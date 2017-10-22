@@ -18,12 +18,12 @@ class PostController extends Controller
 
     public function view($id)
     {
-        $post = (new PostModel())->where(["tid = ?"],[$id])->fetch();
-        $comments = (new CommentModel())->where(["tid = ? AND aid=1"],[$id])->fetchAll();
+        $post = (new PostModel())->where(["tid = ?"], [$id])->fetch();
+        $comments = (new CommentModel())->where(["tid = ? AND aid=1"], [$id])->fetchAll();
 
-        $this->assign('title',$post['title']);
-        $this->assign('post',$post);
-        $this->assign('comments',$comments);
+        $this->assign('title', $post['title']);
+        $this->assign('post', $post);
+        $this->assign('comments', $comments);
 
         $this->render();
     }
