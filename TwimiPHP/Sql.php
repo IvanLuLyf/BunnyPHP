@@ -22,10 +22,10 @@ class Sql
         }
         return $this;
     }
-  
+
     public function order($order = array())
     {
-        if($order) {
+        if ($order) {
             $this->filter .= ' ORDER BY ';
             $this->filter .= implode(',', $order);
         }
@@ -68,6 +68,7 @@ class Sql
         $sth->execute();
         return $sth->rowCount();
     }
+
     // 修改数据
     public function update($data)
     {

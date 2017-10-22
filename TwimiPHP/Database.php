@@ -9,6 +9,7 @@
 class Database
 {
     private static $pdo = null;
+
     public static function pdo()
     {
         if (self::$pdo !== null) {

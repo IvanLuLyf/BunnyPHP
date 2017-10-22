@@ -58,10 +58,10 @@ class TwimiPHP
     {
         if (APP_DEBUG === true) {
             error_reporting(E_ALL);
-            ini_set('display_errors','On');
+            ini_set('display_errors', 'On');
         } else {
             error_reporting(E_ALL);
-            ini_set('display_errors','Off');
+            ini_set('display_errors', 'Off');
             ini_set('log_errors', 'On');
         }
     }
@@ -75,8 +75,8 @@ class TwimiPHP
     public function removeMagicQuotes()
     {
         if (get_magic_quotes_gpc()) {
-            $_GET = isset($_GET) ? $this->stripSlashesDeep($_GET ) : '';
-            $_POST = isset($_POST) ? $this->stripSlashesDeep($_POST ) : '';
+            $_GET = isset($_GET) ? $this->stripSlashesDeep($_GET) : '';
+            $_POST = isset($_POST) ? $this->stripSlashesDeep($_POST) : '';
             $_COOKIE = isset($_COOKIE) ? $this->stripSlashesDeep($_COOKIE) : '';
             $_SESSION = isset($_SESSION) ? $this->stripSlashesDeep($_SESSION) : '';
         }
@@ -104,8 +104,8 @@ class TwimiPHP
             define('DB_USER', $this->config['db']['username']);
             define('DB_PASS', $this->config['db']['password']);
 
-            define("TP_SITENAME",$this->config['sitename']);
-            define("TP_SITEURL",$this->config['siteurl']);
+            define("TP_SITENAME", $this->config['sitename']);
+            define("TP_SITEURL", $this->config['siteurl']);
         }
     }
 

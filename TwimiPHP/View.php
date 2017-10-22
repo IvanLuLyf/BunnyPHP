@@ -11,6 +11,7 @@ class View
     protected $variables = array();
     protected $_controller;
     protected $_action;
+
     function __construct($controller, $action)
     {
         $this->_controller = strtolower($controller);
@@ -32,21 +33,21 @@ class View
         $controllerLayout = APP_PATH . 'app/views/' . $this->_controller . '/' . $this->_action . '.php';
 
         if (file_exists($controllerHeader)) {
-            include ($controllerHeader);
+            include($controllerHeader);
         } else {
-            include ($defaultHeader);
+            include($defaultHeader);
         }
 
         if (file_exists($controllerLayout)) {
-            include ($controllerLayout);
+            include($controllerLayout);
         } else {
             echo "<h1>无法找到视图文件</h1>";
         }
 
         if (file_exists($controllerFooter)) {
-            include ($controllerFooter);
+            include($controllerFooter);
         } else {
-            include ($defaultFooter);
+            include($defaultFooter);
         }
     }
 }
