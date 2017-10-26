@@ -7,7 +7,7 @@
  */
 
 define('APP_PATH', __DIR__ . '/');
-define('APP_DEBUF', true);
+define('APP_DEBUG', true);
 define("IN_TWIMI_PHP", "True", TRUE);
 require(APP_PATH . 'TwimiPHP/TwimiPHP.php');
 $config = require(APP_PATH . 'config/config.php');

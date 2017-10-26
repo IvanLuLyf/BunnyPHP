@@ -23,6 +23,12 @@ class Sql
         return $this;
     }
 
+    public function limit($size, $start = 0)
+    {
+        $this->filter .= " LIMIT $start,$size ";
+        return $this;
+    }
+
     public function order($order = array())
     {
         if ($order) {

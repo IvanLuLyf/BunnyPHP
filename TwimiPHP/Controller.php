@@ -28,4 +28,14 @@ class Controller
     {
         $this->_view->render();
     }
+
+    public function filter($filterName)
+    {
+        $filter = $filterName . 'Filter';
+        if (!class_exists($filter)) {
+            exit($filter . ' Not Found');
+        }
+        $dispatch = new $filter();
+        return call_user_func(array($dispatch, "doFilter"));
+    }
 }

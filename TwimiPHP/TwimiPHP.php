@@ -9,10 +9,12 @@
 class TwimiPHP
 {
     protected $config = [];
+    protected $mode = 0;
 
-    public function __construct($config)
+    public function __construct($config, $m = 0)
     {
         $this->config = $config;
+        $this->mode = $m;
     }
 
     public function run()
@@ -27,12 +29,12 @@ class TwimiPHP
 
     public function route()
     {
-        $controllerName = $this->config['defaultController'];
-        $actionName = $this->config['defaultAction'];
+        $controllerName = isset($_GET['mod']) ? $_GET['mod'] : $this->config['defaultController'];
+        $actionName = isset($_GET['action']) ? $_GET['action'] : $this->config['defaultAction'];
         $param = array();
         $url = $_SERVER['REQUEST_URI'];
         $position = strpos($url, '?');
-        $url = $position === false ? $url : substr($url, 0, $position);
+        $url = ($position === false) ? $url : substr($url, 0, $position);
         $url = trim($url, '/');
         if ($url) {
             $urlArray = explode('/', $url);
@@ -114,12 +116,15 @@ class TwimiPHP
         $frameworks = __DIR__ . '/' . $class . '.php';
         $controllers = APP_PATH . 'app/controllers/' . $class . '.php';
         $models = APP_PATH . 'app/models/' . $class . '.php';
+        $filters = APP_PATH . 'app/filters/' . $class . '.php';
         if (file_exists($frameworks)) {
             include $frameworks;
         } elseif (file_exists($controllers)) {
             include $controllers;
         } elseif (file_exists($models)) {
             include $models;
+        } elseif (file_exists($filters)) {
+            include $filters;
         } else {
             // 错误代码
         }
