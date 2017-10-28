@@ -11,6 +11,7 @@ class Sql
     protected $table;
     protected $primary = 'id';
     private $filter = '';
+    private $join = '';
     private $param = array();
 
     public function where($where = array(), $param = array())
@@ -19,6 +20,15 @@ class Sql
             $this->filter .= ' WHERE ';
             $this->filter .= implode(' ', $where);
             $this->param = $param;
+        }
+        return $this;
+    }
+
+    public function join($tableName, $condition = array(), $mod = '')
+    {
+        $this->join .= " $mod JOIN `$tableName`";
+        if ($condition) {
+            $this->join .= " ON (" . implode(' ', $condition) . ") ";
         }
         return $this;
     }
@@ -38,18 +48,18 @@ class Sql
         return $this;
     }
 
-    public function fetchAll()
+    public function fetchAll($column = '*')
     {
-        $sql = sprintf("select * from `%s` %s", $this->table, $this->filter);
+        $sql = sprintf("select %s from `%s` %s %s", $column, $this->table, $this->join, $this->filter);
         $sth = Database::pdo()->prepare($sql);
         $sth = $this->formatParam($sth, $this->param);
         $sth->execute();
         return $sth->fetchAll();
     }
 
-    public function fetch()
+    public function fetch($column = '*')
     {
-        $sql = sprintf("select * from `%s` %s", $this->table, $this->filter);
+        $sql = sprintf("select %s from `%s` %s %s", $column, $this->table, $this->join, $this->filter);
         $sth = Database::pdo()->prepare($sql);
         $sth = $this->formatParam($sth, $this->param);
         $sth->execute();
