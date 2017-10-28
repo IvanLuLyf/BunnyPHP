@@ -29,14 +29,14 @@ class TwimiPHP
 
     public function route()
     {
-        $controllerName = isset($_GET['mod']) ? $_GET['mod'] : $this->config['defaultController'];
+        $controllerName = isset($_GET['mod']) ? ucfirst($_GET['mod']) : $this->config['defaultController'];
         $actionName = isset($_GET['action']) ? $_GET['action'] : $this->config['defaultAction'];
         $param = array();
         $url = $_SERVER['REQUEST_URI'];
         $position = strpos($url, '?');
         $url = ($position === false) ? $url : substr($url, 0, $position);
         $url = trim($url, '/');
-        if ($url) {
+        if ($url && strtolower($url) != "index.php") {
             $urlArray = explode('/', $url);
             $urlArray = array_filter($urlArray);
             $controllerName = ucfirst($urlArray[0]);
