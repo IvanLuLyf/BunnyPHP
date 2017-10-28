@@ -9,3 +9,4 @@ $url = $_SERVER['REQUEST_URI'];
 echo ($url."<br>");
 echo ($_GET['mod']."<br>");
 echo ($_GET['action']."<br>");
+echo ($_SESSION['token']."<br>");

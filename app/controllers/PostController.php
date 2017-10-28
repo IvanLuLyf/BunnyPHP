@@ -16,15 +16,25 @@ class PostController extends Controller
         $this->render();
     }
 
-    public function view($id)
+    public function view($id = 0)
     {
-        $post = (new PostModel())->where(["tid = ?"], [$id])->fetch();
-        $comments = (new CommentModel())->where(["tid = ? AND aid=1"], [$id])->fetchAll();
+        if ($id == 0 && isset($_GET['tid'])) {
+            $id = $_GET['tid'];
+        }
+        if ($id != 0) {
+            $post = (new PostModel())
+                ->join("tp_user", ["tp_posts.username=tp_user.username"], "LEFT")
+                ->where(["tid = ?"], [$id])
+                ->fetch("tp_posts.*,tp_user.nickname");
+            $comments = (new CommentModel())->where(["tid = ? AND aid=1"], [$id])->fetchAll();
 
-        $this->assign('title', $post['title']);
-        $this->assign('post', $post);
-        $this->assign('comments', $comments);
+            $this->assign('title', $post['title']);
+            $this->assign('post', $post);
+            $this->assign('comments', $comments);
 
-        $this->render();
+            $this->render();
+        } else {
+            header('Location: /post/index');
+        }
     }
 }

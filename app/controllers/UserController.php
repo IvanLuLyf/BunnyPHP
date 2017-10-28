@@ -8,36 +8,30 @@
  */
 class UserController extends Controller
 {
-    public function index()
-    {
-        $user = $this->filter("Auth");
-        if ($user != null) {
-            header('Location: /index/index');
-        } else {
-            header('Location: /user/login');
-        }
-    }
-
     public function login()
     {
-        $this->assign("title","登陆");
+        if (($user = $this->filter("Auth")) != null) {
+            header('Location: /index/index');
+        }
+        $this->assign("title", "登陆");
         if (isset($_POST['username'])) {
-            $user = new UserModel;
             $username = $_POST['username'];
             $password = $_POST['password'];
 
-            $row = $user->where(["email = ? or username = ?"], [$username, $username])->fetch();
+            $row = (new UserModel)->where(["email = ? or username = ?"], [$username, $username])->fetch();
             if ($row != null) {
                 if ($row['password'] == md5($password)) {
                     $timeline = time();
-                    if ($timeline > $row['expire']) {
-                        $token = md5($row['uid'] . $row['username'] . $timeline);
-                        $update = array('token' => $token, 'expire' => $timeline + 604800);
-                        $user->where(["uid = ?"], [$row['uid']])->update($update);
+                    if ($row['expire'] == null || $timeline > intval($row['expire'])) {
+                        $uid = $row['id'];
+                        $token = md5($row['id'] . $row['username'] . $timeline);
+                        $updatedata = array('token' => $token, 'expire' => $timeline + 604800);
+                        (new UserModel)->where(["id = :id"], [':id' => $uid])->update($updatedata);
                     } else {
                         $token = $row['token'];
                     }
-                    setcookie('token', $token, 604800);
+                    session_start();
+                    $_SESSION['token'] = $token;
                     header('Location: /index/index');
                 } else {
                     $this->assign('tp_error_msg', '密码错误');
@@ -50,5 +44,12 @@ class UserController extends Controller
         } else {
             $this->render();
         }
+    }
+
+    public function logout()
+    {
+        session_start();
+        unset($_SESSION['token']);
+        header('Location: /user/login');
     }
 }
