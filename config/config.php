@@ -13,6 +13,6 @@ $config['db']['dbname'] = 'database';
 $config['sitename'] = 'TwimiCenter';
 $config['siteurl'] = "yourdomain.com";
 
-$config['defaultController'] = 'Post';
+$config['defaultController'] = 'Index';
 $config['defaultAction'] = 'index';
 return $config;
