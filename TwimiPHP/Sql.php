@@ -54,6 +54,8 @@ class Sql
         $sth = Database::pdo()->prepare($sql);
         $sth = $this->formatParam($sth, $this->param);
         $sth->execute();
+        $this->join = '';
+        $this->filter = '';
         return $sth->fetchAll();
     }
 
@@ -63,6 +65,8 @@ class Sql
         $sth = Database::pdo()->prepare($sql);
         $sth = $this->formatParam($sth, $this->param);
         $sth->execute();
+        $this->join = '';
+        $this->filter = '';
         return $sth->fetch();
     }
 
@@ -72,6 +76,8 @@ class Sql
         $sth = Database::pdo()->prepare($sql);
         $sth = $this->formatParam($sth, [$this->primary => $id]);
         $sth->execute();
+        $this->join = '';
+        $this->filter = '';
         return $sth->rowCount();
     }
 
@@ -82,6 +88,8 @@ class Sql
         $sth = $this->formatParam($sth, $data);
         $sth = $this->formatParam($sth, $this->param);
         $sth->execute();
+        $this->join = '';
+        $this->filter = '';
         return $sth->rowCount();
     }
 
@@ -93,6 +101,8 @@ class Sql
         $sth = $this->formatParam($sth, $data);
         $sth = $this->formatParam($sth, $this->param);
         $sth->execute();
+        $this->join = '';
+        $this->filter = '';
         return $sth->rowCount();
     }
 
