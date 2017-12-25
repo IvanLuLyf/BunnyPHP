@@ -15,4 +15,5 @@ $config['siteurl'] = "yourdomain.com";
 
 $config['defaultController'] = 'Index';
 $config['defaultAction'] = 'index';
+$config['defaultStorage'] = 'file';
 return $config;
