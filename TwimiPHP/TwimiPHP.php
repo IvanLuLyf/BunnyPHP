@@ -36,7 +36,7 @@ class TwimiPHP
         $position = strpos($url, '?');
         $url = ($position === false) ? $url : substr($url, 0, $position);
         $url = trim($url, '/');
-        if ($url && strtolower($url) != "index.php") {
+        if ($url && strtolower($url) != "index.php" && $this->mode == 0) {
             $urlArray = explode('/', $url);
             $urlArray = array_filter($urlArray);
             $controllerName = ucfirst($urlArray[0]);
@@ -44,6 +44,8 @@ class TwimiPHP
             $actionName = $urlArray ? $urlArray[0] : $actionName;
             array_shift($urlArray);
             $param = $urlArray ? $urlArray : array();
+        } elseif ($this->mode == 1) {
+            $param = array();
         }
         $controller = $controllerName . 'Controller';
         if (!class_exists($controller)) {
@@ -52,7 +54,7 @@ class TwimiPHP
         if (!method_exists($controller, $actionName)) {
             exit($actionName . ' Not Exist');
         }
-        $dispatch = new $controller($controllerName, $actionName);
+        $dispatch = new $controller($controllerName, $actionName, $this->mode);
         call_user_func_array(array($dispatch, $actionName), $param);
     }
 
@@ -106,6 +108,8 @@ class TwimiPHP
             define('DB_USER', $this->config['db']['username']);
             define('DB_PASS', $this->config['db']['password']);
 
+            define('TP_STORAGE', $this->config['defaultStorage']);
+
             define("TP_SITENAME", $this->config['sitename']);
             define("TP_SITEURL", $this->config['siteurl']);
         }
@@ -117,6 +121,7 @@ class TwimiPHP
         $controllers = APP_PATH . 'app/controllers/' . $class . '.php';
         $models = APP_PATH . 'app/models/' . $class . '.php';
         $filters = APP_PATH . 'app/filters/' . $class . '.php';
+        $storage = __DIR__ . '/Storage/' . $class . '.php';
         if (file_exists($frameworks)) {
             include $frameworks;
         } elseif (file_exists($controllers)) {
@@ -125,6 +130,8 @@ class TwimiPHP
             include $models;
         } elseif (file_exists($filters)) {
             include $filters;
+        } elseif (file_exists($storage)) {
+            include $storage;
         } else {
             // 错误代码
         }
