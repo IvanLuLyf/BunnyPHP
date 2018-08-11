@@ -1,3 +1,3 @@
-# TwimiPHP
+# BunnyPHP
 
-TwimiPHP is a simple MVC Framework.
+BunnyPHP is a simple MVC Framework.

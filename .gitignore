@@ -1,0 +1,4 @@
+/config/config.php
+/config/install.lock
+/upload/
+.idea/

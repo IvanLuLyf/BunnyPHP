@@ -3,14 +3,14 @@
 /**
  * Created by PhpStorm.
  * User: IvanLu
- * Date: 2017/10/5
- * Time: 15:46
+ * Date: 2018/1/1
+ * Time: 15:08
  */
 class Database
 {
     private static $pdo = null;
 
-    public static function pdo()
+    public static function pdo(): PDO
     {
         if (self::$pdo !== null) {
             return self::$pdo;

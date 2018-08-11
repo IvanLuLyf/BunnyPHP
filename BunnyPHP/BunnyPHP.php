@@ -1,17 +1,23 @@
 <?php
-
 /**
  * Created by PhpStorm.
  * User: IvanLu
- * Date: 2017/10/5
- * Time: 15:36
+ * Date: 2018/7/28
+ * Time: 17:42
  */
-class TwimiPHP
-{
-    protected $config = [];
-    protected $mode = 0;
 
-    public function __construct($config, $m = 0)
+class BunnyPHP
+{
+    const MODE_NORMAL = 0;
+    const MODE_API = 1;
+
+    protected $config = [];
+    protected $mode = BunnyPHP::MODE_NORMAL;
+
+    private static $database;
+    private static $storage;
+
+    public function __construct($config, $m = BunnyPHP::MODE_NORMAL)
     {
         $this->config = $config;
         $this->mode = $m;
@@ -23,39 +29,57 @@ class TwimiPHP
         $this->setReporting();
         $this->removeMagicQuotes();
         $this->unregisterGlobals();
-        $this->LoadConfig();
+        $this->loadConfig();
         $this->route();
     }
 
     public function route()
     {
-        $controllerName = isset($_GET['mod']) ? ucfirst($_GET['mod']) : $this->config['defaultController'];
-        $actionName = isset($_GET['action']) ? $_GET['action'] : $this->config['defaultAction'];
+        $controllerName = isset($_GET['mod']) ? ucfirst($_GET['mod']) : $this->config['controller'];
+        $actionName = isset($_GET['action']) ? $_GET['action'] : $this->config['action'];
         $param = array();
+
         $url = $_SERVER['REQUEST_URI'];
         $position = strpos($url, '?');
         $url = ($position === false) ? $url : substr($url, 0, $position);
         $url = trim($url, '/');
-        if ($url && strtolower($url) != "index.php" && $this->mode == 0) {
+
+        if ($url && strtolower($url) != "index.php" && $this->mode == BunnyPHP::MODE_NORMAL) {
             $urlArray = explode('/', $url);
             $urlArray = array_filter($urlArray);
+            if (strtolower($urlArray[0]) == "api") {
+                array_shift($urlArray);
+                $this->mode = BunnyPHP::MODE_API;
+            }
             $controllerName = ucfirst($urlArray[0]);
             array_shift($urlArray);
             $actionName = $urlArray ? $urlArray[0] : $actionName;
             array_shift($urlArray);
             $param = $urlArray ? $urlArray : array();
-        } elseif ($this->mode == 1) {
+        } elseif ($this->mode == BunnyPHP::MODE_API) {
             $param = array();
         }
+
         $controller = $controllerName . 'Controller';
         if (!class_exists($controller)) {
-            exit($controller . ' Not Found');
+            exit('<h1>' . $controller . ' Not Found</h1>');
         }
-        if (!method_exists($controller, $actionName)) {
-            exit($actionName . ' Not Exist');
+
+        $actionFunc = 'ac_' . $actionName . '_' . strtolower($_SERVER['REQUEST_METHOD']);
+        if (method_exists($controller, $actionFunc)) {
+            $dispatch = new $controller($controllerName, $actionName, $this->mode);
+            call_user_func_array(array($dispatch, $actionFunc), $param);
+        } elseif (method_exists($controller, 'ac_' . $actionName)) {
+            $dispatch = new $controller($controllerName, $actionName, $this->mode);
+            call_user_func_array(array($dispatch, 'ac_' . $actionName), $param);
+        } else {
+            exit('<h1>Action ' . $actionName . ' Not Exist</h1>');
         }
-        $dispatch = new $controller($controllerName, $actionName, $this->mode);
-        call_user_func_array(array($dispatch, $actionName), $param);
+    }
+
+    public static function getStorage(): Storage
+    {
+        return self::$storage;
     }
 
     public function setReporting()
@@ -100,40 +124,43 @@ class TwimiPHP
         }
     }
 
-    public function LoadConfig()
+    public function loadConfig()
     {
-        if ($this->config['db']) {
+        if (isset($this->config['site_name']))
+            define("TP_SITE_NAME", $this->config['site_name']);
+        if (isset($this->config['site_url']))
+            define("TP_SITE_URL", $this->config['site_url']);
+
+        if (isset($this->config['db'])) {
             define('DB_HOST', $this->config['db']['host']);
-            define('DB_NAME', $this->config['db']['dbname']);
+            define('DB_NAME', $this->config['db']['database']);
             define('DB_USER', $this->config['db']['username']);
             define('DB_PASS', $this->config['db']['password']);
+        }
 
-            define('TP_STORAGE', $this->config['defaultStorage']);
-
-            define("TP_SITENAME", $this->config['sitename']);
-            define("TP_SITEURL", $this->config['siteurl']);
+        if (isset($this->config['storage'])) {
+            $storageName = $this->config['storage']['name'] . 'Storage';
+            BunnyPHP::$storage = new $storageName($this->config['storage']);
         }
     }
 
     public static function loadClass($class)
     {
         $frameworks = __DIR__ . '/' . $class . '.php';
-        $controllers = APP_PATH . 'app/controllers/' . $class . '.php';
-        $models = APP_PATH . 'app/models/' . $class . '.php';
-        $filters = APP_PATH . 'app/filters/' . $class . '.php';
-        $storage = __DIR__ . '/Storage/' . $class . '.php';
+        $controllers = APP_PATH . 'app/controller/' . $class . '.php';
+        $models = APP_PATH . 'app/model/' . $class . '.php';
+        $services = APP_PATH . 'app/service/' . $class . '.php';
+        $storages = APP_PATH . 'app/storage/' . $class . '.php';
         if (file_exists($frameworks)) {
             include $frameworks;
         } elseif (file_exists($controllers)) {
             include $controllers;
         } elseif (file_exists($models)) {
             include $models;
-        } elseif (file_exists($filters)) {
-            include $filters;
-        } elseif (file_exists($storage)) {
-            include $storage;
-        } else {
-            // 错误代码
+        } elseif (file_exists($services)) {
+            include $services;
+        } elseif (file_exists($storages)) {
+            include $storages;
         }
     }
 }
