@@ -18,4 +18,5 @@ if (file_exists("config/config.php")) {
         'controller' => 'Index',
         'action' => 'index'
     ];
-}(new BunnyPHP($config))->run();
+}
+(new BunnyPHP($config))->run();
