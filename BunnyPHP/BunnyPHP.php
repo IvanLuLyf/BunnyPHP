@@ -88,6 +88,25 @@ class BunnyPHP
         try {
             $class = new ReflectionClass($controller);
             $method = $class->getMethod($action);
+            if ($docComment = $method->getDocComment()) {
+                $pattern = "#(@[a-zA-Z]+\s*[a-zA-Z0-9, ()_].*)#";
+                if (preg_match_all($pattern, $docComment, $matches, PREG_PATTERN_ORDER)) {
+                    foreach ($matches[1] as $decorate) {
+                        if (strpos($decorate, '@filter') === 0) {
+                            $filters = explode(' ', $decorate);
+                            array_filter($filters);
+                            array_shift($filters);
+                            foreach ($filters as $filterName) {
+                                $filter = trim(ucfirst($filterName)) . 'Filter';
+                                $result = (new $filter)->doFilter();
+                                if ($result == Filter::STOP) {
+                                    return;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
             if ($method->getNumberOfParameters() > 0) {
                 $params = $method->getParameters();
                 $value = [];
