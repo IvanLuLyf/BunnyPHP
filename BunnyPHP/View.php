@@ -8,48 +8,52 @@
 
 class View
 {
-    protected $variables = array();
-    protected $_controller;
-    protected $_action;
-    protected $_mode;
-
-    function __construct($controller, $action, $mode = BunnyPHP::MODE_NORMAL)
+    public static function render($view, $context = [], $mode = BunnyPHP::MODE_NORMAL)
     {
-        $this->_controller = strtolower($controller);
-        $this->_action = strtolower($action);
-        $this->_mode = $mode;
-    }
-
-    public function assign($name, $value)
-    {
-        $this->variables[$name] = $value;
-    }
-
-    public function assignAll($arr)
-    {
-        $this->variables = array_merge($this->variables, $arr);
-    }
-
-    public function render($template)
-    {
-        if ($this->_mode == BunnyPHP::MODE_NORMAL) {
-            extract($this->variables);
-            $view = APP_PATH . 'app/view/' . $template;
-            $temp = APP_PATH . 'template/' . $template;
-            if (file_exists($temp)) {
-                include($temp);
-            } elseif (file_exists($view)) {
-                include($view);
+        if ($mode == BunnyPHP::MODE_API or $mode == BunnyPHP::MODE_AJAX) {
+            header("Content-Type: application/json; charset=UTF-8");
+            echo json_encode($context);
+        } else {
+            header("Content-Type: text/html; charset=UTF-8");
+            extract($context);
+            if (file_exists(APP_PATH . "template/{$view}")) {
+                include APP_PATH . "template/{$view}";
+            } elseif (file_exists(APP_PATH . "app/view/{$view}")) {
+                include APP_PATH . "app/view/{$view}";
+            } else if ($view == '' || $view == null) {
+                echo json_encode($context);
             } else {
-                echo "<h1>View Not Found</h1>";
+                self::error(['ret' => '-3', 'status' => 'template not exists', 'tp_error_msg' => "模板${view}不存在"]);
             }
-        } elseif ($this->_mode == BunnyPHP::MODE_API) {
-            echo json_encode($this->variables);
         }
     }
 
-    public function redirect($url)
+    public static function error($context = [], $mode = BunnyPHP::MODE_NORMAL)
     {
-        header("Location: " . $url);
+        if ($mode == BunnyPHP::MODE_API or $mode == BunnyPHP::MODE_AJAX) {
+            header("Content-Type: application/json; charset=UTF-8");
+            echo json_encode($context);
+        } else {
+            header("Content-Type: text/html; charset=UTF-8");
+            $error_html = "<html><head><title>BunnyPHP Error</title></head><body><h2>BunnyPHP Error</h2><p>{$context['tp_error_msg']}</p></body></html>";
+            echo $error_html;
+        }
+        exit();
+    }
+
+    public static function get_url($mod, $action, $params = [])
+    {
+        $query = http_build_query($params);
+        return "/${mod}/${action}?${query}";
+    }
+
+    public static function redirect($url, $action = null, $params = [])
+    {
+        if ($action == null) {
+            header("Location: $url");
+        } else {
+            $query = http_build_query($params);
+            header("Location: /${url}/${action}?${query}");
+        }
     }
 }

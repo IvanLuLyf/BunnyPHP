@@ -8,9 +8,9 @@
 
 class Controller
 {
+    protected $_variables = [];
     protected $_controller;
     protected $_action;
-    protected $_view;
     protected $_mode;
     protected $_storage;
 
@@ -18,28 +18,37 @@ class Controller
     {
         $this->_controller = $controller;
         $this->_action = $action;
-        $this->_view = new View($controller, $action, $mode);
         $this->_mode = $mode;
+    }
+
+    public function getController()
+    {
+        return $this->_controller;
+    }
+
+    public function getAction()
+    {
+        return $this->_action;
     }
 
     public function assign($name, $value)
     {
-        $this->_view->assign($name, $value);
+        $this->_variables[$name] = $value;
     }
 
     public function assignAll($arr)
     {
-        $this->_view->assignAll($arr);
+        $this->_variables = array_merge($this->_variables, $arr);
     }
 
     public function render($template = '')
     {
-        $this->_view->render($template);
+        View::render($template, $this->_variables, $this->_mode);
     }
 
-    public function redirect($url)
+    public function redirect($url, $action = null, $params = [])
     {
-        $this->_view->redirect($url);
+        View::redirect($url, $action, $params);
     }
 
     public function service($serviceName): Service
