@@ -1,0 +1,12 @@
+{
+  "name": "ivanlulyf/bunnyphp",
+  "description": "a simple php framework",
+  "minimum-stability": "stable",
+  "license": "MIT",
+  "authors": [
+    {
+      "name": "Ivan Lu",
+      "email": "me@ivanlu.cn"
+    }
+  ]
+}
