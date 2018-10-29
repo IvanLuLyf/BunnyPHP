@@ -24,11 +24,19 @@ class FileStorage implements Storage
 
     public function write($filename, $content)
     {
+        $dir = dirname($filename);
+        if ($dir !== '.' && !is_dir($this->uploadPath . $dir)) {
+            mkdir($this->uploadPath . $dir, 0755, true);
+        }
         file_put_contents($this->uploadPath . $filename, $content);
     }
 
     public function upload($filename, $path)
     {
+        $dir = dirname($filename);
+        if ($dir !== '.' && !is_dir($this->uploadPath . $dir)) {
+            mkdir($this->uploadPath . $dir, 0755, true);
+        }
         move_uploaded_file($path, $this->uploadPath . $filename);
     }
 
