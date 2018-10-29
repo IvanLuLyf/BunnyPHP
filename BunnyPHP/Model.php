@@ -19,7 +19,8 @@ class Model
     {
         if (!$this->_table) {
             $this->_name = substr(get_class($this), 0, -5);
-            $this->_table = DB_PREFIX . strtolower($this->_name);
+            $dashed = strtolower(preg_replace('/([A-Z])/', '_$1', lcfirst($this->_name)));
+            $this->_table = DB_PREFIX . strtolower($dashed);
         }
     }
 
