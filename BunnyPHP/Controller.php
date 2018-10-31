@@ -61,4 +61,9 @@ class Controller
     {
         return BunnyPHP::getStorage();
     }
+
+    public function cache(): Cache
+    {
+        return BunnyPHP::getCache();
+    }
 }

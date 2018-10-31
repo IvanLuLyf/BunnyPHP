@@ -16,6 +16,7 @@ class BunnyPHP
     protected $mode = BunnyPHP::MODE_NORMAL;
 
     private static $storage;
+    private static $cache;
 
     public function __construct($m = BunnyPHP::MODE_NORMAL)
     {
@@ -138,6 +139,11 @@ class BunnyPHP
         return self::$storage;
     }
 
+    public static function getCache(): Cache
+    {
+        return self::$cache;
+    }
+
     public function setReporting()
     {
         if (APP_DEBUG === true) {
@@ -200,6 +206,12 @@ class BunnyPHP
             $storageName = ($this->config->get(['storage', 'name'], 'File')) . 'Storage';
         }
         BunnyPHP::$storage = new $storageName($this->config->get('storage', []));
+
+        $cacheName = 'FileCache';
+        if ($this->config->has('cache')) {
+            $cacheName = ($this->config->get(['cache', 'name'], 'File')) . 'Cache';
+        }
+        BunnyPHP::$cache = new $cacheName($this->config->get('cache', []));
     }
 
     public static function loadClass($class)
