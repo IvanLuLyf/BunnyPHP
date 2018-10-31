@@ -44,7 +44,8 @@ class View
     public static function get_url($mod, $action, $params = [])
     {
         $query = http_build_query($params);
-        return "/${mod}/${action}?${query}";
+        if ($query != '') $query = '?' . $query;
+        return "/${mod}/${action}${query}";
     }
 
     public static function redirect($url, $action = null, $params = [])
@@ -53,7 +54,8 @@ class View
             header("Location: $url");
         } else {
             $query = http_build_query($params);
-            header("Location: /${url}/${action}?${query}");
+            if ($query != '') $query = '?' . $query;
+            header("Location: /${url}/${action}${query}");
         }
     }
 }
