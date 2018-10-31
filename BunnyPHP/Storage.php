@@ -9,8 +9,12 @@
 interface Storage
 {
     public function read($filename);
+
     public function write($filename, $content);
+
     public function upload($filename, $path);
+
     public function remove($filename);
+
     public function geturl($filename);
 }
