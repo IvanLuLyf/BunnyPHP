@@ -25,6 +25,7 @@ class Template
             $output = APP_PATH . "template/{$this->template}.html";
         }
         $this->parse_var();
+        $this->parse_if();
         file_put_contents($output, $this->content);
     }
 
@@ -37,6 +38,24 @@ class Template
         $pattern = '/\{\{\s+([\w]+).([\w]+)\s+\}\}/';
         if (preg_match($pattern, $this->content)) {
             $this->content = preg_replace($pattern, "<?=\$$1['$2']?>", $this->content);
+        }
+    }
+
+    private function parse_if()
+    {
+        $_patternIf = '/\{%\s?if\s+(.*)\s?%\}/';
+        $_patternEnd = '/\{%\s?endif\s?%\}/';
+        $_patternElse = '/\{%\s?else\s?%\}/';
+        if (preg_match($_patternIf, $this->content)) {
+            if (preg_match($_patternEnd, $this->content)) {
+                $this->content = preg_replace($_patternIf, "<?php if($1):?>", $this->content);
+                $this->content = preg_replace($_patternEnd, "<?php endif; ?>", $this->content);
+                if (preg_match($_patternElse, $this->content)) {
+                    $this->content = preg_replace($_patternElse, "<?php else: ?>", $this->content);
+                }
+            } else {
+                View::error([]);
+            }
         }
     }
 }
