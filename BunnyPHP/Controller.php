@@ -53,6 +53,11 @@ class Controller
         Template::render($template, $this->_variables);
     }
 
+    public function error()
+    {
+        View::error($this->_variables, $this->_mode);
+    }
+
     public function redirect($url, $action = null, $params = [])
     {
         View::redirect($url, $action, $params);
