@@ -63,7 +63,11 @@ class Model
 
     public function limit($size, $start = 0)
     {
-        $this->_filter .= " limit $start,$size ";
+        if (constant("DB_TYPE") == 'pgsql') {
+            $this->_filter .= " limit $size offset $start";
+        } else {
+            $this->_filter .= " limit $start,$size ";
+        }
         return $this;
     }
 
