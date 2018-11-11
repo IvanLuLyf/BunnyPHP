@@ -20,6 +20,8 @@ class BunnyPHP
     private static $storage;
     private static $cache;
 
+    private $variable = [];
+
     public function __construct($m = BunnyPHP::MODE_NORMAL)
     {
         $this->mode = $m;
@@ -102,7 +104,7 @@ class BunnyPHP
                             array_shift($filters);
                             foreach ($filters as $filterName) {
                                 $filter = trim(ucfirst($filterName)) . 'Filter';
-                                $result = (new $filter)->doFilter();
+                                $result = (new $filter($this->mode))->doFilter();
                                 if ($result == Filter::STOP) {
                                     return;
                                 }
@@ -135,6 +137,16 @@ class BunnyPHP
         } catch (ReflectionException $e) {
             call_user_func_array([$dispatch, $action], [$pathParam]);
         }
+    }
+
+    public function get($key)
+    {
+        return isset($this->variable[$key]) ? $this->variable[$key] : null;
+    }
+
+    public function set($key, $value)
+    {
+        $this->variable[$key] = $value;
     }
 
     public static function app(): BunnyPHP
