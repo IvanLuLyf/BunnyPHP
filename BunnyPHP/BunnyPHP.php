@@ -195,6 +195,7 @@ class BunnyPHP
         if ($this->config->has('db')) {
             define('DB_TYPE', $this->config->get(['db', 'type'], 'mysql'));
             define('DB_HOST', $this->config->get(['db', 'host'], 'localhost'));
+            define('DB_PORT', $this->config->get(['db', 'port'], '3306'));
             define('DB_NAME', $this->config->get(['db', 'database']));
             define('DB_USER', $this->config->get(['db', 'username']));
             define('DB_PASS', $this->config->get(['db', 'password']));

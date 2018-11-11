@@ -15,11 +15,11 @@ class Database
     {
         $db_type = strtolower(constant("DB_TYPE"));
         if ($db_type == 'mysql') {
-            $dsn = "mysql:host=" . DB_HOST . ";dbname=" . DB_NAME . ";charset=utf8mb4";
+            $dsn = "mysql:host=" . DB_HOST . ";port=" . DB_PORT . ";dbname=" . DB_NAME . ";charset=utf8mb4";
         } elseif ($db_type == 'sqlite') {
             $dsn = "sqlite:" . DB_NAME;
         } elseif ($db_type == 'pgsql') {
-            $dsn = "pgsql:host=" . DB_HOST . ";port=5432;dbname=" . DB_NAME . "";
+            $dsn = "pgsql:host=" . DB_HOST . ";port=" . DB_PORT . ";dbname=" . DB_NAME . "";
         }
         $option = array(PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC);
         $this->conn = new PDO($dsn, DB_USER, DB_PASS, $option);
