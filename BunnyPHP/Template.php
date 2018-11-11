@@ -19,6 +19,20 @@ class Template
         }
     }
 
+    public static function render($view, $context = [])
+    {
+        header("Content-Type: text/html; charset=UTF-8");
+        extract($context);
+        if (file_exists(APP_PATH . "template/{$view}.html")) {
+            include APP_PATH . "template/{$view}.html";
+        } elseif (file_exists(APP_PATH . "template/{$view}.tpl.html")) {
+            (new self($view))->compile();
+            include APP_PATH . "template/{$view}.html";
+        } else {
+            View::error(['ret' => '-3', 'status' => 'template not exists', 'tp_error_msg' => "模板${view}不存在"]);
+        }
+    }
+
     public function compile($output = '')
     {
         if ($output == '') {
