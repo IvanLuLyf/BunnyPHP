@@ -31,19 +31,26 @@ class Controller
         return $this->_action;
     }
 
-    public function assign($name, $value)
+    public function assign($name, $value): Controller
     {
         $this->_variables[$name] = $value;
+        return $this;
     }
 
-    public function assignAll($arr)
+    public function assignAll($arr): Controller
     {
         $this->_variables = array_merge($this->_variables, $arr);
+        return $this;
     }
 
     public function render($template = '')
     {
         View::render($template, $this->_variables, $this->_mode);
+    }
+
+    public function renderTemplate($template = '')
+    {
+        Template::render($template, $this->_variables);
     }
 
     public function redirect($url, $action = null, $params = [])
