@@ -28,6 +28,15 @@ class Model
         }
     }
 
+    public static function create()
+    {
+        $name = substr(get_called_class(), 0, -5);
+        $dashed = strtolower(preg_replace('/([A-Z])/', '_$1', lcfirst($name)));
+        $table = DB_PREFIX . strtolower($dashed);
+        $vars = get_class_vars(get_called_class());
+        Database::getInstance()->createTable($table, $vars['_column'], $vars['_pk'], $vars['_ai']);
+    }
+
     private function reset()
     {
         $this->_filter = '';
