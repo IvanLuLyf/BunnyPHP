@@ -8,6 +8,7 @@
 
 class BunnyPHP
 {
+    const BUNNY_VERSION = '1.5.0';
     const MODE_NORMAL = 0;
     const MODE_API = 1;
     const MODE_AJAX = 2;
@@ -15,12 +16,14 @@ class BunnyPHP
     protected $config;
     protected $mode = BunnyPHP::MODE_NORMAL;
 
+    private static $app;
     private static $storage;
     private static $cache;
 
     public function __construct($m = BunnyPHP::MODE_NORMAL)
     {
         $this->mode = $m;
+        BunnyPHP::$app = $this;
     }
 
     public function run()
@@ -33,10 +36,10 @@ class BunnyPHP
         $this->route();
     }
 
-    public function route()
+    private function route()
     {
         $controllerName = isset($_GET['mod']) ? ucfirst($_GET['mod']) : $this->config->get('controller', 'Index');
-        $actionName = isset($_GET['action']) ? $_GET['action'] : $this->config->get('action', 'index');
+        $actionName = isset($_GET['action']) ? $_GET['action'] : 'index';
         $param = [];
 
         $request_url = $_SERVER['REQUEST_URI'];
@@ -63,7 +66,7 @@ class BunnyPHP
         $controller = $controllerName . 'Controller';
         if (!class_exists($controller)) {
             if (!class_exists('OtherController')) {
-                View::error(['ret' => '-1', 'status' => 'mod not exists', 'tp_error_msg' => "模块{$controller}不存在"]);
+                View::error(['ret' => '-1', 'status' => 'mod not exists', 'tp_error_msg' => "模块{$controller}不存在"], $this->mode);
             } else {
                 $controller = 'OtherController';
             }
@@ -80,7 +83,7 @@ class BunnyPHP
             $dispatch = new $controller($controllerName, $actionName, $this->mode);
             $this->callAction($controller, $dispatch, 'other', $param);
         } else {
-            View::error(['ret' => '-2', 'status' => 'action not exists', 'tp_error_msg' => "Action {$actionName}不存在"]);
+            View::error(['ret' => '-2', 'status' => 'action not exists', 'tp_error_msg' => "Action {$actionName}不存在"], $this->mode);
         }
     }
 
@@ -134,6 +137,11 @@ class BunnyPHP
         }
     }
 
+    public static function app(): BunnyPHP
+    {
+        return self::$app;
+    }
+
     public static function getStorage(): Storage
     {
         return self::$storage;
@@ -144,7 +152,7 @@ class BunnyPHP
         return self::$cache;
     }
 
-    public function setReporting()
+    private function setReporting()
     {
         if (APP_DEBUG === true) {
             error_reporting(E_ALL);
@@ -156,13 +164,13 @@ class BunnyPHP
         }
     }
 
-    public function stripSlashesDeep($value)
+    private function stripSlashesDeep($value)
     {
         $value = is_array($value) ? array_map(array($this, 'stripSlashesDeep'), $value) : stripslashes($value);
         return $value;
     }
 
-    public function removeMagicQuotes()
+    private function removeMagicQuotes()
     {
         if (get_magic_quotes_gpc()) {
             $_GET = isset($_GET) ? $this->stripSlashesDeep($_GET) : '';
@@ -172,7 +180,7 @@ class BunnyPHP
         }
     }
 
-    public function unregisterGlobals()
+    private function unregisterGlobals()
     {
         if (ini_get('register_globals')) {
             $array = array('_SESSION', '_POST', '_GET', '_COOKIE', '_REQUEST', '_SERVER', '_ENV', '_FILES');
@@ -186,7 +194,7 @@ class BunnyPHP
         }
     }
 
-    public function loadConfig()
+    private function loadConfig()
     {
         $this->config = Config::load('config');
         define("TP_SITE_NAME", $this->config->get('site_name', 'BunnyPHP'));
@@ -215,7 +223,7 @@ class BunnyPHP
         BunnyPHP::$cache = new $cacheName($this->config->get('cache', []));
     }
 
-    public static function loadClass($class)
+    private static function loadClass($class)
     {
         $frameworkFile = __DIR__ . '/' . $class . '.php';
         $controllerFile = APP_PATH . 'app/controller/' . $class . '.php';
