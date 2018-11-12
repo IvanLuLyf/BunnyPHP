@@ -40,6 +40,7 @@ class Template
         }
         $this->parse_var();
         $this->parse_if();
+        $this->parse_for();
         file_put_contents($output, $this->content);
     }
 
@@ -63,10 +64,33 @@ class Template
         if (preg_match($_patternIf, $this->content)) {
             if (preg_match($_patternEnd, $this->content)) {
                 $this->content = preg_replace($_patternIf, "<?php if($1):?>", $this->content);
-                $this->content = preg_replace($_patternEnd, "<?php endif; ?>", $this->content);
+                $this->content = preg_replace($_patternEnd, "<?php endif; ?>", $this->content, 1);
                 if (preg_match($_patternElse, $this->content)) {
                     $this->content = preg_replace($_patternElse, "<?php else: ?>", $this->content);
                 }
+            } else {
+                View::error([]);
+            }
+        }
+    }
+
+    private function parse_for()
+    {
+        $_patternFor = '/\{%\s?for\s+(\w+)\s+in\s+(\w+)\s?%\}/';
+        $_patternForKV = '/\{%\s?for\s+(\w+)\s?,\s?(\w+)\s+in\s+(\w+)\s?%\}/';
+        $_patternEnd = '/\{%\s?endfor\s?%\}/';
+        if (preg_match($_patternFor, $this->content)) {
+            if (preg_match($_patternEnd, $this->content)) {
+                $this->content = preg_replace($_patternFor, "<?php foreach(\$$2 as \$$1):?>", $this->content);
+                $this->content = preg_replace($_patternEnd, "<?php endforeach; ?>", $this->content, 1);
+            } else {
+                View::error([]);
+            }
+        }
+        if (preg_match($_patternForKV, $this->content)) {
+            if (preg_match($_patternEnd, $this->content)) {
+                $this->content = preg_replace($_patternForKV, "<?php foreach(\$$3 as \$$1=>\$$2):?>", $this->content);
+                $this->content = preg_replace($_patternEnd, "<?php endforeach; ?>", $this->content, 1);
             } else {
                 View::error([]);
             }
