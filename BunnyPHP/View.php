@@ -44,8 +44,13 @@ class View
     public static function get_url($mod, $action, $params = [])
     {
         $query = http_build_query($params);
-        if ($query != '') $query = '?' . $query;
-        return "/${mod}/${action}${query}";
+        if (constant('TP_SITE_REWRITE') == true) {
+            if ($query != '') $query = '?' . $query;
+            return "/${mod}/${action}${query}";
+        } else {
+            if ($query != '') $query = '&' . $query;
+            return "/index.php?mod=${mod}&action=${action}${query}";
+        }
     }
 
     public static function redirect($url, $action = null, $params = [])
@@ -54,8 +59,13 @@ class View
             header("Location: $url");
         } else {
             $query = http_build_query($params);
-            if ($query != '') $query = '?' . $query;
-            header("Location: /${url}/${action}${query}");
+            if (constant('TP_SITE_REWRITE') == true) {
+                if ($query != '') $query = '?' . $query;
+                header("Location: /${url}/${action}${query}");
+            } else {
+                if ($query != '') $query = '&' . $query;
+                header("Location: /index.php?mod=${url}&action=${action}${query}");
+            }
         }
     }
 }
