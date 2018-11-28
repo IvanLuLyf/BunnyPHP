@@ -11,7 +11,7 @@ class Filter
     const NEXT = 0;
     const STOP = 1;
 
-    private $_mode;
+    protected $_mode;
 
     public function __construct($mode = BunnyPHP::MODE_NORMAL)
     {
