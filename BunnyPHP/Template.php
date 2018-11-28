@@ -13,9 +13,9 @@ class Template
 
     public function __construct($template)
     {
-        if (file_exists(APP_PATH . "template/{$template}.tpl.html")) {
+        if (file_exists(APP_PATH . "template/{$template}")) {
             $this->template = $template;
-            $this->content = file_get_contents(APP_PATH . "template/{$template}.tpl.html");
+            $this->content = file_get_contents(APP_PATH . "template/{$template}");
         }
     }
 
@@ -23,11 +23,12 @@ class Template
     {
         header("Content-Type: text/html; charset=UTF-8");
         extract($context);
-        if (file_exists(APP_PATH . "template/{$view}.html")) {
-            include APP_PATH . "template/{$view}.html";
-        } elseif (file_exists(APP_PATH . "template/{$view}.tpl.html")) {
+        $cacheDir = APP_PATH . 'cache/template/';
+        if (file_exists($cacheDir . $view)) {
+            include $cacheDir . $view;
+        } elseif (file_exists(APP_PATH . "template/{$view}")) {
             (new self($view))->compile();
-            include APP_PATH . "template/{$view}.html";
+            include $cacheDir . $view;
         } else {
             View::error(['ret' => '-3', 'status' => 'template not exists', 'tp_error_msg' => "模板${view}不存在"]);
         }
@@ -36,11 +37,16 @@ class Template
     public function compile($output = '')
     {
         if ($output == '') {
-            $output = APP_PATH . "template/{$this->template}.html";
+            $cacheDir = APP_PATH . 'cache/template/';
+            if (!is_dir($cacheDir)) {
+                mkdir($cacheDir, 0555, true);
+            }
+            $output = APP_PATH . $cacheDir . $this->template;
         }
         $this->parse_var();
         $this->parse_if();
         $this->parse_for();
+        $this->parse_url();
         file_put_contents($output, $this->content);
     }
 
@@ -94,6 +100,14 @@ class Template
             } else {
                 View::error([]);
             }
+        }
+    }
+
+    private function parse_url()
+    {
+        $pattern = '/\{u\s+(.*)\s+\}/';
+        if (preg_match($pattern, $this->content)) {
+            $this->content = preg_replace($pattern, "<?=View::get_url($1)?>", $this->content);
         }
     }
 }
