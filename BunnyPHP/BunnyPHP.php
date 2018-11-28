@@ -211,6 +211,7 @@ class BunnyPHP
         $this->config = Config::load('config');
         define("TP_SITE_NAME", $this->config->get('site_name', 'BunnyPHP'));
         define("TP_SITE_URL", $this->config->get('site_url', 'localhost'));
+        define("TP_SITE_REWRITE", $this->config->get('site_rewrite', true));
 
         if ($this->config->has('db')) {
             define('DB_TYPE', $this->config->get(['db', 'type'], 'mysql'));
