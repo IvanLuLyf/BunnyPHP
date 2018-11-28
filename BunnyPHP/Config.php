@@ -41,6 +41,11 @@ class Config
         return file_exists(APP_PATH . "config/{$name}.php");
     }
 
+    public static function checkLock($name)
+    {
+        return file_exists(APP_PATH . "config/{$name}.lock");
+    }
+
     public static function load($name)
     {
         if (file_exists(APP_PATH . "config/{$name}.php")) {
@@ -50,7 +55,7 @@ class Config
         }
     }
 
-    public static function make($configs = [], $type = self::MODE_CONST)
+    public static function make($configs = [], $type = self::MODE_ARRAY)
     {
         $config_text = "<?php\r\n";
         if ($type == self::MODE_CONST) {
