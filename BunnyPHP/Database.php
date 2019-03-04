@@ -46,13 +46,15 @@ class Database
         return $this->conn->lastInsertId();
     }
 
-    public function update(array $data, $table, $where = null, $condition = [])
+    public function update(array $data, $table, $where = null, $condition = [], $updates = null)
     {
-        $sets = [];
-        foreach ($data as $key => $value) {
-            $sets[] = "{$key} = :{$key}";
+        if ($updates === null) {
+            $sets = [];
+            foreach ($data as $key => $value) {
+                $sets[] = "{$key} = :{$key}";
+            }
+            $updates = implode(',', $sets);
         }
-        $updates = implode(',', $sets);
         $where = $where == null ? '' : ' WHERE ' . $where;
         $sql = "update {$table} set {$updates} {$where}";
         $pst = $this->conn->prepare($sql);
