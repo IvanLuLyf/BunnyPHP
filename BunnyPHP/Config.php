@@ -18,6 +18,11 @@ class Config
         $this->configs = $c;
     }
 
+    public function all()
+    {
+        return $this->configs;
+    }
+
     public function has($key)
     {
         if (is_array($key)) {
