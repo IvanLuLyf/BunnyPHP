@@ -13,6 +13,7 @@ class Model
     private $_filter = '';
     private $_join = '';
     private $_param = [];
+    private $_column = [];
     private $_has_where = false;
 
     public function __construct($name = "")
@@ -39,11 +40,19 @@ class Model
         Database::getInstance()->createTable($table, $vars['_column'], $pk, $ai);
     }
 
+    public static function name()
+    {
+        $name = substr(get_called_class(), 0, -5);
+        $dashed = strtolower(preg_replace('/([A-Z])/', '_$1', lcfirst($name)));
+        return DB_PREFIX . strtolower($dashed);
+    }
+
     private function reset()
     {
         $this->_filter = '';
         $this->_join = '';
         $this->_param = [];
+        $this->_column = [];
         $this->_has_where = false;
     }
 
@@ -61,14 +70,36 @@ class Model
         return $this;
     }
 
-    public function join($tableName, $condition = [], $mod = '')
+    public function join($tableName, $condition = [], $select = [], $mod = 'left')
     {
-        $this->_join .= " $mod join $tableName";
-        if (is_array($condition)) {
-            $this->_join .= " on (" . implode(' ', $condition) . ") ";
-        } else {
-            $this->_join .= " on ($condition) ";
+        if (substr($tableName, -5) == "Model") {
+            $tableName = substr($tableName, 0, -5);
+            $dashed = strtolower(preg_replace('/([A-Z])/', '_$1', lcfirst($tableName)));
+            $tableName = DB_PREFIX . strtolower($dashed);
         }
+        if (count($select) == 0) {
+            $this->_column[] = $tableName . ".*";
+        } else {
+            foreach ($select as $item) {
+                if (is_array($item)) {
+                    $this->_column[] = sprintf($item[1], "{$tableName}.{$item[0]}");
+                } else {
+                    $this->_column[] = "{$tableName}.{$item}";
+                }
+            }
+        }
+        $this->_join .= " $mod join $tableName";
+        $conditionArr = [];
+        foreach ($condition as $k => $v) {
+            if (is_int($k)) {
+                $conditionArr[] = "{$tableName}.{$v}={$this->_table}.{$v}";
+            } elseif (is_array($v)) {
+                $conditionArr[] = "{$tableName}.{$v[0]}={$this->_table}.{$v[1]}";
+            } else {
+                $conditionArr[] = "{$tableName}.{$k}={$v}";
+            }
+        }
+        $this->_join .= " on (" . implode(' and ', $conditionArr) . ") ";
         return $this;
     }
 
@@ -93,29 +124,59 @@ class Model
         return $this;
     }
 
-    public function fetch($column = '*')
+    public function fetch($columns = '*')
     {
-        if (is_array($column)) {
-            $column = implode(',', $column);
+        $selection = $columns;
+        if ($this->_join != '') {
+            if ($columns == '*') {
+                $selection = $this->_table . '.*';
+                $selection .= ',' . implode(',', $this->_column);
+            } elseif (is_array($columns)) {
+                foreach ($columns as &$column) {
+                    $column = $this->_table . $column;
+                }
+                $selection = implode(',', array_merge($columns, $this->_column));
+            } else {
+                $selection = '*';
+            }
+        } else {
+            if (is_array($columns)) {
+                $selection = implode(',', $columns);
+            }
         }
         if ($this->_has_where) {
             $this->_filter = ' where ' . $this->_filter;
         }
-        $sql = "select {$column} from {$this->_table} {$this->_join} {$this->_filter}";
+        $sql = "select {$selection} from {$this->_table} {$this->_join} {$this->_filter}";
         $result = Database::getInstance()->fetchOne($sql, $this->_param);
         $this->reset();
         return $result;
     }
 
-    public function fetchAll($column = '*')
+    public function fetchAll($columns = '*')
     {
-        if (is_array($column)) {
-            $column = implode(',', $column);
+        $selection = $columns;
+        if ($this->_join != '') {
+            if ($columns == '*') {
+                $selection = $this->_table . '.*';
+                $selection .= ',' . implode(',', $this->_column);
+            } elseif (is_array($columns)) {
+                foreach ($columns as &$column) {
+                    $column = $this->_table . $column;
+                }
+                $selection = implode(',', array_merge($columns, $this->_column));
+            } else {
+                $selection = '*';
+            }
+        } else {
+            if (is_array($columns)) {
+                $selection = implode(',', $columns);
+            }
         }
         if ($this->_has_where) {
             $this->_filter = ' where ' . $this->_filter;
         }
-        $sql = "select {$column} from {$this->_table} {$this->_join} {$this->_filter}";
+        $sql = "select {$selection} from {$this->_table} {$this->_join} {$this->_filter}";
         $result = Database::getInstance()->fetchAll($sql, $this->_param);
         $this->reset();
         return $result;
