@@ -15,6 +15,4 @@ interface Storage
     public function upload($filename, $path);
 
     public function remove($filename);
-
-    public function geturl($filename);
 }

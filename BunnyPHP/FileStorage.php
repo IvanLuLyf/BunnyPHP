@@ -41,15 +41,11 @@ class FileStorage implements Storage
             mkdir($this->uploadPath . $dir, 0555, true);
         }
         move_uploaded_file($path, $this->uploadPath . $filename);
+        return "/$this->dir/" . $filename;
     }
 
     public function remove($filename)
     {
         unlink($this->uploadPath . $filename);
-    }
-
-    public function geturl($filename)
-    {
-        return "/$this->dir/" . $filename;
     }
 }
