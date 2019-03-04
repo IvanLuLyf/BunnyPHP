@@ -55,6 +55,9 @@ class BunnyPHP
             if (strtolower($url_array[0]) == "api") {
                 array_shift($url_array);
                 $this->mode = BunnyPHP::MODE_API;
+            } elseif (strtolower($url_array[0]) == "ajax") {
+                array_shift($url_array);
+                $this->mode = BunnyPHP::MODE_AJAX;
             }
             $controllerName = ucfirst($url_array[0]);
             array_shift($url_array);
@@ -99,15 +102,13 @@ class BunnyPHP
                 if (preg_match_all($pattern, $docComment, $matches, PREG_PATTERN_ORDER)) {
                     foreach ($matches[1] as $decorate) {
                         if (strpos($decorate, '@filter') === 0) {
-                            $filters = explode(' ', $decorate);
+                            $filters = explode(' ', trim($decorate));
                             array_filter($filters);
                             array_shift($filters);
-                            foreach ($filters as $filterName) {
-                                $filter = trim(ucfirst($filterName)) . 'Filter';
-                                $result = (new $filter($this->mode))->doFilter();
-                                if ($result == Filter::STOP) {
-                                    return;
-                                }
+                            $filter = trim(ucfirst(array_shift($filters))) . 'Filter';
+                            $result = (new $filter($this->mode))->doFilter($filters);
+                            if ($result == Filter::STOP) {
+                                return;
                             }
                         }
                     }
