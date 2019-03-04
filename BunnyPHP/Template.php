@@ -50,13 +50,33 @@ class Template
         file_put_contents($output, $this->content);
     }
 
+    public static function process($template, $context = [])
+    {
+        if (file_exists(APP_PATH . "template/{$template}")) {
+            $content = file_get_contents(APP_PATH . "template/{$template}");
+            $pattern = '/\{\{\s*([\w]+)\s*\}\}/';
+            if (preg_match_all($pattern, $content, $match)) {
+                $ps = [];
+                $rs = [];
+                for ($i = 0; $i < count($match[0]); $i++) {
+                    $ps[] = '/\{\{\s*' . $match[1][$i] . '\s*\}\}/';
+                    $rs[] = $context[$match[1][$i]];
+                }
+                $content = preg_replace($ps, $rs, $content);
+            }
+            return $content;
+        } else {
+            return null;
+        }
+    }
+
     private function parse_var()
     {
-        $pattern = '/\{\{\s+([\w]+)\s+\}\}/';
+        $pattern = '/\{\{\s*([\w]+)\s*\}\}/';
         if (preg_match($pattern, $this->content)) {
             $this->content = preg_replace($pattern, "<?=\$$1?>", $this->content);
         }
-        $pattern = '/\{\{\s+([\w]+).([\w]+)\s+\}\}/';
+        $pattern = '/\{\{\s*([\w]+).([\w]+)\s*\}\}/';
         if (preg_match($pattern, $this->content)) {
             $this->content = preg_replace($pattern, "<?=\$$1['$2']?>", $this->content);
         }
