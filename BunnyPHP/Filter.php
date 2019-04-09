@@ -12,6 +12,7 @@ class Filter
     const STOP = 1;
 
     protected $_mode;
+    protected $_variables = [];
 
     public function __construct($mode = BunnyPHP::MODE_NORMAL)
     {
@@ -23,14 +24,24 @@ class Filter
         return self::NEXT;
     }
 
+    public function assign($name, $value)
+    {
+        $this->_variables[$name] = $value;
+    }
+
+    public function getVariable()
+    {
+        return $this->_variables;
+    }
+
     public function render($variable, $template = '')
     {
         View::render($template, $variable, $this->_mode);
     }
 
-    public function error($variable)
+    public function error($variable, $code = 200)
     {
-        View::error($variable, $this->_mode);
+        View::error($variable, $this->_mode, $code);
     }
 
     public function redirect($url, $action = null, $params = [])
