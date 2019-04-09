@@ -13,13 +13,17 @@ class View
         if ($mode == BunnyPHP::MODE_API or $mode == BunnyPHP::MODE_AJAX) {
             header("Content-Type: application/json; charset=UTF-8");
             echo json_encode($context);
+        } elseif ($mode == BunnyPHP::MODE_CLI) {
+            if (isset($context['response'])) {
+                echo $context['response'];
+            } else {
+                print_r($context);
+            }
         } else {
             header("Content-Type: text/html; charset=UTF-8");
             extract($context);
             if (file_exists(APP_PATH . "template/{$view}")) {
                 include APP_PATH . "template/{$view}";
-            } elseif (file_exists(APP_PATH . "app/view/{$view}")) {
-                include APP_PATH . "app/view/{$view}";
             } else if ($view == '' || $view == null) {
                 echo json_encode($context);
             } else {
@@ -28,15 +32,23 @@ class View
         }
     }
 
-    public static function error($context = [], $mode = BunnyPHP::MODE_NORMAL)
+    public static function error($context = [], $mode = BunnyPHP::MODE_NORMAL, $code = 200)
     {
+        if ($code !== 200) {
+            http_send_status($code);
+        }
         if ($mode == BunnyPHP::MODE_API or $mode == BunnyPHP::MODE_AJAX) {
             header("Content-Type: application/json; charset=UTF-8");
             echo json_encode($context);
         } else {
             header("Content-Type: text/html; charset=UTF-8");
-            $error_html = "<html><head><title>BunnyPHP Error</title></head><body><h2>BunnyPHP Error</h2><p>{$context['tp_error_msg']}</p></body></html>";
-            echo $error_html;
+            if (file_exists("template/error.html")) {
+                extract($context);
+                include APP_PATH . "template/error.html";
+            } else {
+                $error_html = "<html><head><title>BunnyPHP Error</title></head><body><h2>BunnyPHP Error</h2><p>{$context['tp_error_msg']}</p></body></html>";
+                echo $error_html;
+            }
         }
         exit();
     }
