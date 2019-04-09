@@ -1,6 +1,6 @@
 {
   "name": "ivanlulyf/bunnyphp",
-  "description": "a simple php framework",
+  "description": "a lightweight PHP MVC Framework",
   "minimum-stability": "stable",
   "license": "MIT",
   "authors": [
