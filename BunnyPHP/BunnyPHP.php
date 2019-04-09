@@ -8,10 +8,11 @@
 
 class BunnyPHP
 {
-    const BUNNY_VERSION = '1.8.0';
+    const BUNNY_VERSION = '2.0.0';
     const MODE_NORMAL = 0;
     const MODE_API = 1;
     const MODE_AJAX = 2;
+    const MODE_CLI = 3;
 
     /**
      * @var $config Config
@@ -22,8 +23,10 @@ class BunnyPHP
     private static $app;
     private static $storage;
     private static $cache;
+    private static $request;
 
     private $variable = [];
+    private $container = [];
 
     public function __construct($m = BunnyPHP::MODE_NORMAL)
     {
@@ -43,17 +46,19 @@ class BunnyPHP
 
     private function route()
     {
-        $controllerName = isset($_GET['mod']) ? ucfirst($_GET['mod']) : $this->config->get('controller', 'Index');
-        $actionName = isset($_GET['action']) ? $_GET['action'] : 'index';
-        $request_url = $_SERVER['REQUEST_URI'];
-        $position = strpos($request_url, '?');
-        $request_url = ($position === false) ? $request_url : substr($request_url, 0, $position);
-        $request_url = trim($request_url, '/');
-
-        if ($request_url) {
-            if (in_array(strtolower($request_url), ['index.php', 'api.php', 'ajax.php'])) {
-                $param = [];
-            } else {
+        if ($this->mode == BunnyPHP::MODE_CLI) {
+            $controllerName = isset($_SERVER['argv'][1]) ? ucfirst($_SERVER['argv'][1]) : $this->config->get('controller', 'Index');
+            $actionName = isset($_SERVER['argv'][2]) ? $_SERVER['argv'][2] : 'index';
+            $param = array_slice($_SERVER['argv'], 3);
+        } else {
+            $controllerName = isset($_GET['mod']) ? ucfirst($_GET['mod']) : $this->config->get('controller', 'Index');
+            $actionName = isset($_GET['action']) ? $_GET['action'] : 'index';
+            $request_url = $_SERVER['REQUEST_URI'];
+            $position = strpos($request_url, '?');
+            $request_url = ($position === false) ? $request_url : substr($request_url, 0, $position);
+            $request_url = trim($request_url, '/');
+            $param = [];
+            if ($request_url && !in_array(strtolower($request_url), ['index.php', 'api.php', 'ajax.php'])) {
                 $url_array = explode('/', $request_url);
                 $url_array = array_filter($url_array);
                 if (strtolower($url_array[0]) == "api" || strtolower($url_array[0]) == "api.php") {
@@ -72,7 +77,6 @@ class BunnyPHP
                 $param = $url_array ? $url_array : [];
             }
         }
-
         $controller = $controllerName . 'Controller';
         if (!class_exists($controller)) {
             if (!class_exists('OtherController')) {
@@ -81,8 +85,8 @@ class BunnyPHP
                 $controller = 'OtherController';
             }
         }
-
-        $actionFunc = 'ac_' . $actionName . '_' . strtolower($_SERVER['REQUEST_METHOD']);
+        $request_method = isset($_SERVER['REQUEST_METHOD']) ? strtolower($_SERVER['REQUEST_METHOD']) : 'cli';
+        $actionFunc = 'ac_' . $actionName . '_' . $request_method;
         if (method_exists($controller, $actionFunc)) {
             $dispatch = new $controller($controllerName, $actionName, $this->mode);
             $this->callAction($controller, $dispatch, $actionFunc, $param);
@@ -102,27 +106,13 @@ class BunnyPHP
         try {
             $class = new ReflectionClass($controller);
             $method = $class->getMethod($action);
+            $pathValue = [];
+            $assignValue = [];
             if ($docComment = $method->getDocComment()) {
-                /**
-                 * @var $filter Filter
-                 */
-                $pattern = "#(@[a-zA-Z]+\s*[a-zA-Z0-9, ()_].*)#";
-                if (preg_match_all($pattern, $docComment, $matches, PREG_PATTERN_ORDER)) {
-                    foreach ($matches[1] as $decorate) {
-                        if (strpos($decorate, '@filter') === 0) {
-                            $filterInfo = explode(' ', trim($decorate));
-                            array_filter($filterInfo);
-                            array_shift($filterInfo);
-                            $filterName = trim(ucfirst(array_shift($filterInfo))) . 'Filter';
-                            $filter = new $filterName($this->mode);
-                            $result = $filter->doFilter($filterInfo);
-                            if ($result == Filter::STOP) {
-                                return;
-                            }
-                        }
-                    }
-                }
+                list($flag, $pathValue, $assignValue) = $this->processAnnotation($docComment, $pathParam);
+                if ($flag == Filter::STOP) return;
             }
+            call_user_func_array([$dispatch, 'assignAll'], [$assignValue]);
             if ($method->getNumberOfParameters() > 0) {
                 $params = $method->getParameters();
                 $value = [];
@@ -134,10 +124,15 @@ class BunnyPHP
                         } elseif ($type == 'string') {
                             $value[] = isset($_REQUEST[$param->getName()]) ? $_REQUEST[$param->getName()] : '';
                         } else {
-                            $value[] = new $type();
+                            if (!isset($this->container[$type])) {
+                                $this->container[$type] = new $type();
+                            }
+                            $value[] = $this->container[$type];
                         }
                     } else {
-                        $value[] = isset($_REQUEST[$param->getName()]) ? $_REQUEST[$param->getName()] : '';
+                        $p = isset($pathValue[$param->getName()]) ? $pathValue[$param->getName()] : '';
+                        $p = isset($_REQUEST[$param->getName()]) ? $_REQUEST[$param->getName()] : $p;
+                        $value[] = $p;
                     }
                 }
                 call_user_func_array([$dispatch, $action], $value);
@@ -147,6 +142,45 @@ class BunnyPHP
         } catch (ReflectionException $e) {
             call_user_func_array([$dispatch, $action], [$pathParam]);
         }
+    }
+
+    private function processAnnotation($docComment, $pathParam = [])
+    {
+        /**
+         * @var $filter Filter
+         */
+        $pattern = "#(@[a-zA-Z]+\s*[a-zA-Z0-9, ()_].*)#";
+        $pathValue = [];
+        $assignValue = [];
+        if (preg_match_all($pattern, $docComment, $matches, PREG_PATTERN_ORDER)) {
+            foreach ($matches[1] as $decorate) {
+                if (strpos($decorate, '@filter') === 0) {
+                    $filterInfo = explode(' ', trim($decorate));
+                    array_filter($filterInfo);
+                    array_shift($filterInfo);
+                    $filterName = trim(ucfirst(array_shift($filterInfo))) . 'Filter';
+                    $filter = new $filterName($this->mode);
+                    $result = $filter->doFilter($filterInfo);
+                    if ($result == Filter::STOP) {
+                        return [Filter::STOP];
+                    }
+                    $assignValue = array_merge($assignValue, $filter->getVariable());
+                } elseif (strpos($decorate, '@path') === 0) {
+                    $filterInfo = explode(' ', trim($decorate));
+                    array_filter($filterInfo);
+                    array_shift($filterInfo);
+                    if (isset($pathParam[intval($filterInfo[1])])) {
+                        $pathValue[trim($filterInfo[0])] = $pathParam[intval($filterInfo[1])];
+                    } else {
+                        if (isset($filterInfo[2])) {
+                            $pathValue[trim($filterInfo[0])] = $filterInfo[2];
+                        }
+                    }
+                }
+            }
+            return [Filter::NEXT, $pathValue, $assignValue];
+        }
+        return [Filter::NEXT];
     }
 
     public function get($key)
@@ -172,6 +206,11 @@ class BunnyPHP
     public static function getCache(): Cache
     {
         return self::$cache;
+    }
+
+    public static function getRequest(): Request
+    {
+        return self::$request;
     }
 
     private function setReporting()
@@ -235,34 +274,36 @@ class BunnyPHP
 
         $storageName = 'FileStorage';
         if ($this->config->has('storage')) {
-            $storageName = ($this->config->get(['storage', 'name'], 'File')) . 'Storage';
+            $storageName = ucfirst(($this->config->get(['storage', 'name'], 'File')) . 'Storage');
         }
         BunnyPHP::$storage = new $storageName($this->config->get('storage', []));
 
         $cacheName = 'FileCache';
         if ($this->config->has('cache')) {
-            $cacheName = ($this->config->get(['cache', 'name'], 'File')) . 'Cache';
+            $cacheName = ucfirst(($this->config->get(['cache', 'name'], 'File')) . 'Cache');
         }
         BunnyPHP::$cache = new $cacheName($this->config->get('cache', []));
+        BunnyPHP::$request = new Request();
+    }
+
+    private static function getClassType($class)
+    {
+        $i = strlen($class) - 1;
+        while ($i >= 0 && ($class[$i] < 'A' || $class[$i] > 'Z')) {
+            $i--;
+        }
+        return substr($class, $i);
     }
 
     private static function loadClass($class)
     {
         $frameworkFile = __DIR__ . '/' . $class . '.php';
-        $controllerFile = APP_PATH . 'app/controller/' . $class . '.php';
-        $modelFile = APP_PATH . 'app/model/' . $class . '.php';
-        $serviceFile = APP_PATH . 'app/service/' . $class . '.php';
-        $storageFile = APP_PATH . 'app/storage/' . $class . '.php';
+        $classType = strtolower(self::getClassType($class));
+        $classFile = APP_PATH . 'app' . '/' . $classType . '/' . $class . '.php';
         if (file_exists($frameworkFile)) {
             include $frameworkFile;
-        } elseif (file_exists($controllerFile)) {
-            include $controllerFile;
-        } elseif (file_exists($modelFile)) {
-            include $modelFile;
-        } elseif (file_exists($serviceFile)) {
-            include $serviceFile;
-        } elseif (file_exists($storageFile)) {
-            include $storageFile;
+        } elseif (file_exists($classFile)) {
+            include $classFile;
         }
     }
 }
