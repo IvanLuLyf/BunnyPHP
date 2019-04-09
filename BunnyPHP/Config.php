@@ -10,6 +10,7 @@ class Config
 {
     const MODE_CONST = 0;
     const MODE_ARRAY = 1;
+    const MODE_JSON = 2;
 
     private $configs = [];
 
@@ -55,6 +56,9 @@ class Config
     {
         if (file_exists(APP_PATH . "config/{$name}.php")) {
             return new self(require APP_PATH . "config/{$name}.php");
+        } elseif (file_exists(APP_PATH . "config/{$name}.json")) {
+            $configJSON = file_get_contents(APP_PATH . "config/{$name}.json");
+            return new self(json_decode($configJSON, true));
         } else {
             return new self();
         }
