@@ -13,6 +13,9 @@ class BunnyPHP
     const MODE_API = 1;
     const MODE_AJAX = 2;
 
+    /**
+     * @var $config Config
+     */
     protected $config;
     protected $mode = BunnyPHP::MODE_NORMAL;
 
@@ -42,30 +45,32 @@ class BunnyPHP
     {
         $controllerName = isset($_GET['mod']) ? ucfirst($_GET['mod']) : $this->config->get('controller', 'Index');
         $actionName = isset($_GET['action']) ? $_GET['action'] : 'index';
-        $param = [];
-
         $request_url = $_SERVER['REQUEST_URI'];
         $position = strpos($request_url, '?');
         $request_url = ($position === false) ? $request_url : substr($request_url, 0, $position);
         $request_url = trim($request_url, '/');
 
-        if ($request_url && strtolower($request_url) != "index.php" && $this->mode == BunnyPHP::MODE_NORMAL) {
-            $url_array = explode('/', $request_url);
-            $url_array = array_filter($url_array);
-            if (strtolower($url_array[0]) == "api") {
+        if ($request_url) {
+            if (in_array(strtolower($request_url), ['index.php', 'api.php', 'ajax.php'])) {
+                $param = [];
+            } else {
+                $url_array = explode('/', $request_url);
+                $url_array = array_filter($url_array);
+                if (strtolower($url_array[0]) == "api" || strtolower($url_array[0]) == "api.php") {
+                    array_shift($url_array);
+                    $this->mode = BunnyPHP::MODE_API;
+                } elseif (strtolower($url_array[0]) == "ajax" || strtolower($url_array[0]) == "ajax.php") {
+                    array_shift($url_array);
+                    $this->mode = BunnyPHP::MODE_AJAX;
+                } elseif (strtolower($url_array[0]) == "index.php") {
+                    array_shift($url_array);
+                }
+                $controllerName = ucfirst($url_array[0]);
                 array_shift($url_array);
-                $this->mode = BunnyPHP::MODE_API;
-            } elseif (strtolower($url_array[0]) == "ajax") {
+                $actionName = $url_array ? $url_array[0] : $actionName;
                 array_shift($url_array);
-                $this->mode = BunnyPHP::MODE_AJAX;
+                $param = $url_array ? $url_array : [];
             }
-            $controllerName = ucfirst($url_array[0]);
-            array_shift($url_array);
-            $actionName = $url_array ? $url_array[0] : $actionName;
-            array_shift($url_array);
-            $param = $url_array ? $url_array : [];
-        } elseif ($this->mode == BunnyPHP::MODE_API) {
-            $param = [];
         }
 
         $controller = $controllerName . 'Controller';
@@ -98,15 +103,19 @@ class BunnyPHP
             $class = new ReflectionClass($controller);
             $method = $class->getMethod($action);
             if ($docComment = $method->getDocComment()) {
+                /**
+                 * @var $filter Filter
+                 */
                 $pattern = "#(@[a-zA-Z]+\s*[a-zA-Z0-9, ()_].*)#";
                 if (preg_match_all($pattern, $docComment, $matches, PREG_PATTERN_ORDER)) {
                     foreach ($matches[1] as $decorate) {
                         if (strpos($decorate, '@filter') === 0) {
-                            $filters = explode(' ', trim($decorate));
-                            array_filter($filters);
-                            array_shift($filters);
-                            $filter = trim(ucfirst(array_shift($filters))) . 'Filter';
-                            $result = (new $filter($this->mode))->doFilter($filters);
+                            $filterInfo = explode(' ', trim($decorate));
+                            array_filter($filterInfo);
+                            array_shift($filterInfo);
+                            $filterName = trim(ucfirst(array_shift($filterInfo))) . 'Filter';
+                            $filter = new $filterName($this->mode);
+                            $result = $filter->doFilter($filterInfo);
                             if ($result == Filter::STOP) {
                                 return;
                             }

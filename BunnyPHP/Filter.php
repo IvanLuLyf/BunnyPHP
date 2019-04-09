@@ -18,7 +18,7 @@ class Filter
         $this->_mode = $mode;
     }
 
-    public function doFilter()
+    public function doFilter($param = [])
     {
         return self::NEXT;
     }

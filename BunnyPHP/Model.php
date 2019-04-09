@@ -91,10 +91,10 @@ class Model
         $this->_join .= " $mod join $tableName";
         $conditionArr = [];
         foreach ($condition as $k => $v) {
-            if (is_int($k)) {
-                $conditionArr[] = "{$tableName}.{$v}={$this->_table}.{$v}";
-            } elseif (is_array($v)) {
+            if (is_array($v)) {
                 $conditionArr[] = "{$tableName}.{$v[0]}={$this->_table}.{$v[1]}";
+            } else if (is_int($k)) {
+                $conditionArr[] = "{$tableName}.{$v}={$this->_table}.{$v}";
             } else {
                 $conditionArr[] = "{$tableName}.{$k}={$v}";
             }
