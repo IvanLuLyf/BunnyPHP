@@ -53,9 +53,9 @@ class Controller
         Template::render($template, $this->_variables);
     }
 
-    public function error()
+    public function error($code = 200)
     {
-        View::error($this->_variables, $this->_mode);
+        View::error($this->_variables, $this->_mode, $code);
     }
 
     public function redirect($url, $action = null, $params = [])
