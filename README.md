@@ -15,6 +15,7 @@ Project                 Root Dir
 │  ├─controller         Controller Dir
 │  ├─model              Model Dir
 │  ├─service            Service Dir
+│  ├─filter             Filter Dir
 ├─BunnyPHP              Framework Dir
 ├─cache                 Default FileCache Dir
 ├─config                Configure Dir
@@ -38,6 +39,7 @@ git clone https://github.com/IvanLuLyf/BunnyPHP.git
 
 Sample
 
+PHP Config File
 ```php
 <?php
 return [
@@ -53,8 +55,28 @@ return [
     "site_name"=>"Your Site Name",    // your site name
     "site_url"=>"YourDomain.com",     // your site domain
     "controller"=>"Index",            // default controller
-    "action"=>"index",                // default action
 ];
+```
+
+JSON Config File
+
+to use this you should prevent other from getting this file.
+
+```json
+{
+  "db":{
+    "type":"sqlite",
+    "host":"",
+    "port":"",
+    "username":"",
+    "password":"",
+    "database":"bunny.sqlite3",
+    "prefix":"tp_"
+  },
+  "site_name":"Your Site Name",
+  "site_url":"YourDomain.com",
+  "controller":"Index"
+}
 ```
 
 ## Model
