@@ -8,7 +8,7 @@
 
 class BunnyPHP
 {
-    const BUNNY_VERSION = '2.0.0';
+    const BUNNY_VERSION = '2.1.0';
     const MODE_NORMAL = 0;
     const MODE_API = 1;
     const MODE_AJAX = 2;
@@ -165,15 +165,18 @@ class BunnyPHP
                         return [Filter::STOP];
                     }
                     $assignValue = array_merge($assignValue, $filter->getVariable());
-                } elseif (strpos($decorate, '@path') === 0) {
-                    $filterInfo = explode(' ', trim($decorate));
-                    array_filter($filterInfo);
-                    array_shift($filterInfo);
-                    if (isset($pathParam[intval($filterInfo[1])])) {
-                        $pathValue[trim($filterInfo[0])] = $pathParam[intval($filterInfo[1])];
-                    } else {
-                        if (isset($filterInfo[2])) {
-                            $pathValue[trim($filterInfo[0])] = $filterInfo[2];
+                } elseif (strpos($decorate, '@param') === 0) {
+                    $patName = '/\$([\w]+)\s*/';
+                    $patPath = '/path\(([0-9])(,(.*))?\)/';
+                    if (preg_match($patName, $decorate, $matName)) {
+                        if (preg_match($patPath, $decorate, $matPath)) {
+                            if (isset($pathParam[intval($matPath[1])])) {
+                                $pathValue[trim($matName[1])] = $pathParam[intval($matPath[1])];
+                            } else {
+                                if (isset($matPath[3])) {
+                                    $pathValue[trim($matName[1])] = $matPath[3];
+                                }
+                            }
                         }
                     }
                 }

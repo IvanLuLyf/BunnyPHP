@@ -71,8 +71,6 @@ class Config
             foreach ($configs as $k => $v) {
                 $config_text .= "define(\"{$k}\",\"{$v}\");\r\n";
             }
-        } elseif ($type == self::MODE_JSON) {
-            $config_text = json_encode($configs);
         } else {
             $config_text .= "return [\r\n";
             foreach ($configs as $k => $v) {
