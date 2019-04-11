@@ -18,7 +18,7 @@ Project                 Root Dir
 │  ├─filter             Filter Dir
 ├─BunnyPHP              Framework Dir
 ├─cache                 Default FileCache Dir
-├─config                Configure Dir
+├─config                Default Configure Dir
 │  ├─config.php         Default Configure File
 ├─static                Static Files Dir
 ├─template              Template Files Dir
@@ -35,11 +35,39 @@ composer create-project ivanlulyf/bunnyphp project --no-dev
 git clone https://github.com/IvanLuLyf/BunnyPHP.git
 ```
 
+## Requirement
+
+* PHP >= 7.0
+* Database : MySQL SQLite or PostgreSQL
+
+## Server Setting
+
+> Apache
+
+Add following content to ```.htacess``` file.
+
+```apacheconfig
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+    RewriteCond %{REQUEST_FILENAME} !-f
+    RewriteCond %{REQUEST_FILENAME} !-d
+    RewriteRule . index.php
+</IfModule>
+```
+
+> Nginx
+
+```nginx
+location / {
+    try_files $uri $uri/ /index.php$is_args$args;
+}
+```
+
 ## Configure
 
 Sample
 
-PHP Config File
+> PHP Config File
 ```php
 <?php
 return [
@@ -58,7 +86,7 @@ return [
 ];
 ```
 
-JSON Config File
+> JSON Config File
 
 to use this you should prevent other from getting this file.
 
@@ -81,28 +109,119 @@ to use this you should prevent other from getting this file.
 
 ## Model
 
-Sample
+Every Model **must extend** ```Model```
+
+> Sample
 
 ```php
-class UserModel extends Model
+class MessageModel extends Model
 {
     protected $_column = [
-        'uid' => ['integer', 'not null'],
-        'username' => ['varchar(16)', 'not null'],
-        'password' => ['varchar(32)', 'not null']
+        'id' => ['integer', 'not null'],
+        'message' => ['text', 'not null'],
+        'from' => ['varchar(32)', 'not null']
     ];
 
-    protected $_pk = ['uid']; // Primary Key
+    protected $_pk = ['id']; // Primary Key
 
-    protected $_ai = 'uid';   // Auto Increment
+    protected $_ai = 'id';   // Auto Increment
 }
 ```
 
-Use ```UserModel::create()``` to generate a table
+Use ```MessageModel::create()``` to generate a table
 
-## Controller
+> Use chained calls to fetch data
 
-Request```/ctrl/act``` will be handle by ```/app/CtrlController.php```.It will call ```CtrlController::ac_act()``` function by defalut.
+```php
+$messages = (new MessageModel())->where('from = :f',['f'=>$from])
+    ->order('id desc')
+    ->limit($size,$start)
+    ->fetchAll(['message']);
+```
 
-If there has ```ac_act_get```,```ac_act_post```, Request```POST /ctrl/act/```will handle by ```ac_act_post```.
+> Add data
+
+```php
+$id = (new MessageModel())->add(['message'=>$message,'from'=>$from]);
+```
+
+> Update data
+
+```php
+$affect_rows = (new MessageModel())->where('from = :f',['f'=>$from])
+    ->update(['message'=>'new message']);
+```
+
+> Delete data
+
+```php
+$affect_rows = (new MessageModel())->where('from = :f',['f'=>$from])->delete();
+```
+
+## Controller and Router
+
+Every Controller **must extend** ```Controller```
+
+> Sample
+
+```php
+class MessageController extends Controller
+{
+    public function ac_init_cli()
+    {
+        MessageModel::create();    //Create Table 'prefix_message'
+        $this->assign('response', 'Table Created')->render();
+    }
+
+    public function ac_list(MessageModel $model)
+    {
+        $messages = $model->fetchAll();
+        $this->assign('messages', $messages)->render('list.html');
+    }
+
+    public function ac_message_get($id, MessageModel $model)
+    {
+        $message = $model->getMessage($id);
+        $this->assign('message', $message)->render('view.html');
+    }
+
+    public function ac_message_post($message, MessageModel $model)
+    {
+        $id = $model->addMessage($message);
+        $this->redirect('test', 'message', ['id' => $id]);
+    }
+}
+```
+
+> Cli
+
+In the terminal, enter ```php cli message init``` and the request will be responded by ```MessageController``` if it exists.
+
+If there is a function ```ac_init_cli``` in ```MessageController```, the request will be responded by the function.
+ 
+If it does not exist, it will be responded by ```ac_init```.
+
+If they do not exist, an error will be reported.
+
+> Web
+
+In Browser, the request ```/message/list``` will be responded by ```MessageController::ac_list``` if it exists.
+
+What's more. If the function of a particular request method exists,such as ```ac_message_get```, ```ac_message_post```, or ```ac_message_put```, it will be called first.
+
+If it does not exist, it will be responded by ```ac_message```.
+
+If they do not exist, an error will be reported.
+
+> API
+
+The API Request start with ```/api/```,such as ```/api/message/list```.
+
+It will be displayed in JSON format.
+
+> AJAX
+
+The API Request start with ```/ajax/```,such as ```/ajax/message/list```.
+
+It will be displayed in JSON format.
 
