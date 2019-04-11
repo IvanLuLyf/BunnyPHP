@@ -37,7 +37,7 @@ class Model
         $vars = get_class_vars(get_called_class());
         $pk = isset($vars['_pk']) ? $vars['_pk'] : [];
         $ai = isset($vars['_ai']) ? $vars['_ai'] : '';
-        Database::getInstance()->createTable($table, $vars['_column'], $pk, $ai);
+        return Database::getInstance()->createTable($table, $vars['_column'], $pk, $ai);
     }
 
     public static function name()

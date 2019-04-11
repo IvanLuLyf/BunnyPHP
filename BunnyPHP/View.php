@@ -22,9 +22,9 @@ class View
         } else {
             header("Content-Type: text/html; charset=UTF-8");
             extract($context);
-            if (file_exists(APP_PATH . "template/{$view}")) {
+            if (!empty($view) && file_exists(APP_PATH . "template/{$view}")) {
                 include APP_PATH . "template/{$view}";
-            } else if ($view == '' || $view == null) {
+            } else if (empty($view)) {
                 echo json_encode($context);
             } else {
                 self::error(['ret' => '-3', 'status' => 'template not exists', 'tp_error_msg' => "模板${view}不存在"]);
