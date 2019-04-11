@@ -6,6 +6,8 @@ BunnyPHP is a lightweight PHP MVC Framework.
 [![Total Downloads](https://img.shields.io/packagist/dt/ivanlulyf/bunnyphp.svg?color=brightgreen)](https://packagist.org/packages/ivanlulyf/bunnyphp)
 ![License](https://img.shields.io/packagist/l/ivanlulyf/bunnyphp.svg?color=blue)
 
+[中文](README_CN.md)
+
 ## Directory Structure
 ```
 Project                 Root Dir
