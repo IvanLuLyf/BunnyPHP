@@ -8,7 +8,7 @@
 
 class BunnyPHP
 {
-    const BUNNY_VERSION = '2.1.1';
+    const BUNNY_VERSION = '2.1.2';
     const MODE_NORMAL = 0;
     const MODE_API = 1;
     const MODE_AJAX = 2;
