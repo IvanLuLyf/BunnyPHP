@@ -1,6 +1,10 @@
 {
   "name": "ivanlulyf/bunnyphp",
   "description": "a lightweight PHP MVC Framework",
+  "keywords": [
+    "framework",
+    "mvc"
+  ],
   "minimum-stability": "stable",
   "license": "MIT",
   "authors": [
@@ -8,5 +12,8 @@
       "name": "Ivan Lu",
       "email": "me@ivanlu.cn"
     }
-  ]
+  ],
+  "require": {
+    "php": "^7.0.0"
+  }
 }
