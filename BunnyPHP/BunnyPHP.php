@@ -8,7 +8,7 @@
 
 class BunnyPHP
 {
-    const BUNNY_VERSION = '2.1.2';
+    const BUNNY_VERSION = '2.1.3';
     const MODE_NORMAL = 0;
     const MODE_API = 1;
     const MODE_AJAX = 2;
@@ -36,7 +36,7 @@ class BunnyPHP
 
     public function run()
     {
-        spl_autoload_register(array($this, 'loadClass'));
+        spl_autoload_register([$this, 'loadClass']);
         $this->setReporting();
         $this->removeMagicQuotes();
         $this->unregisterGlobals();
@@ -47,12 +47,12 @@ class BunnyPHP
     private function route()
     {
         if ($this->mode == BunnyPHP::MODE_CLI) {
-            $controllerName = isset($_SERVER['argv'][1]) ? ucfirst($_SERVER['argv'][1]) : $this->config->get('controller', 'Index');
-            $actionName = isset($_SERVER['argv'][2]) ? $_SERVER['argv'][2] : 'index';
+            $controllerName = !empty($_SERVER['argv'][1]) ? ucfirst($_SERVER['argv'][1]) : $this->config->get('controller', 'Index');
+            $actionName = !empty($_SERVER['argv'][2]) ? $_SERVER['argv'][2] : 'index';
             $param = array_slice($_SERVER['argv'], 3);
         } else {
-            $controllerName = isset($_GET['mod']) ? ucfirst($_GET['mod']) : $this->config->get('controller', 'Index');
-            $actionName = isset($_GET['action']) ? $_GET['action'] : 'index';
+            $controllerName = !empty($_GET['mod']) ? ucfirst($_GET['mod']) : $this->config->get('controller', 'Index');
+            $actionName = !empty($_GET['action']) ? $_GET['action'] : 'index';
             $request_url = $_SERVER['REQUEST_URI'];
             $position = strpos($request_url, '?');
             $request_url = ($position === false) ? $request_url : substr($request_url, 0, $position);
@@ -118,11 +118,27 @@ class BunnyPHP
                 $value = [];
                 foreach ($params as $param) {
                     $type = '' . $param->getType();
-                    if ($type != '') {
+                    $name = '' . $param->getName();
+                    if ($param->isOptional()) {
+                        $defVal = $param->getDefaultValue();
+                    } else {
+                        $defVal = '';
+                    }
+                    if (!empty($type)) {
                         if ($type == 'array') {
                             $value[] = $pathParam;
                         } elseif ($type == 'string') {
-                            $value[] = isset($_REQUEST[$param->getName()]) ? $_REQUEST[$param->getName()] : '';
+                            $p = isset($pathValue[$name]) ? $pathValue[$name] : $defVal;
+                            $p = isset($_REQUEST[$name]) ? $_REQUEST[$name] : $p;
+                            $value[] = $p;
+                        } elseif ($type == 'int') {
+                            $p = isset($pathValue[$name]) ? intval($pathValue[$name]) : $defVal;
+                            $p = isset($_REQUEST[$name]) ? intval($_REQUEST[$name]) : $p;
+                            $value[] = $p;
+                        } elseif ($type == 'float') {
+                            $p = isset($pathValue[$name]) ? floatval($pathValue[$name]) : $defVal;
+                            $p = isset($_REQUEST[$name]) ? floatval($_REQUEST[$name]) : $p;
+                            $value[] = $p;
                         } else {
                             if (!isset($this->container[$type])) {
                                 $this->container[$type] = new $type();
@@ -130,8 +146,8 @@ class BunnyPHP
                             $value[] = $this->container[$type];
                         }
                     } else {
-                        $p = isset($pathValue[$param->getName()]) ? $pathValue[$param->getName()] : '';
-                        $p = isset($_REQUEST[$param->getName()]) ? $_REQUEST[$param->getName()] : $p;
+                        $p = isset($pathValue[$name]) ? $pathValue[$name] : $defVal;
+                        $p = isset($_REQUEST[$name]) ? $_REQUEST[$name] : $p;
                         $value[] = $p;
                     }
                 }
@@ -230,7 +246,7 @@ class BunnyPHP
 
     private function stripSlashesDeep($value)
     {
-        $value = is_array($value) ? array_map(array($this, 'stripSlashesDeep'), $value) : stripslashes($value);
+        $value = is_array($value) ? array_map([$this, 'stripSlashesDeep'], $value) : stripslashes($value);
         return $value;
     }
 
