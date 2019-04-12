@@ -16,10 +16,10 @@ class Model
     private $_column = [];
     private $_has_where = false;
 
-    public function __construct($name = "")
+    public function __construct($name = '')
     {
         if (!$this->_table) {
-            if (isset($name) && $name != "") {
+            if (!empty($name)) {
                 $this->_name = $name;
             } else {
                 $this->_name = substr(get_class($this), 0, -5);
@@ -129,11 +129,10 @@ class Model
         $selection = $columns;
         if ($this->_join != '') {
             if ($columns == '*') {
-                $selection = $this->_table . '.*';
-                $selection .= ',' . implode(',', $this->_column);
+                $selection = $this->_table . '.* ,' . implode(',', $this->_column);
             } elseif (is_array($columns)) {
                 foreach ($columns as &$column) {
-                    $column = $this->_table . $column;
+                    $column = $this->_table . '.' . $column;
                 }
                 $selection = implode(',', array_merge($columns, $this->_column));
             } else {
@@ -158,11 +157,10 @@ class Model
         $selection = $columns;
         if ($this->_join != '') {
             if ($columns == '*') {
-                $selection = $this->_table . '.*';
-                $selection .= ',' . implode(',', $this->_column);
+                $selection = $this->_table . '.* ,' . implode(',', $this->_column);
             } elseif (is_array($columns)) {
                 foreach ($columns as &$column) {
-                    $column = $this->_table . $column;
+                    $column = $this->_table . '.' . $column;
                 }
                 $selection = implode(',', array_merge($columns, $this->_column));
             } else {

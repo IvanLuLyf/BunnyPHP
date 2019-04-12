@@ -13,7 +13,7 @@ class Database
 
     private function __construct()
     {
-        $db_type = strtolower(constant("DB_TYPE"));
+        $db_type = strtolower(DB_TYPE);
         if ($db_type == 'mysql') {
             $dsn = "mysql:host=" . DB_HOST . ";port=" . DB_PORT . ";dbname=" . DB_NAME . ";charset=utf8mb4";
         } elseif ($db_type == 'sqlite') {
@@ -21,8 +21,10 @@ class Database
         } elseif ($db_type == 'pgsql') {
             $dsn = "pgsql:host=" . DB_HOST . ";port=" . DB_PORT . ";dbname=" . DB_NAME . "";
         }
-        $option = array(PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC);
-        $this->conn = new PDO($dsn, DB_USER, DB_PASS, $option);
+        if (!empty($dsn)) {
+            $option = array(PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC);
+            $this->conn = new PDO($dsn, DB_USER, DB_PASS, $option);
+        }
     }
 
     public static function getInstance(): Database
@@ -118,7 +120,7 @@ class Database
 
     public function createTable($tableName, $columns = [], $primary = [], $a_i = '')
     {
-        $db_type = strtolower(constant("DB_TYPE"));
+        $db_type = strtolower(DB_TYPE);
         if ($db_type == 'mysql') {
             $columnsData = [];
             foreach ($columns as $name => $info) {
