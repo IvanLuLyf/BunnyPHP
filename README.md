@@ -160,6 +160,33 @@ $affect_rows = (new MessageModel())->where('from = :f',['f'=>$from])
 $affect_rows = (new MessageModel())->where('from = :f',['f'=>$from])->delete();
 ```
 
+> Table Join
+
+```php
+join(ModelClass,[Join Condition(optianal)],[Table Field (optional)],[Join Method])
+```
+
+Join Condition Format
+
+|Format Type|Sample|Description|
+|----|----|----|
+|String|```['id',]```|JoinedTable.id=CurrentTable.id|
+|Array|```[['id','msg_id'],]```|JoinedTable.id=CurrentTable.msg_id|
+|Key-value Pair|```['id'=>1]```|JoinedTable.id = 1|
+
+Sample
+
+```php
+$hellos = $this->join(TestModel::class, [['id', 'msg_id']], ['message'])
+    ->fetchAll(['content', 'id']);
+```
+
+Generated SQL(table prefix is tp_)
+
+```sql
+select tp_hello.content,tp_hello.id,tp_test.message from tp_hello left join tp_test on (tp_test.id=tp_hello.msg_id); 
+```
+
 ## Controller and Router
 
 Every Controller **must extend** ```Controller```
@@ -171,7 +198,7 @@ class MessageController extends Controller
 {
     public function ac_init_cli()
     {
-        MessageModel::create();    //Create Table 'prefix_message'
+        MessageModel::create();
         $this->assign('response', 'Table Created')->render();
     }
 
@@ -197,33 +224,37 @@ class MessageController extends Controller
 
 > Cli
 
-In the terminal, enter ```php cli message init``` and the request will be responded by ```MessageController``` if it exists.
+Enter ```php cli [mod] [act]``` in the console. If there is ```[Mod]Controller```, the request will be handle by this class.
 
-If there is a function ```ac_init_cli``` in ```MessageController```, the request will be responded by the function.
- 
-If it does not exist, it will be responded by ```ac_init```.
+For example, ```php cli message init``` will handle by ```MessageController```.
 
-If they do not exist, an error will be reported.
+If there is a function like ```ac_[act]_cli``` in the controller class, the request is processed by this function. If it does not exist, it will look for the function ```ac_[act]``` to handle it. If they do not exist, an error is reported.
+
+For example, ```php cli message init``` will look for the ```ac_init_cli``` response first.
 
 > Web
 
-In Browser, the request ```/message/list``` will be responded by ```MessageController::ac_list``` if it exists.
+In the browser, the request ```/[mod]/[act]``` will be responded to by the function in ```[Mod]Controller```.
 
-What's more. If the function of a particular request method exists,such as ```ac_message_get```, ```ac_message_post```, or ```ac_message_put```, it will be called first.
+In particular, if the request does not contain ```[act]```, the value of ```[act]``` is ```index```.
 
-If it does not exist, it will be responded by ```ac_message```.
+If the function name of the specified request method like ```ac_[act]_[method]``` exists in the controller class, for example, ```ac_message_get```, ```ac_message_post``` or ``` ac_message_put```, the request will be processed first by these functions.
+
+If these functions do not exist, they will be handled by ```ac_[act]```.
+
+If there is no function like ```ac_[act]``` in the controller class, but there has the ```other``` function, the request will be handled by the ```other``` function, and you can use ```$this->getAction()``` to get the contents of ```[act]```.
 
 If they do not exist, an error will be reported.
 
 > API
 
-The API Request start with ```/api/```,such as ```/api/message/list```.
+API requests start with ```/api/```, which is like ```/api/[mod]/[act]```.
 
 It will be displayed in JSON format.
 
 > AJAX
 
-The API Request start with ```/ajax/```,such as ```/ajax/message/list```.
+API requests start with ```/ajax/```, which is like ```/ajax/[mod]/[act]```.
 
 It will be displayed in JSON format.
 
