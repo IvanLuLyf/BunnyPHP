@@ -12,7 +12,7 @@ class View
     {
         if ($mode == BunnyPHP::MODE_API or $mode == BunnyPHP::MODE_AJAX) {
             header("Content-Type: application/json; charset=UTF-8");
-            echo json_encode($context);
+            echo json_encode($context, JSON_NUMERIC_CHECK);
         } elseif ($mode == BunnyPHP::MODE_CLI) {
             if (isset($context['response'])) {
                 echo $context['response'];
@@ -25,7 +25,7 @@ class View
             if (!empty($view) && file_exists(APP_PATH . "template/{$view}")) {
                 include APP_PATH . "template/{$view}";
             } else if (empty($view)) {
-                echo json_encode($context);
+                echo json_encode($context, JSON_NUMERIC_CHECK);
             } else {
                 self::error(['ret' => '-3', 'status' => 'template not exists', 'tp_error_msg' => "模板${view}不存在"]);
             }
@@ -39,7 +39,7 @@ class View
         }
         if ($mode == BunnyPHP::MODE_API or $mode == BunnyPHP::MODE_AJAX) {
             header("Content-Type: application/json; charset=UTF-8");
-            echo json_encode($context);
+            echo json_encode($context, JSON_NUMERIC_CHECK);
         } else {
             header("Content-Type: text/html; charset=UTF-8");
             if (file_exists("template/error.html")) {
