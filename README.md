@@ -1,5 +1,7 @@
 # BunnyPHP
 
+![BunnyPHP](static/img/logo.png?raw=true)
+
 BunnyPHP is a lightweight PHP MVC Framework.
 
 [![Latest Stable Version](https://img.shields.io/packagist/v/ivanlulyf/bunnyphp.svg?color=orange)](https://packagist.org/packages/ivanlulyf/bunnyphp)

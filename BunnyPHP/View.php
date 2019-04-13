@@ -25,7 +25,9 @@ class View
             if (!empty($view) && file_exists(APP_PATH . "template/{$view}")) {
                 include APP_PATH . "template/{$view}";
             } else if (empty($view)) {
-                echo json_encode($context, JSON_NUMERIC_CHECK);
+                if (isset($context['response'])) {
+                    echo $context['response'];
+                }
             } else {
                 self::error(['ret' => '-3', 'status' => 'template not exists', 'tp_error_msg' => "模板${view}不存在"]);
             }
