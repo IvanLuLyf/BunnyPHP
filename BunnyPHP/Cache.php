@@ -8,11 +8,11 @@
 
 interface Cache
 {
-    public function get($key);
+    public function get($key, $expire = 0);
 
-    public function has($key);
+    public function has($key, $expire = 0);
 
-    public function set($key, $value);
+    public function set($key, $value, $expire = 0);
 
     public function del($key);
 }
