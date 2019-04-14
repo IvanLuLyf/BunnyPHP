@@ -24,7 +24,7 @@ class FileCache implements Cache
     {
         $filename = $this->cacheDir . md5($key);
         if (file_exists($filename)) {
-            if (filemtime($filename) + $expire > time()) {
+            if ((filemtime($filename) + $expire > time()) || $expire === 0) {
                 return file_get_contents($this->cacheDir . md5($key));
             } else {
                 unlink($filename);
@@ -38,7 +38,7 @@ class FileCache implements Cache
     public function has($key, $expire = 0)
     {
         $filename = $this->cacheDir . md5($key);
-        return file_exists($filename) && (filemtime($filename) + $expire > time());
+        return file_exists($filename) && ((filemtime($filename) + $expire > time()) || $expire === 0);
     }
 
     public function set($key, $value, $expire = 0)
@@ -48,6 +48,9 @@ class FileCache implements Cache
 
     public function del($key)
     {
-        unlink($this->cacheDir . md5($key));
+        $filename = $this->cacheDir . md5($key);
+        if (file_exists($filename)) {
+            unlink($filename);
+        }
     }
 }
