@@ -36,12 +36,11 @@ class Template
 
     public function compile($output = '')
     {
-        if ($output == '') {
-            $cacheDir = APP_PATH . 'cache/template/';
-            if (!is_dir($cacheDir)) {
-                mkdir($cacheDir, 0555, true);
-            }
-            $output = APP_PATH . $cacheDir . $this->template;
+        $cacheFile = $cacheDir = APP_PATH . 'cache/template/' . $this->template;
+        $output = empty($output) ? $cacheFile : $output;
+        $cacheDir = dirname($output);
+        if (!is_dir($cacheDir)) {
+            mkdir($cacheDir, 0555, true);
         }
         $this->parse_var();
         $this->parse_if();
