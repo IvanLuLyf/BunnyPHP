@@ -8,7 +8,7 @@
 
 class BunnyPHP
 {
-    const BUNNY_VERSION = '2.1.5';
+    const BUNNY_VERSION = '2.1.6';
     const MODE_NORMAL = 0;
     const MODE_API = 1;
     const MODE_AJAX = 2;
@@ -24,6 +24,7 @@ class BunnyPHP
     private static $storage;
     private static $cache;
     private static $request;
+    private static $logger;
 
     private $variable = [];
     private $container = [];
@@ -232,6 +233,11 @@ class BunnyPHP
         return self::$request;
     }
 
+    public static function getLogger(): Logger
+    {
+        return self::$logger;
+    }
+
     private function setReporting()
     {
         if (APP_DEBUG === true) {
@@ -302,6 +308,13 @@ class BunnyPHP
             $cacheName = ucfirst(($this->config->get(['cache', 'name'], 'File')) . 'Cache');
         }
         BunnyPHP::$cache = new $cacheName($this->config->get('cache', []));
+
+        $loggerName = 'FileLogger';
+        if ($this->config->has('logger')) {
+            $loggerName = ucfirst(($this->config->get(['logger', 'name'], 'File')) . 'Logger');
+        }
+        BunnyPHP::$logger = new $loggerName($this->config->get('logger', []));
+
         BunnyPHP::$request = new Request();
     }
 

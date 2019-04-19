@@ -62,20 +62,4 @@ class Controller
     {
         View::redirect($url, $action, $params);
     }
-
-    public function service($serviceName): Service
-    {
-        $service = ucfirst($serviceName) . 'Service';
-        return new $service;
-    }
-
-    public function storage(): Storage
-    {
-        return BunnyPHP::getStorage();
-    }
-
-    public function cache(): Cache
-    {
-        return BunnyPHP::getCache();
-    }
 }
