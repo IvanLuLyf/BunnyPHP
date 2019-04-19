@@ -41,6 +41,8 @@ class FileLogger implements Logger
 
     public function debug($message, array $context = [])
     {
-        error_log($this->makeMessage($message, $context, "DEBUG"), 3, $this->filename);
+        if (APP_DEBUG === true) {
+            error_log($this->makeMessage($message, $context, "DEBUG"), 3, $this->filename);
+        }
     }
 }
