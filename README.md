@@ -1,5 +1,3 @@
-# BunnyPHP
-
 <div align="center">
 
 ![BunnyPHP](static/img/logo.png?raw=true)
@@ -12,7 +10,7 @@ BunnyPHP is a lightweight PHP MVC Framework.
 ![License](https://img.shields.io/packagist/l/ivanlulyf/bunnyphp.svg?color=blue)
 </div>
 
-[中文](README_CN.md)
+English|[中文](README_CN.md)
 
 ## Directory Structure
 ```

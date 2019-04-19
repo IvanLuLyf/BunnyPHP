@@ -1,5 +1,3 @@
-# BunnyPHP
-
 <div align="center">
 
 ![BunnyPHP](static/img/logo.png?raw=true)
@@ -11,6 +9,8 @@ BunnyPHP是一个轻量的PHP MVC框架.
 ![GitHub code size in bytes](https://img.shields.io/github/languages/code-size/ivanlulyf/bunnyphp.svg?color=yellow)
 ![License](https://img.shields.io/packagist/l/ivanlulyf/bunnyphp.svg?color=blue)
 </div>
+
+[English](README.md)|中文
 
 ## 目录结构
 ```
