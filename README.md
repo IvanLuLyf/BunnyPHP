@@ -89,6 +89,16 @@ return [
         "database"=>"sns.sqlite3",    // database name
         "prefix"=>"tp_",              // table prefix
     ],
+    "storage" => [                    // storage config, optional
+        "name" => "file",             // storage name,will load [name]Storage
+    ],
+    "cache" => [                      // cache config, optional
+        "name" => "file",             // cache name,will load [name]Cache
+    ],
+    "logger" => [                     // logger config, optional
+        "name" => "file",             // cache name,will load [name]Logger
+        "filename" => "log.log",      // log file path,if using FileLogger
+    ],
     "site_name"=>"Your Site Name",    // your site name
     "site_url"=>"YourDomain.com",     // your site domain
     "controller"=>"Index",            // default controller
@@ -109,6 +119,16 @@ to use this you should prevent other from getting this file.
     "password":"",
     "database":"bunny.sqlite3",
     "prefix":"tp_"
+  },
+  "storage":{
+    "name":"file"
+  },
+  "cache":{
+    "name":"file"
+  },
+  "logger":{
+    "name":"file",
+    "filename":"log.log"
   },
   "site_name":"Your Site Name",
   "site_url":"YourDomain.com",

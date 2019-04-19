@@ -89,6 +89,16 @@ return [
         "database"=>"sns.sqlite3",    // 数据库名
         "prefix"=>"tp_",              // 数据表前缀
     ],
+    "storage" => [                    // 存储配置, 可选
+        "name" => "file",             // 存储类名字,会加载[名字]Storage
+    ],
+    "cache" => [                      // 缓存配置, 可选
+        "name" => "file",             // 缓存类名字,会加载[名字]Cache
+    ],
+    "logger" => [                     // 日志配置, 可选
+        "name" => "file",             // 日志类名字,会加载[名字]Logger
+        "filename" => "log.log",      // 日志文件路径,如果使用FileLogger
+    ],
     "site_name"=>"Your Site Name",    // 站点名称
     "site_url"=>"YourDomain.com",     // 站点域名
     "controller"=>"Index",            // 默认加载的控制器
@@ -109,6 +119,16 @@ return [
     "password":"",
     "database":"bunny.sqlite3",
     "prefix":"tp_"
+  },
+  "storage":{
+    "name":"file"
+  },
+  "cache":{
+    "name":"file"
+  },
+  "logger":{
+    "name":"file",
+    "filename":"log.log"
   },
   "site_name":"Your Site Name",
   "site_url":"YourDomain.com",
