@@ -6,8 +6,11 @@ BunnyPHP是一个轻量的PHP MVC框架.
 
 [![Latest Stable Version](https://img.shields.io/packagist/v/ivanlulyf/bunnyphp.svg?color=orange)](https://packagist.org/packages/ivanlulyf/bunnyphp)
 [![Total Downloads](https://img.shields.io/packagist/dt/ivanlulyf/bunnyphp.svg?color=brightgreen)](https://packagist.org/packages/ivanlulyf/bunnyphp)
-![GitHub code size in bytes](https://img.shields.io/github/languages/code-size/ivanlulyf/bunnyphp.svg?color=yellow)
 ![License](https://img.shields.io/packagist/l/ivanlulyf/bunnyphp.svg?color=blue)
+
+![GitHub code size in bytes](https://img.shields.io/github/languages/code-size/ivanlulyf/bunnyphp.svg?color=yellow)
+[![GitHub stars](https://img.shields.io/github/stars/ivanlulyf/bunnyphp.svg?style=social)](https://github.com/IvanLuLyf/BunnyPHP)
+
 </div>
 
 [English](README.md)|中文
