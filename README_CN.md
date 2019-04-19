@@ -1,12 +1,15 @@
 # BunnyPHP
 
-![BunnyPHP](static/img/logo.png?raw=true)
+<img align="center" src="https://raw.githubusercontent.com/IvanLuLyf/BunnyPHP/master/static/img/logo.png">
 
+<div align="center">
 BunnyPHP是一个轻量的PHP MVC框架.
 
 [![Latest Stable Version](https://img.shields.io/packagist/v/ivanlulyf/bunnyphp.svg?color=orange)](https://packagist.org/packages/ivanlulyf/bunnyphp)
 [![Total Downloads](https://img.shields.io/packagist/dt/ivanlulyf/bunnyphp.svg?color=brightgreen)](https://packagist.org/packages/ivanlulyf/bunnyphp)
+![GitHub code size in bytes](https://img.shields.io/github/languages/code-size/ivanlulyf/bunnyphp.svg?color=yellow)
 ![License](https://img.shields.io/packagist/l/ivanlulyf/bunnyphp.svg?color=blue)
+</div>
 
 ## 目录结构
 ```
@@ -257,3 +260,75 @@ AJAX```/ajax/```开头,例如```/ajax/[mod]/[act]```.并以JSON格式返回数�
 > 优先级
 
 ```ac_[act]_[method]  >  ac_[act]  >  other```
+
+> 依赖注入
+
+在调用控制器的Action函数时,框架会自动注入参数.
+
+例如
+
+```php
+public function ac_test(UserModel $userModel,string $name,int $id=1){
+
+}
+```
+
+在此样例中$userModel变量会自动获取一个new UserModel()实例.$name会获取```$_REQUEST['name']```的值,如果没有设置```$_REQUEST['name']```且未设置缺省值,则返回```''```.$id会获取```$_REQUEST['id']```的值,如果没有设置则获取缺省值```1```.
+
+特别的,如果函数参数没有指定变量类型,也会以string类型自动获取$_REQUEST的值.
+
+> 变量输出
+
+对于要输出的变量,需要调用```assign($name,$value)```或者```assignAll($dataArray)```.然后调用```render([HTML页面])```,```error()```或者```renderTemplate([HTML模板])```渲染结果页面.
+
+### 注解
+
+控制器的Action函数支持使用注解
+
+> @param注解
+
+如果在@param注解里面有```path(postion)```或者```path(position,default)```.会让参数得到获取Path变量的能力.
+
+例如:
+
+```php
+class TestController{
+    /**
+     * @param $name string path(0,Test)
+     * @param $page integer path(1,1)
+     */
+    public function ac_test($page, $name){
+    
+    }
+}
+```
+
+在请求```/test/test/Bunny/2```中,```$name```变量会获取path(0)的值即```'Bunny'``` ,```$page```变量会获取path(1)的值```2```.
+
+在请求```/test/test/Bunny```中,```$name```变量会获取path(0)的值即```'Bunny'``` ,```$page```变量会获取path(1)的缺省值```1```.
+
+在请求```/test/test```中,```$name```变量会获取path(0)的缺省值即```'Test'``` ,```$page```变量会获取path(1)的缺省值```1```.
+
+特别的如果同时存在变量```$_REQUEST['name']```和path变量的值存在,最终值为```$_REQUEST```的值.
+
+例如,请求```/test/test/Bunny?name=PHP```,最终```$name```获取的值为```'PHP'```.
+
+> @filter注解
+
+如果函数内定义了@filter注解,会先调用对应过滤器的```doFilter```函数,再执行控制器的Action函数.
+
+例如
+
+```php
+class TestController{
+    /**
+     * @filter test
+     * @filter hello
+     */
+    public function ac_test(){
+    
+    }
+}
+```
+
+会先调用```TestFilter```的```doFilter```函数.如果返回值是```Filter::NEXT```则执行下一个过滤器,在例子中是```HelloFilter```.如果函数返回值是```Filter::STOP```则停止执行剩余Filter和Action函数.

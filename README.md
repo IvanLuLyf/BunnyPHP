@@ -1,12 +1,15 @@
 # BunnyPHP
 
-![BunnyPHP](static/img/logo.png?raw=true)
+<img align="center" src="https://raw.githubusercontent.com/IvanLuLyf/BunnyPHP/master/static/img/logo.png">
 
+<div align="center">
 BunnyPHP is a lightweight PHP MVC Framework.
 
 [![Latest Stable Version](https://img.shields.io/packagist/v/ivanlulyf/bunnyphp.svg?color=orange)](https://packagist.org/packages/ivanlulyf/bunnyphp)
 [![Total Downloads](https://img.shields.io/packagist/dt/ivanlulyf/bunnyphp.svg?color=brightgreen)](https://packagist.org/packages/ivanlulyf/bunnyphp)
+![GitHub code size in bytes](https://img.shields.io/github/languages/code-size/ivanlulyf/bunnyphp.svg?color=yellow)
 ![License](https://img.shields.io/packagist/l/ivanlulyf/bunnyphp.svg?color=blue)
+</div>
 
 [中文](README_CN.md)
 
@@ -260,3 +263,78 @@ API requests start with ```/ajax/```, which is like ```/ajax/[mod]/[act]```.
 
 It will be displayed in JSON format.
 
+> Priority
+
+```ac_[act]_[method]  >  ac_[act]  >  other```
+
+> Dependency Injection
+
+The framework automatically injects parameters when calling the Controller's Action function.
+
+For Example
+
+```php
+public function ac_test(UserModel $userModel,string $name,int $id=1){
+
+}
+```
+
+In this example, the $userModel variable will automatically get a ```new UserModel()``` instance. ```$name``` will get the value of ```$_REQUEST['name']```, if ```$_REQUEST['name']``` is not set and the default value is not set, then return ```''```.```$id``` will get the value of ```$_REQUEST['id']```, if not set, get the default value ```1```.
+
+In particular, if the function parameter does not specify a variable type, the value of ```$_REQUEST``` is automatically obtained as a string type.
+
+> Variable output
+
+For the variable to be output, you need to call ```assign($name,$value)``` or ```assignAll($dataArray)```. Then call ```render([HTML page])``` , ```error()``` or ```renderTemplate([HTML template])``` rendering results page.
+
+### Annotation
+
+The Controller's Action function supports the use of annotations.
+
+> @param annotation
+
+If there is ```path(postion)``` or ```path(position,default)```. in the @param annotation, the parameter will get the ability to get the Path variable.
+
+For example:
+
+```php
+class TestController{
+    /**
+     * @param $name string path(0,Test)
+     * @param $page integer path(1,1)
+     */
+    public function ac_test($page, $name){
+    
+    }
+}
+```
+
+In the request ```/test/test/Bunny/2```, the variable ```$name``` will get the value of path(0) ```'Bunny'```, The variable ```$page```  will get the value of path(1) ```2```.
+
+In the request ```/test/test/Bunny```, the variable ```$name``` will get the value of path(0) ```'Bunny'```, The variable ```$page``` will get the default value of path(1) ```1```.
+
+In the request ```/test/test```, the variable ```$name``` will get the default value of path(0) ```'Test'```, The variable ```$page``` will get the default value of path(1) ```1```.
+
+In particular, if there is a variable ```$_REQUEST['name']``` and the value of the path variable exists, the final value is the value in ```$_REQUEST```.
+
+For example, request ```/test/test/Bunny?name=PHP```, and the final ```$name``` gets the value ```'PHP'```.
+
+> @filter annotation
+
+If the @filter annotation is defined in the function, the ```doFilter``` function of the corresponding filter is called first, and then the Controller's Action function is executed.
+
+例如
+
+```php
+class TestController{
+    /**
+     * @filter test
+     * @filter hello
+     */
+    public function ac_test(){
+    
+    }
+}
+```
+
+It will call ```TestFilter```'s```doFilter``` function first.If the return value is ```Filter::NEXT``` then execute the next filter, in the example it is ```HelloFilter```. If the function return value is ```Filter::STOP``` then stop Execute the remaining Filter and Action functions.
