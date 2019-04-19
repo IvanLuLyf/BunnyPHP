@@ -1,8 +1,9 @@
 # BunnyPHP
 
-<img align="center" src="https://raw.githubusercontent.com/IvanLuLyf/BunnyPHP/master/static/img/logo.png">
-
 <div align="center">
+
+![BunnyPHP](static/img/logo.png?raw=true)
+
 BunnyPHP是一个轻量的PHP MVC框架.
 
 [![Latest Stable Version](https://img.shields.io/packagist/v/ivanlulyf/bunnyphp.svg?color=orange)](https://packagist.org/packages/ivanlulyf/bunnyphp)
