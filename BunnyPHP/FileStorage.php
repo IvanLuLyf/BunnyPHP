@@ -16,7 +16,7 @@ class FileStorage implements Storage
         $this->dir = isset($config['dir']) ? $config['dir'] : 'upload';
         $this->uploadPath = APP_PATH . $this->dir . '/';
         if (!is_dir($this->uploadPath)) {
-            mkdir($this->uploadPath, 0666, true);
+            mkdir($this->uploadPath, 0777, true);
         }
     }
 
@@ -29,7 +29,7 @@ class FileStorage implements Storage
     {
         $dir = dirname($filename);
         if ($dir !== '.' && !is_dir($this->uploadPath . $dir)) {
-            mkdir($this->uploadPath . $dir, 0666, true);
+            mkdir($this->uploadPath . $dir, 0777, true);
         }
         file_put_contents($this->uploadPath . $filename, $content);
     }
@@ -38,7 +38,7 @@ class FileStorage implements Storage
     {
         $dir = dirname($filename);
         if ($dir !== '.' && !is_dir($this->uploadPath . $dir)) {
-            mkdir($this->uploadPath . $dir, 0666, true);
+            mkdir($this->uploadPath . $dir, 0777, true);
         }
         move_uploaded_file($path, $this->uploadPath . $filename);
         return "/$this->dir/" . $filename;

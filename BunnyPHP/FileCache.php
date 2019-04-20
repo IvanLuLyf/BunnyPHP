@@ -16,7 +16,7 @@ class FileCache implements Cache
         $this->dir = isset($config['dir']) ? $config['dir'] : 'cache';
         $this->cacheDir = APP_PATH . $this->dir . '/';
         if (!is_dir($this->cacheDir)) {
-            mkdir($this->cacheDir, 0666, true);
+            mkdir($this->cacheDir, 0777, true);
         }
     }
 

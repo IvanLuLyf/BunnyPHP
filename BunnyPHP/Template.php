@@ -40,7 +40,7 @@ class Template
         $output = empty($output) ? $cacheFile : $output;
         $cacheDir = dirname($output);
         if (!is_dir($cacheDir)) {
-            mkdir($cacheDir, 0555, true);
+            mkdir($cacheDir, 0777, true);
         }
         $this->parse_var();
         $this->parse_if();
