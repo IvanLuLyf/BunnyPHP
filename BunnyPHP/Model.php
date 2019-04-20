@@ -15,6 +15,7 @@ class Model
     private $_param = [];
     private $_column = [];
     private $_has_where = false;
+    private $debug = false;
 
     public function __construct($name = '')
     {
@@ -29,22 +30,26 @@ class Model
         }
     }
 
-    public static function create()
+    public static function create($debug = false)
     {
-        $name = substr(get_called_class(), 0, -5);
-        $dashed = strtolower(preg_replace('/([A-Z])/', '_$1', lcfirst($name)));
-        $table = DB_PREFIX . strtolower($dashed);
+        $table = self::name();
         $vars = get_class_vars(get_called_class());
         $pk = isset($vars['_pk']) ? $vars['_pk'] : [];
         $ai = isset($vars['_ai']) ? $vars['_ai'] : '';
-        return Database::getInstance()->createTable($table, $vars['_column'], $pk, $ai);
+        $uk = isset($vars['_uk']) ? $vars['_uk'] : [];
+        return Database::getInstance($debug)->createTable($table, $vars['_column'], $pk, $ai, $uk);
     }
 
     public static function name()
     {
-        $name = substr(get_called_class(), 0, -5);
-        $dashed = strtolower(preg_replace('/([A-Z])/', '_$1', lcfirst($name)));
-        return DB_PREFIX . strtolower($dashed);
+        $vars = get_class_vars(get_called_class());
+        if (isset($vars['_table'])) {
+            return $vars['_table'];
+        } else {
+            $name = substr(get_called_class(), 0, -5);
+            $dashed = strtolower(preg_replace('/([A-Z])/', '_$1', lcfirst($name)));
+            return DB_PREFIX . strtolower($dashed);
+        }
     }
 
     private function reset()
@@ -54,6 +59,12 @@ class Model
         $this->_param = [];
         $this->_column = [];
         $this->_has_where = false;
+    }
+
+    public function debug()
+    {
+        $this->debug = true;
+        return $this;
     }
 
     public function where($where, $param = [])
@@ -147,7 +158,7 @@ class Model
             $this->_filter = ' where ' . $this->_filter;
         }
         $sql = "select {$selection} from {$this->_table} {$this->_join} {$this->_filter}";
-        $result = Database::getInstance()->fetchOne($sql, $this->_param);
+        $result = Database::getInstance($this->debug)->fetchOne($sql, $this->_param);
         $this->reset();
         return $result;
     }
@@ -175,26 +186,26 @@ class Model
             $this->_filter = ' where ' . $this->_filter;
         }
         $sql = "select {$selection} from {$this->_table} {$this->_join} {$this->_filter}";
-        $result = Database::getInstance()->fetchAll($sql, $this->_param);
+        $result = Database::getInstance($this->debug)->fetchAll($sql, $this->_param);
         $this->reset();
         return $result;
     }
 
     public function delete()
     {
-        $result = Database::getInstance()->delete($this->_table, $this->_filter, $this->_param);
+        $result = Database::getInstance($this->debug)->delete($this->_table, $this->_filter, $this->_param);
         $this->reset();
         return $result;
     }
 
     public function add($data = [])
     {
-        return Database::getInstance()->insert($data, $this->_table);
+        return Database::getInstance($this->debug)->insert($data, $this->_table);
     }
 
     public function update($data = [], $what = null)
     {
-        $result = Database::getInstance()->update($data, $this->_table, $this->_filter, $this->_param, $what);
+        $result = Database::getInstance($this->debug)->update($data, $this->_table, $this->_filter, $this->_param, $what);
         $this->reset();
         return $result;
     }

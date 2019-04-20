@@ -9,9 +9,10 @@
 class Database
 {
     private $conn;
+    private $debug = false;
     private static $instance;
 
-    private function __construct()
+    private function __construct($debug = false)
     {
         $db_type = strtolower(DB_TYPE);
         if ($db_type == 'mysql') {
@@ -25,12 +26,13 @@ class Database
             $option = array(PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC);
             $this->conn = new PDO($dsn, DB_USER, DB_PASS, $option);
         }
+        $this->debug = $debug;
     }
 
-    public static function getInstance(): Database
+    public static function getInstance($debug = false): Database
     {
         if (self::$instance == null) {
-            self::$instance = new Database();
+            self::$instance = new Database($debug);
         }
         return self::$instance;
     }
@@ -40,6 +42,9 @@ class Database
         $keys = implode(',', array_keys($data));
         $values = implode(',:', array_keys($data));
         $sql = "insert into {$table} ({$keys}) values(:{$values})";
+        if ($this->debug) {
+            return $sql;
+        }
         $pst = $this->conn->prepare($sql);
         foreach ($data as $k => &$v) {
             $pst->bindParam(':' . $k, $v);
@@ -59,6 +64,9 @@ class Database
         }
         $where = $where == null ? '' : ' WHERE ' . $where;
         $sql = "update {$table} set {$updates} {$where}";
+        if ($this->debug) {
+            return $sql;
+        }
         $pst = $this->conn->prepare($sql);
         foreach ($data as $k => &$v) {
             $pst->bindParam(':' . $k, $v);
@@ -78,6 +86,9 @@ class Database
     {
         $where = $where == null ? '' : ' WHERE ' . $where;
         $sql = "delete from {$table} {$where}";
+        if ($this->debug) {
+            return $sql;
+        }
         $pst = $this->conn->prepare($sql);
         foreach ($condition as $k => &$v) {
             if (is_int($k)) {
@@ -92,6 +103,9 @@ class Database
 
     public function fetchOne($sql, $condition = [])
     {
+        if ($this->debug) {
+            return $sql;
+        }
         $pst = $this->conn->prepare($sql);
         foreach ($condition as $k => &$v) {
             if (is_int($k)) {
@@ -106,6 +120,9 @@ class Database
 
     public function fetchAll($sql, $condition = [])
     {
+        if ($this->debug) {
+            return $sql;
+        }
         $pst = $this->conn->prepare($sql);
         foreach ($condition as $k => &$v) {
             if (is_int($k)) {
@@ -118,7 +135,7 @@ class Database
         return $pst->fetchAll();
     }
 
-    public function createTable($tableName, $columns = [], $primary = [], $a_i = '')
+    public function createTable($tableName, $columns = [], $primary = [], $a_i = '', $unique = [])
     {
         $db_type = strtolower(DB_TYPE);
         if ($db_type == 'mysql') {
@@ -140,7 +157,14 @@ class Database
             if ($primary) {
                 $pk .= ',primary key(' . implode(',', $primary) . ')';
             }
-            $sql = "create table {$tableName}({$c}{$pk});";
+            $uk = '';
+            if ($unique) {
+                $uk .= ',unique key(' . implode(',', $unique) . ')';
+            }
+            $sql = "create table {$tableName}({$c}{$pk}{$uk});";
+            if ($this->debug) {
+                return $sql;
+            }
             return $this->conn->exec($sql);
         } elseif ($db_type == 'pgsql') {
             $columnsData = [];
@@ -161,7 +185,14 @@ class Database
                 $columnsData[] = $columnData;
             }
             $c = implode(',', $columnsData);
-            $sql = "create table {$tableName}({$c});";
+            $uk = '';
+            if ($unique) {
+                $uk .= ',unique(' . implode(',', $unique) . ')';
+            }
+            $sql = "create table {$tableName}({$c}{$uk});";
+            if ($this->debug) {
+                return $sql;
+            }
             return $this->conn->exec($sql);
         } elseif ($db_type == 'sqlite') {
             $columnsData = [];
@@ -181,7 +212,14 @@ class Database
                 $columnsData[] = $columnData;
             }
             $c = implode(',', $columnsData);
-            $sql = "create table {$tableName}({$c});";
+            $uk = '';
+            if ($unique) {
+                $uk .= ',unique(' . implode(',', $unique) . ')';
+            }
+            $sql = "create table {$tableName}({$c}{$uk});";
+            if ($this->debug) {
+                return $sql;
+            }
             return $this->conn->exec($sql);
         } else {
             return -1;
