@@ -25,6 +25,9 @@ class Template
         extract($context);
         $cacheDir = APP_PATH . 'cache/template/';
         if (file_exists($cacheDir . $view)) {
+            if (filemtime(APP_PATH . "template/{$view}") > filemtime($cacheDir . $view)) {
+                (new self($view))->compile();
+            }
             include $cacheDir . $view;
         } elseif (file_exists(APP_PATH . "template/{$view}")) {
             (new self($view))->compile();
@@ -42,11 +45,17 @@ class Template
         if (!is_dir($cacheDir)) {
             mkdir($cacheDir, 0777, true);
         }
+        file_put_contents($output, $this->parse()->content);
+    }
+
+    private function parse()
+    {
         $this->parse_var();
         $this->parse_if();
         $this->parse_for();
         $this->parse_url();
-        file_put_contents($output, $this->content);
+        $this->parse_include();
+        return $this;
     }
 
     public static function process($template, $context = [])
@@ -127,6 +136,17 @@ class Template
         $pattern = '/\{u\s+(.*)\s+\}/';
         if (preg_match($pattern, $this->content)) {
             $this->content = preg_replace($pattern, "<?=View::get_url($1)?>", $this->content);
+        }
+    }
+
+    private function parse_include()
+    {
+        $_patternInclude = '/\{%\s?include\s+\'(.*)\'\s?%\}/';
+        if (preg_match_all($_patternInclude, $this->content, $match)) {
+            foreach ($match[1] as $index => $file) {
+                $file_content = (new self($file))->parse()->content;
+                $this->content = str_replace($match[0][$index], $file_content, $this->content);
+            }
         }
     }
 }
