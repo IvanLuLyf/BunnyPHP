@@ -78,15 +78,23 @@ class Template
         }
     }
 
+    private function var_name($word)
+    {
+        $word_arr = explode('.', trim($word));
+        $var_name = '$' . array_shift($word_arr);
+        if ($word_arr) {
+            $var_name .= '[\'' . join('\'][\'', $word_arr) . '\']';
+        }
+        return $var_name;
+    }
+
     private function parse_var()
     {
-        $pattern = '/\{\{\s*([\w]+)\s*\}\}/';
-        if (preg_match($pattern, $this->content)) {
-            $this->content = preg_replace($pattern, "<?=\$$1?>", $this->content);
-        }
-        $pattern = '/\{\{\s*([\w]+).([\w]+)\s*\}\}/';
-        if (preg_match($pattern, $this->content)) {
-            $this->content = preg_replace($pattern, "<?=\$$1['$2']?>", $this->content);
+        $pattern = '/\{\{\s*(.*)\s*\}\}/';
+        if (preg_match_all($pattern, $this->content, $match)) {
+            foreach ($match[1] as $index => $word) {
+                $this->content = str_replace($match[0][$index], '<?=' . $this->var_name($word) . '?>', $this->content);
+            }
         }
     }
 
@@ -95,15 +103,17 @@ class Template
         $_patternIf = '/\{%\s?if\s+(.*)\s?%\}/';
         $_patternEnd = '/\{%\s?endif\s?%\}/';
         $_patternElse = '/\{%\s?else\s?%\}/';
-        if (preg_match($_patternIf, $this->content)) {
-            if (preg_match($_patternEnd, $this->content)) {
-                $this->content = preg_replace($_patternIf, "<?php if($1):?>", $this->content);
-                $this->content = preg_replace($_patternEnd, "<?php endif; ?>", $this->content, 1);
-                if (preg_match($_patternElse, $this->content)) {
-                    $this->content = preg_replace($_patternElse, "<?php else: ?>", $this->content);
+        if (preg_match_all($_patternIf, $this->content, $match)) {
+            foreach ($match[0] as $exp) {
+                if (preg_match($_patternEnd, $this->content)) {
+                    $this->content = preg_replace($_patternIf, "<?php if($1):?>", $this->content, 1);
+                    $this->content = preg_replace($_patternEnd, "<?php endif; ?>", $this->content, 1);
+                    if (preg_match($_patternElse, $this->content)) {
+                        $this->content = preg_replace($_patternElse, "<?php else: ?>", $this->content, 1);
+                    }
+                } else {
+                    View::error(['ret' => -4, 'status' => 'template render error', 'tp_error_msg' => '(' . $exp . ')没有结束标签']);
                 }
-            } else {
-                View::error([]);
             }
         }
     }
@@ -113,20 +123,24 @@ class Template
         $_patternFor = '/\{%\s?for\s+(\w+)\s+in\s+(\w+)\s?%\}/';
         $_patternForKV = '/\{%\s?for\s+(\w+)\s?,\s?(\w+)\s+in\s+(\w+)\s?%\}/';
         $_patternEnd = '/\{%\s?endfor\s?%\}/';
-        if (preg_match($_patternFor, $this->content)) {
-            if (preg_match($_patternEnd, $this->content)) {
-                $this->content = preg_replace($_patternFor, "<?php foreach(\$$2 as \$$1):?>", $this->content);
-                $this->content = preg_replace($_patternEnd, "<?php endforeach; ?>", $this->content, 1);
-            } else {
-                View::error([]);
+        if (preg_match_all($_patternFor, $this->content, $match)) {
+            foreach ($match[0] as $i => $exp) {
+                if (preg_match($_patternEnd, $this->content)) {
+                    $this->content = str_replace($exp, '<?php foreach($' . $match[2][$i] . ' as ' . $this->var_name($match[1][$i]) . '):?>', $this->content);
+                    $this->content = preg_replace($_patternEnd, "<?php endforeach; ?>", $this->content, 1);
+                } else {
+                    View::error(['ret' => -4, 'status' => 'template render error', 'tp_error_msg' => $exp . '没有结束标签']);
+                }
             }
         }
-        if (preg_match($_patternForKV, $this->content)) {
-            if (preg_match($_patternEnd, $this->content)) {
-                $this->content = preg_replace($_patternForKV, "<?php foreach(\$$3 as \$$1=>\$$2):?>", $this->content);
-                $this->content = preg_replace($_patternEnd, "<?php endforeach; ?>", $this->content, 1);
-            } else {
-                View::error([]);
+        if (preg_match_all($_patternForKV, $this->content, $match)) {
+            foreach ($match[0] as $i => $exp) {
+                if (preg_match($_patternEnd, $this->content)) {
+                    $this->content = str_replace($exp, '<?php foreach($' . $match[3][$i] . ' as ' . $this->var_name($match[1][$i]) . '=>' . $this->var_name($match[2][$i]) . '):?>', $this->content);
+                    $this->content = preg_replace($_patternEnd, "<?php endforeach; ?>", $this->content, 1);
+                } else {
+                    View::error(['ret' => -4, 'status' => 'template render error', 'tp_error_msg' => $exp . '没有结束标签']);
+                }
             }
         }
     }
