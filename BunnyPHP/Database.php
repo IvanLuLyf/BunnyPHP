@@ -9,10 +9,9 @@
 class Database
 {
     private $conn;
-    private $debug = false;
     private static $instance;
 
-    private function __construct($debug = false)
+    private function __construct()
     {
         $db_type = strtolower(DB_TYPE);
         if ($db_type == 'mysql') {
@@ -26,23 +25,22 @@ class Database
             $option = array(PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC);
             $this->conn = new PDO($dsn, DB_USER, DB_PASS, $option);
         }
-        $this->debug = $debug;
     }
 
-    public static function getInstance($debug = false): Database
+    public static function getInstance(): Database
     {
         if (self::$instance == null) {
-            self::$instance = new Database($debug);
+            self::$instance = new Database();
         }
         return self::$instance;
     }
 
-    public function insert(array $data, $table)
+    public function insert(array $data, $table, $debug = false)
     {
         $keys = implode(',', array_keys($data));
         $values = implode(',:', array_keys($data));
         $sql = "insert into {$table} ({$keys}) values(:{$values})";
-        if ($this->debug) {
+        if ($debug) {
             return $sql;
         }
         $pst = $this->conn->prepare($sql);
@@ -53,7 +51,7 @@ class Database
         return $this->conn->lastInsertId();
     }
 
-    public function update(array $data, $table, $where = null, $condition = [], $updates = null)
+    public function update(array $data, $table, $where = null, $condition = [], $updates = null, $debug = false)
     {
         if ($updates === null) {
             $sets = [];
@@ -62,162 +60,121 @@ class Database
             }
             $updates = implode(',', $sets);
         }
-        $where = $where == null ? '' : ' WHERE ' . $where;
+        $where = $where == null ? '' : ' where ' . $where;
         $sql = "update {$table} set {$updates} {$where}";
-        if ($this->debug) {
+        if ($debug) {
             return $sql;
         }
         $pst = $this->conn->prepare($sql);
         foreach ($data as $k => &$v) {
             $pst->bindParam(':' . $k, $v);
         }
-        foreach ($condition as $k => &$v) {
-            if (is_int($k)) {
-                $pst->bindParam($k + 1, $v);
-            } else {
-                $pst->bindParam(':' . $k, $v);
-            }
-        }
+        $pst = $this->bindParam($pst, $condition);
         $pst->execute();
         return $pst->rowCount();
     }
 
-    public function delete($table, $where = null, $condition = [])
+    public function delete($table, $where = null, $condition = [], $debug = false)
     {
         $where = $where == null ? '' : ' WHERE ' . $where;
         $sql = "delete from {$table} {$where}";
-        if ($this->debug) {
+        if ($debug) {
             return $sql;
         }
         $pst = $this->conn->prepare($sql);
-        foreach ($condition as $k => &$v) {
-            if (is_int($k)) {
-                $pst->bindParam($k + 1, $v);
-            } else {
-                $pst->bindParam(':' . $k, $v);
-            }
-        }
+        $pst = $this->bindParam($pst, $condition);
         $pst->execute();
         return $pst->rowCount();
     }
 
-    public function fetchOne($sql, $condition = [])
+    public function fetchOne($sql, $condition = [], $debug = false)
     {
-        if ($this->debug) {
+        if ($debug) {
             return $sql;
         }
         $pst = $this->conn->prepare($sql);
-        foreach ($condition as $k => &$v) {
-            if (is_int($k)) {
-                $pst->bindParam($k + 1, $v);
-            } else {
-                $pst->bindParam(':' . $k, $v);
-            }
-        }
+        $pst = $this->bindParam($pst, $condition);
         $pst->execute();
         return $pst->fetch();
     }
 
-    public function fetchAll($sql, $condition = [])
+    public function fetchAll($sql, $condition = [], $debug = false)
     {
-        if ($this->debug) {
+        if ($debug) {
             return $sql;
         }
         $pst = $this->conn->prepare($sql);
-        foreach ($condition as $k => &$v) {
-            if (is_int($k)) {
-                $pst->bindParam($k + 1, $v);
-            } else {
-                $pst->bindParam(':' . $k, $v);
-            }
-        }
+        $pst = $this->bindParam($pst, $condition);
         $pst->execute();
         return $pst->fetchAll();
     }
 
-    public function createTable($tableName, $columns = [], $primary = [], $a_i = '', $unique = [])
+    public function cursor($sql, $condition = [])
+    {
+        $pst = $this->conn->prepare($sql);
+        $pst = $this->bindParam($pst, $condition);
+        $pst->execute();
+        while ($row = $pst->fetch()) {
+            yield $row;
+        }
+    }
+
+    private function bindParam(PDOStatement $statement, array $data = []): PDOStatement
+    {
+        foreach ($data as $k => &$v) {
+            if (is_int($k)) {
+                $statement->bindParam($k + 1, $v);
+            } else {
+                $statement->bindParam(':' . $k, $v);
+            }
+        }
+        return $statement;
+    }
+
+    public function exec($sql)
+    {
+        return $this->conn->exec($sql);
+    }
+
+    public function createTable($tableName, $columns = [], $primary = [], $a_i = '', $unique = [], $debug = false)
     {
         $db_type = strtolower(DB_TYPE);
-        if ($db_type == 'mysql') {
-            $columnsData = [];
-            foreach ($columns as $name => $info) {
-                $columnData = $name . ' ';
+        $columnsData = [];
+        foreach ($columns as $name => $info) {
+            $columnData = $name . ' ';
+            if ($a_i == $name && $db_type === 'pgsql') {
+                $columnData .= ' serial ';
+            } else {
                 if (is_array($info)) {
                     $columnData .= implode(' ', $info);
                 } else {
                     $columnData .= ' ' . $info;
                 }
-                if ($a_i == $name) {
+            }
+            if ($a_i == $name) {
+                if ($db_type === 'mysql') {
                     $columnData .= ' auto_increment ';
+                } elseif ($db_type === 'sqlite') {
+                    $columnData = $name . ' integer primary key autoincrement ';
                 }
-                $columnsData[] = $columnData;
             }
-            $c = implode(',', $columnsData);
+            $columnsData[] = $columnData;
+        }
+        $c = implode(',', $columnsData);
+        $pk = '';
+        if ($primary) {
+            $pk .= ',primary key(' . implode(',', $primary) . ')';
+        }
+        if ($db_type === 'sqlite' && !empty($a_i)) {
             $pk = '';
-            if ($primary) {
-                $pk .= ',primary key(' . implode(',', $primary) . ')';
-            }
-            $uk = '';
-            if ($unique) {
-                $uk .= ',unique key(' . implode(',', $unique) . ')';
-            }
-            $sql = "create table {$tableName}({$c}{$pk}{$uk});";
-            if ($this->debug) {
-                return $sql;
-            }
-            return $this->conn->exec($sql);
-        } elseif ($db_type == 'pgsql') {
-            $columnsData = [];
-            foreach ($columns as $name => $info) {
-                $columnData = $name . ' ';
-                if ($a_i == $name) {
-                    $columnData .= ' serial ';
-                } else {
-                    if (is_array($info)) {
-                        $columnData .= implode(' ', $info);
-                    } else {
-                        $columnData .= ' ' . $info;
-                    }
-                }
-                if (in_array($name, $primary)) {
-                    $columnData .= ' primary key ';
-                }
-                $columnsData[] = $columnData;
-            }
-            $c = implode(',', $columnsData);
-            $uk = '';
-            if ($unique) {
-                $uk .= ',unique(' . implode(',', $unique) . ')';
-            }
-            $sql = "create table {$tableName}({$c}{$uk});";
-            if ($this->debug) {
-                return $sql;
-            }
-            return $this->conn->exec($sql);
-        } elseif ($db_type == 'sqlite') {
-            $columnsData = [];
-            foreach ($columns as $name => $info) {
-                $columnData = $name . ' ';
-                if (is_array($info)) {
-                    $columnData .= implode(' ', $info);
-                } else {
-                    $columnData .= ' ' . $info;
-                }
-                if (in_array($name, $primary)) {
-                    $columnData .= ' primary key ';
-                }
-                if ($a_i == $name) {
-                    $columnData .= ' autoincrement ';
-                }
-                $columnsData[] = $columnData;
-            }
-            $c = implode(',', $columnsData);
-            $uk = '';
-            if ($unique) {
-                $uk .= ',unique(' . implode(',', $unique) . ')';
-            }
-            $sql = "create table {$tableName}({$c}{$uk});";
-            if ($this->debug) {
+        }
+        $uk = '';
+        if ($unique) {
+            $uk .= ',unique key(' . implode(',', $unique) . ')';
+        }
+        $sql = "create table {$tableName}({$c}{$pk}{$uk});";
+        if (!empty($sql)) {
+            if ($debug) {
                 return $sql;
             }
             return $this->conn->exec($sql);

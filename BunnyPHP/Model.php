@@ -15,7 +15,7 @@ class Model
     private $_param = [];
     private $_column = [];
     private $_has_where = false;
-    private $debug = false;
+    private $_debug = false;
 
     public function __construct($name = '')
     {
@@ -37,7 +37,7 @@ class Model
         $pk = isset($vars['_pk']) ? $vars['_pk'] : [];
         $ai = isset($vars['_ai']) ? $vars['_ai'] : '';
         $uk = isset($vars['_uk']) ? $vars['_uk'] : [];
-        return Database::getInstance($debug)->createTable($table, $vars['_column'], $pk, $ai, $uk);
+        return Database::getInstance()->createTable($table, $vars['_column'], $pk, $ai, $uk, $debug);
     }
 
     public static function name()
@@ -63,7 +63,7 @@ class Model
 
     public function debug()
     {
-        $this->debug = true;
+        $this->_debug = true;
         return $this;
     }
 
@@ -84,9 +84,7 @@ class Model
     public function join($tableName, $condition = [], $select = [], $mod = 'left')
     {
         if (substr($tableName, -5) == "Model") {
-            $tableName = substr($tableName, 0, -5);
-            $dashed = strtolower(preg_replace('/([A-Z])/', '_$1', lcfirst($tableName)));
-            $tableName = DB_PREFIX . strtolower($dashed);
+            $tableName = $tableName::name();
         }
         if (count($select) == 0) {
             $this->_column[] = $tableName . ".*";
@@ -110,16 +108,16 @@ class Model
                 $conditionArr[] = "{$tableName}.{$k}={$v}";
             }
         }
-        $this->_join .= " on (" . implode(' and ', $conditionArr) . ") ";
+        $this->_join .= " on (" . implode(' and ', $conditionArr) . ")";
         return $this;
     }
 
     public function limit($size, $start = 0)
     {
-        if (constant("DB_TYPE") == 'pgsql') {
+        if (DB_TYPE === 'pgsql') {
             $this->_filter .= " limit $size offset $start";
         } else {
-            $this->_filter .= " limit $start,$size ";
+            $this->_filter .= " limit $start,$size";
         }
         return $this;
     }
@@ -130,43 +128,55 @@ class Model
             $this->_filter .= ' order by ';
             $this->_filter .= implode(',', $order);
         } else {
-            $this->_filter .= " order by $order ";
+            $this->_filter .= " order by $order";
         }
         return $this;
     }
 
     public function fetch($columns = '*')
     {
-        $selection = $columns;
-        if ($this->_join != '') {
-            if ($columns == '*') {
-                $selection = $this->_table . '.* ,' . implode(',', $this->_column);
-            } elseif (is_array($columns)) {
-                foreach ($columns as &$column) {
-                    $column = $this->_table . '.' . $column;
-                }
-                $selection = implode(',', array_merge($columns, $this->_column));
-            } else {
-                $selection = '*';
-            }
-        } else {
-            if (is_array($columns)) {
-                $selection = implode(',', $columns);
-            }
-        }
-        if ($this->_has_where) {
-            $this->_filter = ' where ' . $this->_filter;
-        }
-        $sql = "select {$selection} from {$this->_table} {$this->_join} {$this->_filter}";
-        $result = Database::getInstance($this->debug)->fetchOne($sql, $this->_param);
+        $result = Database::getInstance()->fetchOne($this->buildSelect($columns), $this->_param, $this->_debug);
         $this->reset();
         return $result;
     }
 
     public function fetchAll($columns = '*')
     {
+        $result = Database::getInstance()->fetchAll($this->buildSelect($columns), $this->_param, $this->_debug);
+        $this->reset();
+        return $result;
+    }
+
+    public function cursor($columns = '*')
+    {
+        $result = Database::getInstance()->fetchAll($this->buildSelect($columns), $this->_param, $this->_debug);
+        $this->reset();
+        return $result;
+    }
+
+    public function delete()
+    {
+        $result = Database::getInstance()->delete($this->_table, $this->_filter, $this->_param, $this->_debug);
+        $this->reset();
+        return $result;
+    }
+
+    public function add($data = [])
+    {
+        return Database::getInstance()->insert($data, $this->_table, $this->_debug);
+    }
+
+    public function update($data = [], $what = null)
+    {
+        $result = Database::getInstance()->update($data, $this->_table, $this->_filter, $this->_param, $what, $this->_debug);
+        $this->reset();
+        return $result;
+    }
+
+    private function buildSelect($columns = '*')
+    {
         $selection = $columns;
-        if ($this->_join != '') {
+        if (!empty($this->_join)) {
             if ($columns == '*') {
                 $selection = $this->_table . '.* ,' . implode(',', $this->_column);
             } elseif (is_array($columns)) {
@@ -185,28 +195,6 @@ class Model
         if ($this->_has_where) {
             $this->_filter = ' where ' . $this->_filter;
         }
-        $sql = "select {$selection} from {$this->_table} {$this->_join} {$this->_filter}";
-        $result = Database::getInstance($this->debug)->fetchAll($sql, $this->_param);
-        $this->reset();
-        return $result;
-    }
-
-    public function delete()
-    {
-        $result = Database::getInstance($this->debug)->delete($this->_table, $this->_filter, $this->_param);
-        $this->reset();
-        return $result;
-    }
-
-    public function add($data = [])
-    {
-        return Database::getInstance($this->debug)->insert($data, $this->_table);
-    }
-
-    public function update($data = [], $what = null)
-    {
-        $result = Database::getInstance($this->debug)->update($data, $this->_table, $this->_filter, $this->_param, $what);
-        $this->reset();
-        return $result;
+        return "select {$selection} from {$this->_table}{$this->_join}{$this->_filter}";
     }
 }
