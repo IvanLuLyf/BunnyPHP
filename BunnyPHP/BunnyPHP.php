@@ -8,7 +8,7 @@
 
 class BunnyPHP
 {
-    const BUNNY_VERSION = '2.1.9';
+    const BUNNY_VERSION = '2.2.0';
     const MODE_NORMAL = 0;
     const MODE_API = 1;
     const MODE_AJAX = 2;
@@ -81,7 +81,7 @@ class BunnyPHP
         $controller = $controllerName . 'Controller';
         if (!class_exists($controller)) {
             if (!class_exists('OtherController')) {
-                View::error(['ret' => '-1', 'status' => 'mod not exists', 'tp_error_msg' => "模块{$controller}不存在"], $this->mode);
+                View::error(['ret' => '-2', 'status' => 'mod does not exist', 'tp_error_msg' => "模块{$controller}不存在"], $this->mode);
             } else {
                 $controller = 'OtherController';
             }
@@ -98,7 +98,7 @@ class BunnyPHP
             $dispatch = new $controller($controllerName, $actionName, $this->mode);
             $this->callAction($controller, $dispatch, 'other', $param);
         } else {
-            View::error(['ret' => '-2', 'status' => 'action not exists', 'tp_error_msg' => "Action {$actionName}不存在"], $this->mode);
+            View::error(['ret' => '-3', 'status' => 'action does not exist', 'tp_error_msg' => "Action {$actionName}不存在"], $this->mode);
         }
     }
 

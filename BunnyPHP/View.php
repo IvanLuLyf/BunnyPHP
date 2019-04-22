@@ -8,50 +8,69 @@
 
 class View
 {
-    public static function render($view, $context = [], $mode = BunnyPHP::MODE_NORMAL)
+    const MODE_INFO = 1;
+    const MODE_ERROR = 2;
+
+    public static function render($view, $context = [], $mode = BunnyPHP::MODE_NORMAL, $code = 200)
     {
-        if ($mode == BunnyPHP::MODE_API or $mode == BunnyPHP::MODE_AJAX) {
+        if ($code !== 200) {
+            http_send_status($code);
+        }
+        if ($mode === BunnyPHP::MODE_API or $mode === BunnyPHP::MODE_AJAX) {
             header("Content-Type: application/json; charset=UTF-8");
             echo json_encode($context, JSON_NUMERIC_CHECK);
-        } elseif ($mode == BunnyPHP::MODE_CLI) {
+        } elseif ($mode === BunnyPHP::MODE_CLI) {
             if (isset($context['response'])) {
                 echo $context['response'];
+            } elseif (isset($context['tp_error_msg'])) {
+                echo $context['tp_error_msg'];
             } else {
                 print_r($context);
             }
         } else {
             header("Content-Type: text/html; charset=UTF-8");
-            extract($context);
-            if (!empty($view) && file_exists(APP_PATH . "template/{$view}")) {
-                include APP_PATH . "template/{$view}";
-            } else if (empty($view)) {
-                if (isset($context['response'])) {
-                    echo $context['response'];
+            if (is_string($view)) {
+                extract($context);
+                if (!empty($view) && file_exists(APP_PATH . "template/{$view}")) {
+                    include APP_PATH . "template/{$view}";
+                } else if (empty($view)) {
+                    if (isset($context['response'])) {
+                        echo $context['response'];
+                    }
+                } else {
+                    self::error(['ret' => '-4', 'status' => 'template does not exist', 'tp_error_msg' => "模板${view}不存在"]);
                 }
-            } else {
-                self::error(['ret' => '-3', 'status' => 'template not exists', 'tp_error_msg' => "模板${view}不存在"]);
+            } elseif ($view === self::MODE_ERROR) {
+                header("Content-Type: text/html; charset=UTF-8");
+                if (file_exists("template/error.html")) {
+                    extract($context);
+                    include APP_PATH . "template/error.html";
+                } else {
+                    $error_html = "<html><head><title>BunnyPHP Error</title></head><body><h2>BunnyPHP Error</h2><p>{$context['tp_error_msg']}</p></body></html>";
+                    echo $error_html;
+                }
+            } elseif ($view === self::MODE_INFO) {
+                header("Content-Type: text/html; charset=UTF-8");
+                if (file_exists("template/info.html")) {
+                    extract($context);
+                    include APP_PATH . "template/info.html";
+                } else {
+                    $info_html = "<html><head><title>BunnyPHP Info</title></head><body><h2>BunnyPHP Info</h2><p>{$context['tp_info_msg']}</p></body></html>";
+                    echo $info_html;
+                }
             }
         }
     }
 
     public static function error($context = [], $mode = BunnyPHP::MODE_NORMAL, $code = 200)
     {
-        if ($code !== 200) {
-            http_send_status($code);
-        }
-        if ($mode == BunnyPHP::MODE_API or $mode == BunnyPHP::MODE_AJAX) {
-            header("Content-Type: application/json; charset=UTF-8");
-            echo json_encode($context, JSON_NUMERIC_CHECK);
-        } else {
-            header("Content-Type: text/html; charset=UTF-8");
-            if (file_exists("template/error.html")) {
-                extract($context);
-                include APP_PATH . "template/error.html";
-            } else {
-                $error_html = "<html><head><title>BunnyPHP Error</title></head><body><h2>BunnyPHP Error</h2><p>{$context['tp_error_msg']}</p></body></html>";
-                echo $error_html;
-            }
-        }
+        self::render(self::MODE_ERROR, $context, $mode, $code);
+        exit();
+    }
+
+    public static function info($context = [], $mode = BunnyPHP::MODE_NORMAL, $code = 200)
+    {
+        self::render(self::MODE_INFO, $context, $mode, $code);
         exit();
     }
 

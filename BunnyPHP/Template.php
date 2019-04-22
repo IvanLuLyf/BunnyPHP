@@ -33,7 +33,7 @@ class Template
             (new self($view))->compile();
             include $cacheDir . $view;
         } else {
-            View::error(['ret' => '-3', 'status' => 'template not exists', 'tp_error_msg' => "模板${view}不存在"]);
+            View::error(['ret' => '-4', 'status' => 'template does not exist', 'tp_error_msg' => "模板${view}不存在"]);
         }
     }
 
@@ -112,7 +112,7 @@ class Template
                         $this->content = preg_replace($_patternElse, "<?php else: ?>", $this->content, 1);
                     }
                 } else {
-                    View::error(['ret' => -4, 'status' => 'template render error', 'tp_error_msg' => '(' . $exp . ')没有结束标签']);
+                    View::error(['ret' => -5, 'status' => 'template rendering error', 'tp_error_msg' => '(' . $exp . ')没有结束标签']);
                 }
             }
         }
@@ -129,7 +129,7 @@ class Template
                     $this->content = str_replace($exp, '<?php foreach($' . $match[2][$i] . ' as ' . $this->var_name($match[1][$i]) . '):?>', $this->content);
                     $this->content = preg_replace($_patternEnd, "<?php endforeach; ?>", $this->content, 1);
                 } else {
-                    View::error(['ret' => -4, 'status' => 'template render error', 'tp_error_msg' => $exp . '没有结束标签']);
+                    View::error(['ret' => -5, 'status' => 'template rendering error', 'tp_error_msg' => $exp . '没有结束标签']);
                 }
             }
         }
@@ -139,7 +139,7 @@ class Template
                     $this->content = str_replace($exp, '<?php foreach($' . $match[3][$i] . ' as ' . $this->var_name($match[1][$i]) . '=>' . $this->var_name($match[2][$i]) . '):?>', $this->content);
                     $this->content = preg_replace($_patternEnd, "<?php endforeach; ?>", $this->content, 1);
                 } else {
-                    View::error(['ret' => -4, 'status' => 'template render error', 'tp_error_msg' => $exp . '没有结束标签']);
+                    View::error(['ret' => -5, 'status' => 'template rendering error', 'tp_error_msg' => $exp . '没有结束标签']);
                 }
             }
         }
