@@ -19,21 +19,29 @@ class Template
         }
     }
 
-    public static function render($view, $context = [])
+    public static function render($view, $context = [], $mode = BunnyPHP::MODE_NORMAL, $code = 200)
     {
-        header("Content-Type: text/html; charset=UTF-8");
-        extract($context);
-        $cacheDir = APP_PATH . 'cache/template/';
-        if (file_exists($cacheDir . $view)) {
-            if (filemtime(APP_PATH . "template/{$view}") > filemtime($cacheDir . $view)) {
-                (new self($view))->compile();
-            }
-            include $cacheDir . $view;
-        } elseif (file_exists(APP_PATH . "template/{$view}")) {
-            (new self($view))->compile();
-            include $cacheDir . $view;
+        if ($code !== 200) {
+            http_send_status($code);
+        }
+        if ($mode === BunnyPHP::MODE_API or $mode === BunnyPHP::MODE_AJAX) {
+            header("Content-Type: application/json; charset=UTF-8");
+            echo json_encode($context, JSON_NUMERIC_CHECK);
         } else {
-            View::error(['ret' => '-4', 'status' => 'template does not exist', 'tp_error_msg' => "模板${view}不存在"]);
+            header("Content-Type: text/html; charset=UTF-8");
+            extract($context);
+            $cacheDir = APP_PATH . 'cache/template/';
+            if (file_exists($cacheDir . $view)) {
+                if (filemtime(APP_PATH . "template/{$view}") > filemtime($cacheDir . $view)) {
+                    (new self($view))->compile();
+                }
+                include $cacheDir . $view;
+            } elseif (file_exists(APP_PATH . "template/{$view}")) {
+                (new self($view))->compile();
+                include $cacheDir . $view;
+            } else {
+                View::error(['ret' => '-4', 'status' => 'template does not exist', 'tp_error_msg' => "模板${view}不存在"]);
+            }
         }
     }
 
@@ -112,7 +120,7 @@ class Template
                         $this->content = preg_replace($_patternElse, "<?php else: ?>", $this->content, 1);
                     }
                 } else {
-                    View::error(['ret' => -5, 'status' => 'template rendering error', 'tp_error_msg' => '(' . $exp . ')没有结束标签']);
+                    View::error(['ret' => -5, 'status' => 'template rendering error', 'tp_error_msg' => $exp . '没有结束标签']);
                 }
             }
         }

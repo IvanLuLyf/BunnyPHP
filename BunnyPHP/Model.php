@@ -59,6 +59,7 @@ class Model
         $this->_param = [];
         $this->_column = [];
         $this->_has_where = false;
+        $this->_debug = false;
     }
 
     public function debug()
