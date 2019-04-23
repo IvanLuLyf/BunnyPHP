@@ -168,6 +168,8 @@ class MessageModel extends Model
     protected $_pk = ['id']; // Primary Key
 
     protected $_ai = 'id';   // Auto Increment
+    
+    protected $_uk = [['message','from']];  //Unique Key List
 }
 ```
 

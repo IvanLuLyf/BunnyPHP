@@ -168,6 +168,8 @@ class MessageModel extends Model
     protected $_pk = ['id']; // 主键
 
     protected $_ai = 'id';   // 自增字段
+    
+    protected $_uk = [['message','from']];  //唯一键列表
 }
 ```
 

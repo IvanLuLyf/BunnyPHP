@@ -170,7 +170,13 @@ class Database
         }
         $uk = '';
         if ($unique) {
-            $uk .= ',unique key(' . implode(',', $unique) . ')';
+            foreach ($unique as $item) {
+                if (is_array($item)) {
+                    $uk .= ',unique key(' . implode(',', $item) . ')';
+                } else {
+                    $uk .= ',unique key(' . $item . ')';
+                }
+            }
         }
         $sql = "create table {$tableName}({$c}{$pk}{$uk});";
         if (!empty($sql)) {
