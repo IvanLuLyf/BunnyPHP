@@ -18,7 +18,7 @@ class View
         }
         if ($mode === BunnyPHP::MODE_API or $mode === BunnyPHP::MODE_AJAX) {
             header("Content-Type: application/json; charset=UTF-8");
-            echo json_encode($context, JSON_NUMERIC_CHECK);
+            echo json_encode($context);
         } elseif ($mode === BunnyPHP::MODE_CLI) {
             echo self::get_message($context);
         } else {
