@@ -12,6 +12,7 @@ BunnyPHP is a lightweight PHP MVC Framework.
 [![GitHub stars](https://img.shields.io/github/stars/ivanlulyf/bunnyphp.svg?style=social)](https://github.com/IvanLuLyf/BunnyPHP)
 
 ![PHP](https://img.shields.io/badge/PHP->%3D7.0.0-777bb3.svg?style=flat-square&logo=php)
+[![Gitter](https://img.shields.io/gitter/room/ivanlulyf-bunnyphp/community.svg?style=flat-square&logo=gitter)](https://gitter.im/ivanlulyf-bunnyphp/community)
 
 </div>
 
