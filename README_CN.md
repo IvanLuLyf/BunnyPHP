@@ -4,16 +4,18 @@
 
 BunnyPHP是一个轻量的PHP MVC框架.
 
-[![Latest Stable Version](https://img.shields.io/packagist/v/ivanlulyf/bunnyphp.svg?color=orange)](https://packagist.org/packages/ivanlulyf/bunnyphp)
-[![Total Downloads](https://img.shields.io/packagist/dt/ivanlulyf/bunnyphp.svg?color=brightgreen)](https://packagist.org/packages/ivanlulyf/bunnyphp)
-![License](https://img.shields.io/packagist/l/ivanlulyf/bunnyphp.svg?color=blue)
+[![Latest Stable Version](https://img.shields.io/packagist/v/ivanlulyf/bunnyphp.svg?color=orange&style=flat-square)](https://packagist.org/packages/ivanlulyf/bunnyphp)
+[![Total Downloads](https://img.shields.io/packagist/dt/ivanlulyf/bunnyphp.svg?color=brightgreen&style=flat-square)](https://packagist.org/packages/ivanlulyf/bunnyphp)
+![License](https://img.shields.io/packagist/l/ivanlulyf/bunnyphp.svg?color=blue&style=flat-square)
 
-![GitHub code size in bytes](https://img.shields.io/github/languages/code-size/ivanlulyf/bunnyphp.svg?color=yellow)
+![Code Size](https://img.shields.io/github/languages/code-size/ivanlulyf/bunnyphp.svg?color=yellow&style=flat-square)
 [![GitHub stars](https://img.shields.io/github/stars/ivanlulyf/bunnyphp.svg?style=social)](https://github.com/IvanLuLyf/BunnyPHP)
+
+![PHP](https://img.shields.io/badge/PHP->%3D7.0.0-777bb3.svg?style=flat-square&logo=php)
 
 </div>
 
-[English](README.md)|中文
+[English](README.md) | 中文
 
 ## 目录结构
 ```
@@ -139,7 +141,7 @@ return [
 ## 框架错误码
 
 |Code|Description|
-|---|---|
+|:---:|---|
 |0|ok|
 |-1|网络错误|
 |-2|Mod不存在|
