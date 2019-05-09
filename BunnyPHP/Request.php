@@ -50,9 +50,9 @@ class Request implements ArrayAccess
     {
         if (isset($_SERVER['CONTENT_TYPE'])) {
             $content = file_get_contents('php://input');
-            if (strtolower($_SERVER['CONTENT_TYPE']) == 'application/json') {
+            if (strpos(strtolower($_SERVER['CONTENT_TYPE']), 'application/json') === 0) {
                 $this->param = json_decode($content, true);
-            } elseif (strtolower($_SERVER['CONTENT_TYPE']) == 'application/x-www-form-urlencoded') {
+            } elseif (strpos(strtolower($_SERVER['CONTENT_TYPE']), 'application/x-www-form-urlencoded') === 0) {
                 parse_str($content, $this->param);
             } elseif (strpos(strtolower($_SERVER['CONTENT_TYPE']), 'multipart/form-data;') === 0) {
                 if (strtolower($_SERVER['REQUEST_METHOD']) === 'post') {
