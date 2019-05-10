@@ -18,6 +18,10 @@ BunnyPHP is a lightweight PHP MVC Framework.
 
 English | [中文](README_CN.md)
 
+## Contents
+
+[TOC]
+
 ## Directory Structure
 ```
 Project                 Root Dir
