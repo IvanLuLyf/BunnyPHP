@@ -23,7 +23,7 @@ BunnyPHP是一个轻量的PHP MVC框架.
 - [目录结构](#目录结构)
 - [安装](#安装)
   * [使用Composer安装](#使用Composer安装)
-  * [使用Git Clone安装](#使用Git Clone安装)
+  * [使用Git Clone安装](#使用Git-Clone安装)
 - [环境要求](#环境要求)
 - [服务器设置](#服务器设置)
 - [配置](#配置)
