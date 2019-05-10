@@ -20,7 +20,17 @@ English | [中文](README_CN.md)
 
 ## Contents
 
-[TOC]
+- [Directory Structure](#directory-structure)
+- [Installation](#installation)
+  * [Using Composer](#using-composer)
+  * [Using Clone](#using-clone)
+- [Requirement](#requirement)
+- [Server Setting](#server-setting)
+- [Configure](#configure)
+- [Framework Error Code](#framework-error-code)
+- [Model](#model)
+- [Controller and Router](#controller-and-router)
+  * [Annotation](#annotation)
 
 ## Directory Structure
 ```
