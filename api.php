@@ -6,6 +6,8 @@
  * Time: 13:46
  */
 
+header('X-Powered-By:BunnyFramework');
+header('Server:BunnyFramework');
 define('APP_PATH', __DIR__ . '/');
 define('APP_DEBUG', true);
 define("IN_TWIMI_PHP", "True", TRUE);
