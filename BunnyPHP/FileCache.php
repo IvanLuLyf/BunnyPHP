@@ -6,6 +6,8 @@
  * Time: 14:09
  */
 
+namespace BunnyPHP;
+
 class FileCache implements Cache
 {
     protected $dir;

@@ -6,6 +6,8 @@
  * Time: 18:06
  */
 
+namespace BunnyPHP;
+
 class View
 {
     const MODE_INFO = 1;

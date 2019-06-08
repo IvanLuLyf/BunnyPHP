@@ -6,6 +6,8 @@
  * Time: 14:50
  */
 
+namespace BunnyPHP;
+
 class Template
 {
     protected $template;

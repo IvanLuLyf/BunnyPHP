@@ -6,6 +6,8 @@
  * Time: 1:03
  */
 
+namespace BunnyPHP;
+
 class Model
 {
     protected $_table;

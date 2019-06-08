@@ -6,6 +6,8 @@
  * Time: 13:59
  */
 
+namespace BunnyPHP;
+
 class Filter
 {
     const NEXT = 0;

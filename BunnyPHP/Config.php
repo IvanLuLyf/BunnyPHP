@@ -6,6 +6,7 @@
  * Time: 15:21
  */
 
+namespace BunnyPHP;
 class Config
 {
     const MODE_CONST = 0;

@@ -6,6 +6,7 @@
  * Time: 18:03
  */
 
+namespace BunnyPHP;
 class Controller
 {
     protected $_variables = [];

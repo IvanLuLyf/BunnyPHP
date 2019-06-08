@@ -6,6 +6,7 @@
  * Time: 18:38
  */
 
+namespace BunnyPHP;
 interface Storage
 {
     public function read($filename);

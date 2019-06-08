@@ -13,6 +13,11 @@
       "email": "me@ivanlu.cn"
     }
   ],
+  "autoload": {
+    "psr-4": {
+      "BunnyPHP\\": "BunnyPHP/"
+    }
+  },
   "require": {
     "php": ">=7.0.0"
   }

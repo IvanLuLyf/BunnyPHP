@@ -6,6 +6,8 @@
  * Time: 23:24
  */
 
+namespace BunnyPHP;
+
 class Service
 {
 

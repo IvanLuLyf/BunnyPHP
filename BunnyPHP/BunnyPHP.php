@@ -6,9 +6,10 @@
  * Time: 17:42
  */
 
+namespace BunnyPHP;
 class BunnyPHP
 {
-    const BUNNY_VERSION = '2.2.4';
+    const BUNNY_VERSION = '2.2.5';
     const MODE_NORMAL = 0;
     const MODE_API = 1;
     const MODE_AJAX = 2;
@@ -105,7 +106,7 @@ class BunnyPHP
     private function callAction($controller, $dispatch, $action, $pathParam = [])
     {
         try {
-            $class = new ReflectionClass($controller);
+            $class = new \ReflectionClass($controller);
             $method = $class->getMethod($action);
             $pathValue = [];
             $assignValue = [];
@@ -156,7 +157,7 @@ class BunnyPHP
             } else {
                 call_user_func_array([$dispatch, $action], [$pathParam]);
             }
-        } catch (ReflectionException $e) {
+        } catch (\ReflectionException $e) {
             call_user_func_array([$dispatch, $action], [$pathParam]);
         }
     }
@@ -297,21 +298,21 @@ class BunnyPHP
             define('DB_PREFIX', $this->config->get(['db', 'prefix']));
         }
 
-        $storageName = 'FileStorage';
+        $storageName = 'BunnyPHP\\FileStorage';
         if ($this->config->has('storage')) {
-            $storageName = ucfirst(($this->config->get(['storage', 'name'], 'File')) . 'Storage');
+            $storageName = ucfirst(($this->config->get(['storage', 'name'], 'BunnyPHP\\File')) . 'Storage');
         }
         BunnyPHP::$storage = new $storageName($this->config->get('storage', []));
 
-        $cacheName = 'FileCache';
+        $cacheName = 'BunnyPHP\\FileCache';
         if ($this->config->has('cache')) {
-            $cacheName = ucfirst(($this->config->get(['cache', 'name'], 'File')) . 'Cache');
+            $cacheName = ucfirst(($this->config->get(['cache', 'name'], 'BunnyPHP\\File')) . 'Cache');
         }
         BunnyPHP::$cache = new $cacheName($this->config->get('cache', []));
 
-        $loggerName = 'FileLogger';
+        $loggerName = 'BunnyPHP\\FileLogger';
         if ($this->config->has('logger')) {
-            $loggerName = ucfirst(($this->config->get(['logger', 'name'], 'File')) . 'Logger');
+            $loggerName = ucfirst(($this->config->get(['logger', 'name'], 'BunnyPHP\\File')) . 'Logger');
         }
         BunnyPHP::$logger = new $loggerName($this->config->get('logger', []));
 

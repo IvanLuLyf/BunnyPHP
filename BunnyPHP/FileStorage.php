@@ -6,6 +6,8 @@
  * Time: 19:11
  */
 
+namespace BunnyPHP;
+
 class FileStorage implements Storage
 {
     protected $uploadPath;

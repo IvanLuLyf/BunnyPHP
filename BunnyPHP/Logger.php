@@ -6,6 +6,8 @@
  * Time: 22:27
  */
 
+namespace BunnyPHP;
+
 interface Logger
 {
     public function info($message, array $context = []);

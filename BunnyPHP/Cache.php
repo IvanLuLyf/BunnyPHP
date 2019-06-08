@@ -6,6 +6,8 @@
  * Time: 14:07
  */
 
+namespace BunnyPHP;
+
 interface Cache
 {
     public function get($key, $expire = 0);

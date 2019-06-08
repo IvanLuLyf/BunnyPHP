@@ -6,7 +6,9 @@
  * Time: 2:05
  */
 
-class Request implements ArrayAccess
+namespace BunnyPHP;
+
+class Request implements \ArrayAccess
 {
     private $param = [];
 

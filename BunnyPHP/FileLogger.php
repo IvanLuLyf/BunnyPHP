@@ -6,6 +6,8 @@
  * Time: 22:31
  */
 
+namespace BunnyPHP;
+
 class FileLogger implements Logger
 {
     protected $filename;
