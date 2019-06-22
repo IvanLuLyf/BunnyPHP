@@ -1,6 +1,6 @@
 <div align="center">
 
-![BunnyPHP](static/img/logo.png?raw=true)
+![BunnyPHP](https://github.com/bunniescc/media/blob/master/php.png?raw=true)
 
 BunnyPHP is a lightweight PHP MVC Framework.
 
@@ -42,7 +42,6 @@ Project                 Root Dir
 │  ├─model              Model Dir
 │  ├─service            Service Dir
 │  ├─filter             Filter Dir
-├─BunnyPHP              Framework Dir
 ├─cache                 Default FileCache Dir
 ├─config                Default Configure Dir
 │  ├─config.php         Default Configure File
@@ -53,13 +52,48 @@ Project                 Root Dir
 
 ## Installation
 ### Using Composer
+
+#### Create a project by template
+
 ```shell
-composer create-project ivanlulyf/bunnyphp project --no-dev
+composer create-project ivanlulyf/bunnyphp-app PROJECT_NAME --no-dev
 ```
+
+#### Create a project by your own
+
+> Run the command to get BunnyPHP
+
+```shell
+composer require ivanlulyf/bunnyphp
+```
+
+> Create file ```index.php``` with the  following content.
+
+```php
+<?php
+define('APP_PATH', __DIR__ . '/');
+define("IN_TWIMI_PHP", "True", TRUE);
+require 'vendor/autoload.php';
+(new BunnyPHP\BunnyPHP())->run();
+``` 
+
 ### Using Clone
+
+> Clone the repo to your project root
+
 ```shell
 git clone https://github.com/IvanLuLyf/BunnyPHP.git
 ```
+
+> Create file ```index.php``` with the  following content.
+
+```php
+<?php
+define('APP_PATH', __DIR__ . '/');
+define("IN_TWIMI_PHP", "True", TRUE);
+require APP_PATH . 'BunnyPHP/BunnyPHP.php';
+(new BunnyPHP\BunnyPHP())->run();
+``` 
 
 ## Requirement
 
