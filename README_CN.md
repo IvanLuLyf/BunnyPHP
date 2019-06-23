@@ -42,7 +42,6 @@ Project                 根目录
 │  ├─model              模型目录
 │  ├─service            服务目录
 │  ├─filter             过滤器目录
-├─BunnyPHP              框架目录
 ├─cache                 默认缓存目录
 ├─config                默认配置目录
 │  ├─config.php         默认配置文件
