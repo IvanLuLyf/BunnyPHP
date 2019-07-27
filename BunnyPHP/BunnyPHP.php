@@ -94,11 +94,11 @@ class BunnyPHP
                 $param = $url_array ? $url_array : [];
             }
         }
-        $prefix = '';
+        $prefix = $this->config->get('namespace', '');
         if (!empty($appName)) {
             $appConf = $this->apps[$appName];
             $prefix = isset($appConf['namespace']) ? $appConf['namespace'] : '';
-            define('SUB_APP_PATH', $appConf['path']);
+            if (isset($appConf['path'])) define('SUB_APP_PATH', $appConf['path']);
         }
         if ($prefix) {
             $controllerPrefix = $prefix . '\\Controller\\';
@@ -196,13 +196,19 @@ class BunnyPHP
         $pattern = "#(@[a-zA-Z]+\s*[a-zA-Z0-9, ()_].*)#";
         $pathValue = [];
         $assignValue = [];
+        $prefix = $this->config->get('namespace', '');
+        if ($prefix) {
+            $filterPrefix = $prefix . '\\Controller\\';
+        } else {
+            $filterPrefix = '';
+        }
         if (preg_match_all($pattern, $docComment, $matches, PREG_PATTERN_ORDER)) {
             foreach ($matches[1] as $decorate) {
                 if (strpos($decorate, '@filter') === 0) {
                     $filterInfo = explode(' ', trim($decorate));
                     array_filter($filterInfo);
                     array_shift($filterInfo);
-                    $filterName = trim(ucfirst(array_shift($filterInfo))) . 'Filter';
+                    $filterName = $filterPrefix . trim(ucfirst(array_shift($filterInfo))) . 'Filter';
                     $filter = new $filterName($this->mode);
                     $result = $filter->doFilter($filterInfo);
                     if ($result == Filter::STOP) {

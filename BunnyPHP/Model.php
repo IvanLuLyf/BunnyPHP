@@ -25,7 +25,7 @@ class Model
             if (!empty($name)) {
                 $this->_name = $name;
             } else {
-                $this->_name = substr(get_class($this), 0, -5);
+                $this->_name = substr(get_class($this), strrpos(get_called_class(), '\\') + 1, -5);
             }
             $dashed = strtolower(preg_replace('/([A-Z])/', '_$1', lcfirst($this->_name)));
             $this->_table = DB_PREFIX . strtolower($dashed);
@@ -48,7 +48,7 @@ class Model
         if (isset($vars['_table'])) {
             return $vars['_table'];
         } else {
-            $name = substr(get_called_class(), 0, -5);
+            $name = substr(get_called_class(), strrpos(get_called_class(), '\\') + 1, -5);
             $dashed = strtolower(preg_replace('/([A-Z])/', '_$1', lcfirst($name)));
             return DB_PREFIX . strtolower($dashed);
         }
