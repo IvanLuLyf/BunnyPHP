@@ -137,7 +137,7 @@ return [
         "port"=>"",                   // database port
         "username"=>"",               // database username
         "password"=>"",               // database password
-        "database"=>"sns.sqlite3",    // database name
+        "database"=>"bunny.sqlite3",  // database name
         "prefix"=>"tp_",              // table prefix
     ],
     "storage" => [                    // storage config, optional

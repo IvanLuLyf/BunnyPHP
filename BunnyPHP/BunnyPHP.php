@@ -7,6 +7,10 @@
  */
 
 namespace BunnyPHP;
+
+use ReflectionClass;
+use ReflectionException;
+
 class BunnyPHP
 {
     const BUNNY_VERSION = '2.2.6';
@@ -20,6 +24,7 @@ class BunnyPHP
      */
     protected $config;
     protected $mode = BunnyPHP::MODE_NORMAL;
+    protected $apps = [];
 
     private static $app;
     private static $storage;
@@ -48,10 +53,16 @@ class BunnyPHP
 
     private function route()
     {
+        $appName = '';
         if ($this->mode == BunnyPHP::MODE_CLI) {
-            $controllerName = !empty($_SERVER['argv'][1]) ? ucfirst($_SERVER['argv'][1]) : $this->config->get('controller', 'Index');
-            $actionName = !empty($_SERVER['argv'][2]) ? $_SERVER['argv'][2] : 'index';
-            $param = array_slice($_SERVER['argv'], 3);
+            $cli_arg = array_slice($_SERVER['argv'], 1);
+            if (in_array($cli_arg[0], array_keys($this->apps))) {
+                $appName = $cli_arg[0];
+                array_shift($cli_arg);
+            }
+            $controllerName = !empty($cli_arg[0]) ? ucfirst($cli_arg[0]) : $this->config->get('controller', 'Index');
+            $actionName = !empty($cli_arg[1]) ? $cli_arg[1] : 'index';
+            $param = array_slice($cli_arg, 2);
         } else {
             $controllerName = !empty($_GET['mod']) ? ucfirst($_GET['mod']) : $this->config->get('controller', 'Index');
             $actionName = !empty($_GET['action']) ? $_GET['action'] : 'index';
@@ -72,14 +83,29 @@ class BunnyPHP
                 } elseif (strtolower($url_array[0]) == "index.php") {
                     array_shift($url_array);
                 }
-                $controllerName = ucfirst($url_array[0]);
+                if (in_array($url_array[0], array_keys($this->apps))) {
+                    $appName = $url_array[0];
+                    array_shift($url_array);
+                }
+                $controllerName = $url_array ? ucfirst($url_array[0]) : $controllerName;
                 array_shift($url_array);
                 $actionName = $url_array ? $url_array[0] : $actionName;
                 array_shift($url_array);
                 $param = $url_array ? $url_array : [];
             }
         }
-        $controller = $controllerName . 'Controller';
+        $prefix = '';
+        if (!empty($appName)) {
+            $appConf = $this->apps[$appName];
+            $prefix = isset($appConf['namespace']) ? $appConf['namespace'] : '';
+            define('SUB_APP_PATH', $appConf['path']);
+        }
+        if ($prefix) {
+            $controllerPrefix = $prefix . '\\Controller\\';
+        } else {
+            $controllerPrefix = '';
+        }
+        $controller = $controllerPrefix . $controllerName . 'Controller';
         if (!class_exists($controller)) {
             if (!class_exists('OtherController')) {
                 View::error(['ret' => '-2', 'status' => 'mod does not exist', 'tp_error_msg' => "模块{$controller}不存在"], $this->mode);
@@ -106,7 +132,7 @@ class BunnyPHP
     private function callAction($controller, $dispatch, $action, $pathParam = [])
     {
         try {
-            $class = new \ReflectionClass($controller);
+            $class = new ReflectionClass($controller);
             $method = $class->getMethod($action);
             $pathValue = [];
             $assignValue = [];
@@ -157,7 +183,7 @@ class BunnyPHP
             } else {
                 call_user_func_array([$dispatch, $action], [$pathParam]);
             }
-        } catch (\ReflectionException $e) {
+        } catch (ReflectionException $e) {
             call_user_func_array([$dispatch, $action], [$pathParam]);
         }
     }
@@ -316,6 +342,9 @@ class BunnyPHP
         }
         BunnyPHP::$logger = new $loggerName($this->config->get('logger', []));
 
+        if ($this->config->has('apps')) {
+            $this->apps = $this->config->get('apps', []);
+        }
         BunnyPHP::$request = new Request();
     }
 
@@ -330,13 +359,22 @@ class BunnyPHP
 
     private static function loadClass($class)
     {
+        $classA = explode('\\', $class);
+        $class = array_pop($classA);
         $frameworkFile = __DIR__ . '/' . $class . '.php';
         $classType = strtolower(self::getClassType($class));
         $classFile = APP_PATH . 'app' . '/' . $classType . '/' . $class . '.php';
-        if (file_exists($frameworkFile)) {
-            include $frameworkFile;
-        } elseif (file_exists($classFile)) {
-            include $classFile;
+        if (defined('SUB_APP_PATH')) {
+            $subClassFile = APP_PATH . 'app' . '/' . SUB_APP_PATH . '/' . $classType . '/' . $class . '.php';
+            if (file_exists($subClassFile)) {
+                include $subClassFile;
+            }
+        } else {
+            if (file_exists($frameworkFile)) {
+                include $frameworkFile;
+            } elseif (file_exists($classFile)) {
+                include $classFile;
+            }
         }
     }
 }

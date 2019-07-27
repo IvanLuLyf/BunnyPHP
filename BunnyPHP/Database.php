@@ -9,6 +9,9 @@
 
 namespace BunnyPHP;
 
+use PDO;
+use PDOStatement;
+
 class Database
 {
     private $conn;
@@ -25,8 +28,8 @@ class Database
             $dsn = "pgsql:host=" . DB_HOST . ";port=" . DB_PORT . ";dbname=" . DB_NAME . "";
         }
         if (!empty($dsn)) {
-            $option = [\PDO::ATTR_DEFAULT_FETCH_MODE => \PDO::FETCH_ASSOC, \PDO::ATTR_STRINGIFY_FETCHES => false, \PDO::ATTR_EMULATE_PREPARES => false];
-            $this->conn = new \PDO($dsn, DB_USER, DB_PASS, $option);
+            $option = [PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC, PDO::ATTR_STRINGIFY_FETCHES => false, PDO::ATTR_EMULATE_PREPARES => false];
+            $this->conn = new PDO($dsn, DB_USER, DB_PASS, $option);
         }
     }
 
@@ -122,7 +125,7 @@ class Database
         }
     }
 
-    private function bindParam(\PDOStatement $statement, array $data = []): \PDOStatement
+    private function bindParam(PDOStatement $statement, array $data = []): PDOStatement
     {
         foreach ($data as $k => &$v) {
             if (is_int($k)) {
