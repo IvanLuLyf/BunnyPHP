@@ -94,13 +94,15 @@ class BunnyPHP
                 $param = $url_array ? $url_array : [];
             }
         }
-        $prefix = $this->config->get('namespace', '');
+        if (defined('TP_NAMESPACE')) {
+            $prefix = TP_NAMESPACE;
+        }
         if (!empty($appName)) {
             $appConf = $this->apps[$appName];
             $prefix = isset($appConf['namespace']) ? $appConf['namespace'] : '';
             if (isset($appConf['path'])) define('SUB_APP_PATH', $appConf['path']);
         }
-        if ($prefix) {
+        if (isset($prefix)) {
             $controllerPrefix = $prefix . '\\Controller\\';
         } else {
             $controllerPrefix = '';
@@ -196,9 +198,11 @@ class BunnyPHP
         $pattern = "#(@[a-zA-Z]+\s*[a-zA-Z0-9, ()_].*)#";
         $pathValue = [];
         $assignValue = [];
-        $prefix = $this->config->get('namespace', '');
-        if ($prefix) {
-            $filterPrefix = $prefix . '\\Controller\\';
+        if (defined('TP_NAMESPACE')) {
+            $prefix = TP_NAMESPACE;
+        }
+        if (isset($prefix)) {
+            $filterPrefix = $prefix . '\\Filter\\';
         } else {
             $filterPrefix = '';
         }
@@ -319,6 +323,10 @@ class BunnyPHP
         define("TP_SITE_NAME", $this->config->get('site_name', 'BunnyPHP'));
         define("TP_SITE_URL", $this->config->get('site_url', 'localhost'));
         define("TP_SITE_REWRITE", $this->config->get('site_rewrite', true));
+
+        if ($this->config->has('namespace')) {
+            define("TP_NAMESPACE", $this->config->get('namespace', ''));
+        }
 
         if ($this->config->has('db')) {
             define('DB_TYPE', $this->config->get(['db', 'type'], 'mysql'));
