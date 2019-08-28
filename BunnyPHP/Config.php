@@ -28,8 +28,18 @@ class Config
 
     public function has($key)
     {
+        if (is_string($key) && strpos($key, '.') !== false) {
+            $key = array_filter(explode('.', $key));
+        }
         if (is_array($key)) {
-            return isset($this->configs[$key[0]][$key[1]]);
+            $tmp = $this->configs;
+            foreach ($key as $k) {
+                if (!isset($tmp[$k])) {
+                    return false;
+                }
+                $tmp = $tmp[$k];
+            }
+            return true;
         } else {
             return isset($this->configs[$key]);
         }
@@ -37,8 +47,18 @@ class Config
 
     public function get($key, $defaultVal = '')
     {
+        if (is_string($key) && strpos($key, '.') !== false) {
+            $key = array_filter(explode('.', $key));
+        }
         if (is_array($key)) {
-            return isset($this->configs[$key[0]][$key[1]]) ? $this->configs[$key[0]][$key[1]] : $defaultVal;
+            $tmp = $this->configs;
+            foreach ($key as $k) {
+                if (!isset($tmp[$k])) {
+                    return $defaultVal;
+                }
+                $tmp = $tmp[$k];
+            }
+            return $tmp;
         } else {
             return isset($this->configs[$key]) ? $this->configs[$key] : $defaultVal;
         }
