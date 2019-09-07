@@ -7,6 +7,7 @@
  */
 
 namespace BunnyPHP;
+defined('BUNNY_PATH') or define('BUNNY_PATH', __DIR__);
 
 use ReflectionClass;
 use ReflectionException;
@@ -22,7 +23,7 @@ class BunnyPHP
     /**
      * @var $config Config
      */
-    protected $config;
+    protected static $config;
     protected $mode = BunnyPHP::MODE_NORMAL;
     protected $apps = [];
 
@@ -60,11 +61,11 @@ class BunnyPHP
                 $appName = $cli_arg[0];
                 array_shift($cli_arg);
             }
-            $controllerName = !empty($cli_arg[0]) ? ucfirst($cli_arg[0]) : $this->config->get('controller', 'Index');
+            $controllerName = !empty($cli_arg[0]) ? ucfirst($cli_arg[0]) : self::$config->get('controller', 'Index');
             $actionName = !empty($cli_arg[1]) ? $cli_arg[1] : 'index';
             $param = array_slice($cli_arg, 2);
         } else {
-            $controllerName = !empty($_GET['mod']) ? ucfirst($_GET['mod']) : $this->config->get('controller', 'Index');
+            $controllerName = !empty($_GET['mod']) ? ucfirst($_GET['mod']) : self::$config->get('controller', 'Index');
             $actionName = !empty($_GET['action']) ? $_GET['action'] : 'index';
             $request_url = $_SERVER['REQUEST_URI'];
             $position = strpos($request_url, '?');
@@ -83,7 +84,7 @@ class BunnyPHP
                 } elseif (strtolower($url_array[0]) == "index.php") {
                     array_shift($url_array);
                 }
-                if (in_array($url_array[0], array_keys($this->apps))) {
+                if (isset($url_array[0]) && in_array($url_array[0], array_keys($this->apps))) {
                     $appName = $url_array[0];
                     array_shift($url_array);
                 }
@@ -257,11 +258,33 @@ class BunnyPHP
 
     public static function getStorage(): Storage
     {
+        if (self::$storage === null) {
+            $storageName = '\\BunnyPHP\\FileStorage';
+            if (self::$config->has('storage')) {
+                $prefix = self::$config->get('storage.prefix');
+                $name = self::$config->get('storage.name');
+                if ($name) {
+                    $storageName = $prefix . ucfirst($name) . 'Storage';
+                }
+            }
+            self::$storage = new $storageName(self::$config->get('storage', []));
+        }
         return self::$storage;
     }
 
     public static function getCache(): Cache
     {
+        if (self::$cache === null) {
+            $cacheName = '\\BunnyPHP\\FileCache';
+            if (self::$config->has('cache')) {
+                $prefix = self::$config->get('cache.prefix');
+                $name = self::$config->get('cache.name');
+                if ($name) {
+                    $cacheName = $prefix . ucfirst($name) . 'Cache';
+                }
+            }
+            self::$cache = new $cacheName(self::$config->get('cache', []));
+        }
         return self::$cache;
     }
 
@@ -272,6 +295,17 @@ class BunnyPHP
 
     public static function getLogger(): Logger
     {
+        if (self::$logger === null) {
+            $loggerName = '\\BunnyPHP\\FileLogger';
+            if (self::$config->has('logger')) {
+                $prefix = self::$config->get('logger.prefix');
+                $name = self::$config->get('logger.name');
+                if ($name) {
+                    $loggerName = $prefix . ucfirst($name) . 'Logger';
+                }
+            }
+            self::$logger = new $loggerName(self::$config->get('logger', []));
+        }
         return self::$logger;
     }
 
@@ -319,47 +353,50 @@ class BunnyPHP
 
     private function loadConfig()
     {
-        $this->config = Config::load('config');
-        define("TP_SITE_NAME", $this->config->get('site_name', 'BunnyPHP'));
-        define("TP_SITE_URL", $this->config->get('site_url', 'localhost'));
-        define("TP_SITE_REWRITE", $this->config->get('site_rewrite', true));
+        self::$config = Config::load('config');
+        define("TP_SITE_NAME", self::$config->get('site_name', 'BunnyPHP'));
+        define("TP_SITE_URL", self::$config->get('site_url', 'localhost'));
+        define("TP_SITE_REWRITE", self::$config->get('site_rewrite', true));
 
-        if ($this->config->has('namespace')) {
-            define("TP_NAMESPACE", $this->config->get('namespace', ''));
+        if (self::$config->has('namespace')) {
+            define("TP_NAMESPACE", self::$config->get('namespace', ''));
         }
 
-        if ($this->config->has('db')) {
-            define('DB_TYPE', $this->config->get(['db', 'type'], 'mysql'));
-            define('DB_HOST', $this->config->get(['db', 'host'], 'localhost'));
-            define('DB_PORT', $this->config->get(['db', 'port'], '3306'));
-            define('DB_NAME', $this->config->get(['db', 'database']));
-            define('DB_USER', $this->config->get(['db', 'username']));
-            define('DB_PASS', $this->config->get(['db', 'password']));
-            define('DB_PREFIX', $this->config->get(['db', 'prefix']));
+        if (self::$config->has('db')) {
+            define('DB_TYPE', self::$config->get('db.type', 'mysql'));
+            define('DB_HOST', self::$config->get('db.host', 'localhost'));
+            define('DB_PORT', self::$config->get('db.port', '3306'));
+            define('DB_NAME', self::$config->get('db.database'));
+            define('DB_USER', self::$config->get('db.username'));
+            define('DB_PASS', self::$config->get('db.password'));
+            define('DB_PREFIX', self::$config->get('db.prefix'));
         }
 
-        $storageName = 'BunnyPHP\\FileStorage';
-        if ($this->config->has('storage')) {
-            $storageName = ucfirst(($this->config->get(['storage', 'name'], 'BunnyPHP\\File')) . 'Storage');
-        }
-        BunnyPHP::$storage = new $storageName($this->config->get('storage', []));
-
-        $cacheName = 'BunnyPHP\\FileCache';
-        if ($this->config->has('cache')) {
-            $cacheName = ucfirst(($this->config->get(['cache', 'name'], 'BunnyPHP\\File')) . 'Cache');
-        }
-        BunnyPHP::$cache = new $cacheName($this->config->get('cache', []));
-
-        $loggerName = 'BunnyPHP\\FileLogger';
-        if ($this->config->has('logger')) {
-            $loggerName = ucfirst(($this->config->get(['logger', 'name'], 'BunnyPHP\\File')) . 'Logger');
-        }
-        BunnyPHP::$logger = new $loggerName($this->config->get('logger', []));
-
-        if ($this->config->has('apps')) {
-            $this->apps = $this->config->get('apps', []);
+        if (self::$config->has('apps')) {
+            $this->apps = self::$config->get('apps', []);
         }
         BunnyPHP::$request = new Request();
+    }
+
+
+    private static function loadClass($class)
+    {
+        $class = self::getShortClassName($class);
+        $frameworkFile = BUNNY_PATH . '/' . $class . '.php';
+        $classType = strtolower(self::getClassType($class));
+        $classFile = APP_PATH . 'app' . '/' . $classType . '/' . $class . '.php';
+        if (file_exists($frameworkFile)) {
+            include $frameworkFile;
+        } elseif (defined('SUB_APP_PATH')) {
+            $subClassFile = APP_PATH . 'app' . '/' . SUB_APP_PATH . '/' . $classType . '/' . $class . '.php';
+            if (file_exists($subClassFile)) {
+                include $subClassFile;
+            }elseif (file_exists($classFile)) {
+                include $classFile;
+            }
+        } elseif (file_exists($classFile)) {
+            include $classFile;
+        }
     }
 
     private static function getClassType($class)
@@ -371,24 +408,9 @@ class BunnyPHP
         return substr($class, $i);
     }
 
-    private static function loadClass($class)
+    private static function getShortClassName($class)
     {
-        $classA = explode('\\', $class);
-        $class = array_pop($classA);
-        $frameworkFile = __DIR__ . '/' . $class . '.php';
-        $classType = strtolower(self::getClassType($class));
-        $classFile = APP_PATH . 'app' . '/' . $classType . '/' . $class . '.php';
-        if (defined('SUB_APP_PATH')) {
-            $subClassFile = APP_PATH . 'app' . '/' . SUB_APP_PATH . '/' . $classType . '/' . $class . '.php';
-            if (file_exists($subClassFile)) {
-                include $subClassFile;
-            }
-        } else {
-            if (file_exists($frameworkFile)) {
-                include $frameworkFile;
-            } elseif (file_exists($classFile)) {
-                include $classFile;
-            }
-        }
+        $tmp = explode('\\', $class);
+        return array_pop($tmp);
     }
 }
