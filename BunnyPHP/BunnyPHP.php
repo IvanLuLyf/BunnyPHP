@@ -110,10 +110,10 @@ class BunnyPHP
         }
         $controller = $controllerPrefix . $controllerName . 'Controller';
         if (!class_exists($controller)) {
-            if (!class_exists('OtherController')) {
+            if (!class_exists($controllerPrefix . 'OtherController')) {
                 View::error(['ret' => '-2', 'status' => 'mod does not exist', 'tp_error_msg' => "模块{$controller}不存在"], $this->mode);
             } else {
-                $controller = 'OtherController';
+                $controller = $controllerPrefix . 'OtherController';
             }
         }
         $request_method = isset($_SERVER['REQUEST_METHOD']) ? strtolower($_SERVER['REQUEST_METHOD']) : 'cli';
@@ -256,7 +256,7 @@ class BunnyPHP
             if (self::$config->has('storage')) {
                 $name = self::$config->get('storage.name');
                 if ($name) {
-                    $storageName = self::getClassName($name, 'storage', TP_NAMESPACE);
+                    $storageName = self::getClassName($name, 'storage');
                 }
             }
             self::$storage = new $storageName(self::$config->get('storage', []));
@@ -271,7 +271,7 @@ class BunnyPHP
             if (self::$config->has('cache')) {
                 $name = self::$config->get('cache.name');
                 if ($name) {
-                    $cacheName = self::getClassName($name, 'cache', TP_NAMESPACE);
+                    $cacheName = self::getClassName($name, 'cache');
                 }
             }
             self::$cache = new $cacheName(self::$config->get('cache', []));
@@ -291,7 +291,7 @@ class BunnyPHP
             if (self::$config->has('logger')) {
                 $name = self::$config->get('logger.name');
                 if ($name) {
-                    $loggerName = self::getClassName($name, 'logger', TP_NAMESPACE);
+                    $loggerName = self::getClassName($name, 'logger');
                 }
             }
             self::$logger = new $loggerName(self::$config->get('logger', []));
@@ -397,7 +397,7 @@ class BunnyPHP
     }
 
 
-    private static function getClassName($class, $type = '', $base = '')
+    public static function getClassName($class, $type = '', $base = TP_NAMESPACE)
     {
         $tmp = explode('.', $class);
         $shortName = ucfirst(array_pop($tmp));
