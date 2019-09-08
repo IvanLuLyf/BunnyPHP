@@ -199,21 +199,14 @@ class BunnyPHP
         $pattern = "#(@[a-zA-Z]+\s*[a-zA-Z0-9, ()_].*)#";
         $pathValue = [];
         $assignValue = [];
-        if (defined('TP_NAMESPACE')) {
-            $prefix = TP_NAMESPACE;
-        }
-        if (isset($prefix)) {
-            $filterPrefix = $prefix . '\\Filter\\';
-        } else {
-            $filterPrefix = '';
-        }
         if (preg_match_all($pattern, $docComment, $matches, PREG_PATTERN_ORDER)) {
             foreach ($matches[1] as $decorate) {
                 if (strpos($decorate, '@filter') === 0) {
                     $filterInfo = explode(' ', trim($decorate));
                     array_filter($filterInfo);
                     array_shift($filterInfo);
-                    $filterName = $filterPrefix . trim(ucfirst(array_shift($filterInfo))) . 'Filter';
+                    $filterName = trim(array_shift($filterInfo));
+                    $filterName = self::getClassName($filterName, 'filter', TP_NAMESPACE);
                     $filter = new $filterName($this->mode);
                     $result = $filter->doFilter($filterInfo);
                     if ($result == Filter::STOP) {
@@ -261,10 +254,9 @@ class BunnyPHP
         if (self::$storage === null) {
             $storageName = '\\BunnyPHP\\FileStorage';
             if (self::$config->has('storage')) {
-                $prefix = self::$config->get('storage.prefix');
                 $name = self::$config->get('storage.name');
                 if ($name) {
-                    $storageName = $prefix . ucfirst($name) . 'Storage';
+                    $storageName = self::getClassName($name, 'storage', TP_NAMESPACE);
                 }
             }
             self::$storage = new $storageName(self::$config->get('storage', []));
@@ -277,10 +269,9 @@ class BunnyPHP
         if (self::$cache === null) {
             $cacheName = '\\BunnyPHP\\FileCache';
             if (self::$config->has('cache')) {
-                $prefix = self::$config->get('cache.prefix');
                 $name = self::$config->get('cache.name');
                 if ($name) {
-                    $cacheName = $prefix . ucfirst($name) . 'Cache';
+                    $cacheName = self::getClassName($name, 'cache', TP_NAMESPACE);
                 }
             }
             self::$cache = new $cacheName(self::$config->get('cache', []));
@@ -298,10 +289,9 @@ class BunnyPHP
         if (self::$logger === null) {
             $loggerName = '\\BunnyPHP\\FileLogger';
             if (self::$config->has('logger')) {
-                $prefix = self::$config->get('logger.prefix');
                 $name = self::$config->get('logger.name');
                 if ($name) {
-                    $loggerName = $prefix . ucfirst($name) . 'Logger';
+                    $loggerName = self::getClassName($name, 'logger', TP_NAMESPACE);
                 }
             }
             self::$logger = new $loggerName(self::$config->get('logger', []));
@@ -354,13 +344,11 @@ class BunnyPHP
     private function loadConfig()
     {
         self::$config = Config::load('config');
-        define("TP_SITE_NAME", self::$config->get('site_name', 'BunnyPHP'));
-        define("TP_SITE_URL", self::$config->get('site_url', 'localhost'));
-        define("TP_SITE_REWRITE", self::$config->get('site_rewrite', true));
+        define('TP_SITE_NAME', self::$config->get('site_name', 'BunnyPHP'));
+        define('TP_SITE_URL', self::$config->get('site_url', 'localhost'));
+        define('TP_SITE_REWRITE', self::$config->get('site_rewrite', true));
 
-        if (self::$config->has('namespace')) {
-            define("TP_NAMESPACE", self::$config->get('namespace', ''));
-        }
+        define('TP_NAMESPACE', self::$config->get('namespace', ''));
 
         if (self::$config->has('db')) {
             define('DB_TYPE', self::$config->get('db.type', 'mysql'));
@@ -381,17 +369,17 @@ class BunnyPHP
 
     private static function loadClass($class)
     {
-        $class = self::getShortClassName($class);
-        $frameworkFile = BUNNY_PATH . '/' . $class . '.php';
-        $classType = strtolower(self::getClassType($class));
-        $classFile = APP_PATH . 'app' . '/' . $classType . '/' . $class . '.php';
+        list($shortName, $type, $prefix) = self::getClassNameInfo($class);
+        $frameworkFile = BUNNY_PATH . '/' . $shortName . '.php';
+        $classType = ($type) ? strtolower($type) : strtolower(self::getClassType($shortName));
+        $classFile = APP_PATH . 'app' . '/' . $classType . '/' . $shortName . '.php';
         if (file_exists($frameworkFile)) {
             include $frameworkFile;
         } elseif (defined('SUB_APP_PATH')) {
-            $subClassFile = APP_PATH . 'app' . '/' . SUB_APP_PATH . '/' . $classType . '/' . $class . '.php';
+            $subClassFile = APP_PATH . 'app' . '/' . SUB_APP_PATH . '/' . $classType . '/' . $shortName . '.php';
             if (file_exists($subClassFile)) {
                 include $subClassFile;
-            }elseif (file_exists($classFile)) {
+            } elseif (file_exists($classFile)) {
                 include $classFile;
             }
         } elseif (file_exists($classFile)) {
@@ -408,9 +396,30 @@ class BunnyPHP
         return substr($class, $i);
     }
 
-    private static function getShortClassName($class)
+
+    private static function getClassName($class, $type = '', $base = '')
+    {
+        $tmp = explode('.', $class);
+        $shortName = ucfirst(array_pop($tmp));
+        $prefix = '';
+        for ($i = 0; $i < count($tmp); $i++) {
+            $prefix .= '\\' . ucfirst($tmp[$i]);
+        }
+        if ($prefix) {
+            return $prefix . '\\' . ($type ? (ucfirst($type) . '\\') : '') . $shortName . ucfirst($type);
+        } elseif ($base) {
+            return $base . '\\' . ($type ? (ucfirst($type) . '\\') : '') . $shortName . ucfirst($type);
+        } else {
+            return $shortName . ucfirst($type);
+        }
+    }
+
+    private static function getClassNameInfo($class)
     {
         $tmp = explode('\\', $class);
-        return array_pop($tmp);
+        $shortName = array_pop($tmp);
+        $type = array_pop($tmp);
+        $prefix = implode('\\', $tmp);
+        return [$shortName, $type, $prefix];
     }
 }
