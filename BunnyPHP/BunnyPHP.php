@@ -99,6 +99,7 @@ class BunnyPHP
             $prefix = TP_NAMESPACE;
         }
         if (!empty($appName)) {
+            self::set('app', $appName);
             $appConf = $this->apps[$appName];
             $prefix = isset($appConf['namespace']) ? $appConf['namespace'] : '';
             if (isset($appConf['path'])) define('SUB_APP_PATH', $appConf['path']);

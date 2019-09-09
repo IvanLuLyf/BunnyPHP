@@ -29,6 +29,9 @@ class View
                 if (!empty($view) && file_exists(APP_PATH . "template/{$view}")) {
                     extract($context);
                     include APP_PATH . "template/{$view}";
+                } else if (!empty($view) && $view[0] == '@' && file_exists(substr($view, 1))) {
+                    extract($context);
+                    include substr($view, 1);
                 } else if (empty($view)) {
                     echo self::get_message($context);
                 } else {
