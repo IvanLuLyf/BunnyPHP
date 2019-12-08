@@ -42,7 +42,7 @@ class Template
                 (new self($view))->compile();
                 include $cacheDir . $view;
             } else {
-                View::error(['ret' => '-4', 'status' => 'template does not exist', 'tp_error_msg' => "模板${view}不存在"]);
+                View::error(['ret' => '-4', 'status' => 'template does not exist', 'tp_error_msg' => Language::get('view_not_exists', ['view' => $view])]);
             }
         }
     }
@@ -63,6 +63,7 @@ class Template
         $this->parse_var();
         $this->parse_if();
         $this->parse_for();
+        $this->parse_lang();
         $this->parse_url();
         $this->parse_include();
         return $this;
@@ -159,7 +160,15 @@ class Template
     {
         $pattern = '/\{u\s+(.*)\s+\}/';
         if (preg_match($pattern, $this->content)) {
-            $this->content = preg_replace($pattern, "<?=View::get_url($1)?>", $this->content);
+            $this->content = preg_replace($pattern, "<?=BunnyPHP\View::get_url($1)?>", $this->content);
+        }
+    }
+
+    private function parse_lang()
+    {
+        $pattern = '/\{L\s*([\'"\w+]*)\s*\}/';
+        if (preg_match($pattern, $this->content)) {
+            $this->content = preg_replace($pattern, "<?=BunnyPHP\Language::get($1)?>", $this->content);
         }
     }
 

@@ -29,27 +29,31 @@ class View
                 if (!empty($view) && file_exists(APP_PATH . "template/{$view}")) {
                     extract($context);
                     include APP_PATH . "template/{$view}";
-                } else if (!empty($view) && $view[0] == '@' && file_exists(substr($view, 1))) {
-                    extract($context);
-                    include substr($view, 1);
                 } else if (empty($view)) {
                     echo self::get_message($context);
                 } else {
-                    self::error(['ret' => '-4', 'status' => 'template does not exist', 'tp_error_msg' => "模板${view}不存在"]);
+                    self::error(['ret' => '-4', 'status' => 'template does not exist', 'tp_error_msg' => Language::get('view_not_exists', ['view' => $view])]);
+                }
+            } elseif (is_array($view)) {
+                if (!empty($view[0]) && is_dir($view[1]) && file_exists($view[1] . "/{$view[0]}")) {
+                    extract($context);
+                    include $view[1] . "/{$view[0]}";
+                } else {
+                    self::error(['ret' => '-4', 'status' => 'template does not exist', 'tp_error_msg' => Language::get('view_not_exists', ['view' => $view])]);
                 }
             } elseif ($view === self::MODE_ERROR) {
                 if (file_exists("template/error.html")) {
                     extract($context);
                     include APP_PATH . "template/error.html";
                 } else {
-                    echo '<html><head><title>BunnyPHP Error</title></head><body><h2>BunnyPHP Error</h2><p>' . self::get_message($context) . '</p></body></html>';
+                    echo Language::get('bunny_error', ['error' => self::get_message($context)]);
                 }
             } elseif ($view === self::MODE_INFO) {
                 if (file_exists("template/info.html")) {
                     extract($context);
                     include APP_PATH . "template/info.html";
                 } else {
-                    echo '<html><head><title>BunnyPHP Info</title></head><body><h2>BunnyPHP Info</h2><p>' . self::get_message($context) . '</p></body></html>';
+                    echo Language::get('bunny_info', ['info' => self::get_message($context)]);
                 }
             }
         }

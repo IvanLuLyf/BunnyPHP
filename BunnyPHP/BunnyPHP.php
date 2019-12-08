@@ -14,7 +14,7 @@ use ReflectionException;
 
 class BunnyPHP
 {
-    const BUNNY_VERSION = '2.2.6';
+    const BUNNY_VERSION = '2.3.0';
     const MODE_NORMAL = 0;
     const MODE_API = 1;
     const MODE_AJAX = 2;
@@ -95,16 +95,14 @@ class BunnyPHP
                 $param = $url_array ? $url_array : [];
             }
         }
-        if (defined('TP_NAMESPACE')) {
-            $prefix = TP_NAMESPACE;
-        }
+        $prefix = TP_NAMESPACE;
         if (!empty($appName)) {
             self::set('app', $appName);
             $appConf = $this->apps[$appName];
             $prefix = isset($appConf['namespace']) ? $appConf['namespace'] : '';
             if (isset($appConf['path'])) define('SUB_APP_PATH', $appConf['path']);
         }
-        if (isset($prefix)) {
+        if (!empty($prefix)) {
             $controllerPrefix = $prefix . '\\Controller\\';
         } else {
             $controllerPrefix = '';
@@ -112,7 +110,7 @@ class BunnyPHP
         $controller = $controllerPrefix . $controllerName . 'Controller';
         if (!class_exists($controller)) {
             if (!class_exists($controllerPrefix . 'OtherController')) {
-                View::error(['ret' => '-2', 'status' => 'mod does not exist', 'tp_error_msg' => "模块{$controller}不存在"], $this->mode);
+                View::error(['ret' => '-2', 'status' => 'mod does not exist', 'tp_error_msg' => Language::get('mod_not_exists', ['mod' => $controller])], $this->mode);
             } else {
                 $controller = $controllerPrefix . 'OtherController';
             }
@@ -129,7 +127,7 @@ class BunnyPHP
             $dispatch = new $controller($controllerName, $actionName, $this->mode);
             $this->callAction($controller, $dispatch, 'other', $param);
         } else {
-            View::error(['ret' => '-3', 'status' => 'action does not exist', 'tp_error_msg' => "Action {$actionName}不存在"], $this->mode);
+            View::error(['ret' => '-3', 'status' => 'action does not exist', 'tp_error_msg' => Language::get('action_not_exists', ['action' => $actionName])], $this->mode);
         }
     }
 
@@ -349,7 +347,7 @@ class BunnyPHP
         define('TP_SITE_URL', self::$config->get('site_url', 'localhost'));
         define('TP_SITE_REWRITE', self::$config->get('site_rewrite', true));
 
-        define('TP_NAMESPACE', self::$config->get('namespace', ''));
+        if (!defined('TP_NAMESPACE')) define('TP_NAMESPACE', self::$config->get('namespace', ''));
 
         if (self::$config->has('db')) {
             define('DB_TYPE', self::$config->get('db.type', 'mysql'));
