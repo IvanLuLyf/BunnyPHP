@@ -1,0 +1,7 @@
+{
+  "mod_not_exists": "Controller {{mod}} is not exists",
+  "action_not_exists": "Action {{action}} is not exists",
+  "view_not_exists": "View {{view}} is not exists",
+  "bunny_error": "<html><head><title>BunnyPHP Error</title></head><body><h2>BunnyPHP Error</h2><p>{{error}}</p></body></html>",
+  "bunny_info": "<html><head><title>BunnyPHP Information</title></head><body><h2>BunnyPHP Information</h2><p>{{info}}</p></body></html>"
+}

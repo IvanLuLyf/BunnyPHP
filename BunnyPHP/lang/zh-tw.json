@@ -1,0 +1,7 @@
+{
+  "mod_not_exists": "控制器{{mod}}不存在",
+  "action_not_exists": "動作{{action}}不存在",
+  "view_not_exists": "視圖{{view}}不存在",
+  "bunny_error": "<html><head><title>BunnyPHP 錯誤</title></head><body><h2>BunnyPHP 錯誤</h2><p>{{error}}</p></body></html>",
+  "bunny_info": "<html><head><title>BunnyPHP 信息</title></head><body><h2>BunnyPHP 信息</h2><p>{{info}}</p></body></html>"
+}
