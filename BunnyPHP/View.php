@@ -16,7 +16,7 @@ class View
     public static function render($view, $context = [], $mode = BunnyPHP::MODE_NORMAL, $code = 200)
     {
         if ($code !== 200) {
-            http_send_status($code);
+            http_response_code($code);
         }
         if ($mode === BunnyPHP::MODE_API or $mode === BunnyPHP::MODE_AJAX) {
             header("Content-Type: application/json; charset=UTF-8");

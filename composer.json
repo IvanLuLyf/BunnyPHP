@@ -21,7 +21,6 @@
   "require": {
     "php": ">=7.0.0",
     "ext-pdo": "*",
-    "ext-json": "*",
-    "ext-http": "*"
+    "ext-json": "*"
   }
 }
