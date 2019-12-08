@@ -43,8 +43,9 @@ Project                 Root Dir
 │  ├─service            Service Dir
 │  ├─filter             Filter Dir
 ├─cache                 Default FileCache Dir
-├─config                Default Configure Dir
+├─config                Configure Dir
 │  ├─config.php         Default Configure File
+├─lang                  Language Package Dir
 ├─static                Static Files Dir
 ├─template              Template Files Dir
 ├─upload                Default FileStorage Dir
@@ -131,6 +132,13 @@ Sample
 ```php
 <?php
 return [
+    "namespace" => "\\App",           // project namespace(optional, empty by default)
+    "apps" => [                       // configure for sub-app  
+        "[url path]" => [             // [url path] sub-app's access path
+            "path" => "admin",        // path to sub-app's program(optional, if using composer and sub-app's namespace is not empty)
+            "namespace" => "\\App"    // sub-app's namespace
+        ],
+    ],
     "db"=> [
         "type"=>"sqlite",             // sqlite mysql pgsql
         "host"=>"",                   // database host
@@ -158,7 +166,7 @@ return [
 
 > JSON Config File
 
-to use this you should prevent other from getting this file.
+to use this you **should** prevent other from getting this file.
 
 ```json
 {
@@ -412,7 +420,7 @@ For example, request ```/test/test/Bunny?name=PHP```, and the final ```$name``` 
 
 If the @filter annotation is defined in the function, the ```doFilter``` function of the corresponding filter is called first, and then the Controller's Action function is executed.
 
-例如
+For example
 
 ```php
 class TestController{

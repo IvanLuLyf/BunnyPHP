@@ -43,8 +43,9 @@ Project                 根目录
 │  ├─service            服务目录
 │  ├─filter             过滤器目录
 ├─cache                 默认缓存目录
-├─config                默认配置目录
+├─config                配置文件目录
 │  ├─config.php         默认配置文件
+├─lang                  语言包目录
 ├─static                静态资源目录
 ├─template              模板目录
 ├─upload                默认上传目录
@@ -131,6 +132,13 @@ location / {
 ```php
 <?php
 return [
+    "namespace" => "\\App",           // 项目命名空间(可选,默认为空)
+    "apps" => [                       // 子应用配置
+        "[url path]" => [             // [url path] 子应用的访问路径
+            "path" => "admin",        // 子应用的程序路径(可选,如果使用composer且子应用的命名空间不为空)
+            "namespace" => "\\App"    // 子应用的命名空间
+        ],
+    ],
     "db"=> [
         "type"=>"sqlite",             // 可使用sqlite mysql pgsql
         "host"=>"",                   // 数据库服务器
@@ -158,7 +166,7 @@ return [
 
 > JSON配置文件
 
-使用JSON文件时请保证配置文件不会被外部直接获取.
+使用JSON文件时请**保证**配置文件不会被外部直接获取.
 
 ```json
 {
