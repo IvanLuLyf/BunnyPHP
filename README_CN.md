@@ -18,6 +18,9 @@ BunnyPHP是一个轻量的PHP MVC框架.
 
 [English](README.md) | 中文
 
+[![Run on Repl.it](https://img.shields.io/badge/-run%20on%20repl.it-%235C6970?logo=repl.it&style=flat-square&logoColor=white)](https://repl.it/github/ivanlulyf/bunnyphp-app)
+[![Open in Gitpod](https://img.shields.io/badge/-open%20in%20Gitpod-%231966D2?logo=gitpod&style=flat-square&logoColor=white)](https://gitpod.io/#https://github.com/IvanLuLyf/BunnyPHP-App)
+
 ## 目录
 
 - [目录结构](#目录结构)
