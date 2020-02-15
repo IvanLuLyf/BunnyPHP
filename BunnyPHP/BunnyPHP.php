@@ -46,8 +46,6 @@ class BunnyPHP
     {
         spl_autoload_register([$this, 'loadClass']);
         $this->setReporting();
-        $this->removeMagicQuotes();
-        $this->unregisterGlobals();
         $this->loadConfig();
         $this->route();
     }
@@ -314,30 +312,6 @@ class BunnyPHP
     {
         $value = is_array($value) ? array_map([$this, 'stripSlashesDeep'], $value) : stripslashes($value);
         return $value;
-    }
-
-    private function removeMagicQuotes()
-    {
-        if (get_magic_quotes_gpc()) {
-            $_GET = isset($_GET) ? $this->stripSlashesDeep($_GET) : '';
-            $_POST = isset($_POST) ? $this->stripSlashesDeep($_POST) : '';
-            $_COOKIE = isset($_COOKIE) ? $this->stripSlashesDeep($_COOKIE) : '';
-            $_SESSION = isset($_SESSION) ? $this->stripSlashesDeep($_SESSION) : '';
-        }
-    }
-
-    private function unregisterGlobals()
-    {
-        if (ini_get('register_globals')) {
-            $array = array('_SESSION', '_POST', '_GET', '_COOKIE', '_REQUEST', '_SERVER', '_ENV', '_FILES');
-            foreach ($array as $value) {
-                foreach ($GLOBALS[$value] as $key => $var) {
-                    if ($var === $GLOBALS[$key]) {
-                        unset($GLOBALS[$key]);
-                    }
-                }
-            }
-        }
     }
 
     private function loadConfig()
