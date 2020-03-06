@@ -40,7 +40,7 @@ class Model
         $pk = isset($vars['_pk']) ? $vars['_pk'] : [];
         $ai = isset($vars['_ai']) ? $vars['_ai'] : '';
         $uk = isset($vars['_uk']) ? $vars['_uk'] : [];
-        return Database::getInstance()->createTable($table, $vars['_column'], $pk, $ai, $uk, $debug);
+        return BunnyPHP::getDatabase()->createTable($table, $vars['_column'], $pk, $ai, $uk, $debug);
     }
 
     public static function name()
@@ -119,11 +119,7 @@ class Model
 
     public function limit($size, $start = 0)
     {
-        if (DB_TYPE === 'pgsql') {
-            $this->_filter .= " limit $size offset $start";
-        } else {
-            $this->_filter .= " limit $start,$size";
-        }
+        $this->_filter .= " limit $size offset $start";
         return $this;
     }
 
@@ -140,40 +136,40 @@ class Model
 
     public function fetch($columns = '*')
     {
-        $result = Database::getInstance()->fetchOne($this->buildSelect($columns), $this->_param, $this->_debug);
+        $result = BunnyPHP::getDatabase()->fetchOne($this->buildSelect($columns), $this->_param, $this->_debug);
         $this->reset();
         return $result;
     }
 
     public function fetchAll($columns = '*')
     {
-        $result = Database::getInstance()->fetchAll($this->buildSelect($columns), $this->_param, $this->_debug);
+        $result = BunnyPHP::getDatabase()->fetchAll($this->buildSelect($columns), $this->_param, $this->_debug);
         $this->reset();
         return $result;
     }
 
     public function cursor($columns = '*')
     {
-        $result = Database::getInstance()->fetchAll($this->buildSelect($columns), $this->_param, $this->_debug);
+        $result = BunnyPHP::getDatabase()->fetchAll($this->buildSelect($columns), $this->_param, $this->_debug);
         $this->reset();
         return $result;
     }
 
     public function delete()
     {
-        $result = Database::getInstance()->delete($this->_table, $this->_filter, $this->_param, $this->_debug);
+        $result = BunnyPHP::getDatabase()->delete($this->_table, $this->_filter, $this->_param, $this->_debug);
         $this->reset();
         return $result;
     }
 
     public function add($data = [])
     {
-        return Database::getInstance()->insert($data, $this->_table, $this->_debug);
+        return BunnyPHP::getDatabase()->insert($data, $this->_table, $this->_debug);
     }
 
     public function update($data = [], $what = null)
     {
-        $result = Database::getInstance()->update($data, $this->_table, $this->_filter, $this->_param, $what, $this->_debug);
+        $result = BunnyPHP::getDatabase()->update($data, $this->_table, $this->_filter, $this->_param, $what, $this->_debug);
         $this->reset();
         return $result;
     }

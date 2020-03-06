@@ -14,7 +14,7 @@ use ReflectionException;
 
 class BunnyPHP
 {
-    const BUNNY_VERSION = '2.3.2';
+    const BUNNY_VERSION = '2.3.3';
     const MODE_NORMAL = 0;
     const MODE_API = 1;
     const MODE_AJAX = 2;
@@ -27,7 +27,8 @@ class BunnyPHP
     protected $mode = BunnyPHP::MODE_NORMAL;
     protected $apps = [];
 
-    private static $app;
+    private static $instance;
+    private static $db;
     private static $storage;
     private static $cache;
     private static $request;
@@ -39,7 +40,7 @@ class BunnyPHP
     public function __construct($m = BunnyPHP::MODE_NORMAL)
     {
         $this->mode = $m;
-        BunnyPHP::$app = $this;
+        BunnyPHP::$instance = $this;
     }
 
     public function run()
@@ -243,7 +244,22 @@ class BunnyPHP
 
     public static function app(): BunnyPHP
     {
-        return self::$app;
+        return self::$instance;
+    }
+
+    public static function getDatabase(): Database
+    {
+        if (self::$db === null) {
+            $dbName = '\\BunnyPHP\\PdoDatabase';
+            if (self::$config->has('db')) {
+                $name = self::$config->get('db.name');
+                if ($name) {
+                    $dbName = self::getClassName($name, 'database');
+                }
+            }
+            self::$db = new $dbName(self::$config->get('db'), []);
+        }
+        return self::$db;
     }
 
     public static function getStorage(): Storage
@@ -324,12 +340,6 @@ class BunnyPHP
         if (!defined('TP_NAMESPACE')) define('TP_NAMESPACE', self::$config->get('namespace', ''));
 
         if (self::$config->has('db')) {
-            define('DB_TYPE', self::$config->get('db.type', 'mysql'));
-            define('DB_HOST', self::$config->get('db.host', 'localhost'));
-            define('DB_PORT', self::$config->get('db.port', '3306'));
-            define('DB_NAME', self::$config->get('db.database'));
-            define('DB_USER', self::$config->get('db.username'));
-            define('DB_PASS', self::$config->get('db.password'));
             define('DB_PREFIX', self::$config->get('db.prefix'));
         }
 
