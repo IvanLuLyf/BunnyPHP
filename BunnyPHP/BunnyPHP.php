@@ -46,6 +46,7 @@ class BunnyPHP
     public function run()
     {
         spl_autoload_register([$this, 'loadClass']);
+        set_error_handler([$this, 'handleErr']);
         $this->setReporting();
         $this->loadConfig();
         $this->route();
@@ -349,6 +350,11 @@ class BunnyPHP
         BunnyPHP::$request = new Request();
     }
 
+    public static function handleErr($err_no, $err_str, $err_file, $err_line)
+    {
+        View::error(['tp_error_msg' => "$err_str<br/>File: $err_file<br/>Line: $err_line"]);
+        return false;
+    }
 
     private static function loadClass($class)
     {
