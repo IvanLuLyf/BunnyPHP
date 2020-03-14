@@ -14,7 +14,7 @@ use ReflectionException;
 
 class BunnyPHP
 {
-    const BUNNY_VERSION = '2.3.6';
+    const BUNNY_VERSION = '2.3.7';
     const MODE_NORMAL = 0;
     const MODE_API = 1;
     const MODE_AJAX = 2;
@@ -55,17 +55,18 @@ class BunnyPHP
     private function route()
     {
         $appName = '';
+        $defCtr = self::$config->get('controller', 'Index');
         if ($this->mode == BunnyPHP::MODE_CLI) {
             $cli_arg = array_slice($_SERVER['argv'], 1);
             if (in_array($cli_arg[0], array_keys($this->apps))) {
                 $appName = $cli_arg[0];
                 array_shift($cli_arg);
             }
-            $controllerName = !empty($cli_arg[0]) ? ucfirst($cli_arg[0]) : self::$config->get('controller', 'Index');
-            $actionName = !empty($cli_arg[1]) ? $cli_arg[1] : 'index';
+            $controllerName = ucfirst($cli_arg[0] ?? $defCtr);
+            $actionName = $cli_arg[1] ?? 'index';
             $param = array_slice($cli_arg, 2);
         } else {
-            $controllerName = !empty($_GET['mod']) ? ucfirst($_GET['mod']) : self::$config->get('controller', 'Index');
+            $controllerName = ucfirst(!empty($_GET['mod']) ? $_GET['mod'] : $defCtr);
             $actionName = !empty($_GET['action']) ? $_GET['action'] : 'index';
             $request_url = $_SERVER['REQUEST_URI'];
             $position = strpos($request_url, '?');
@@ -88,11 +89,11 @@ class BunnyPHP
                     $appName = $url_array[0];
                     array_shift($url_array);
                 }
-                $controllerName = $url_array ? ucfirst($url_array[0]) : $controllerName;
+                $controllerName = ucfirst($url_array[0] ?? $controllerName);
                 array_shift($url_array);
-                $actionName = $url_array ? $url_array[0] : $actionName;
+                $actionName = $url_array[0] ?? $actionName;
                 array_shift($url_array);
-                $param = $url_array ? $url_array : [];
+                $param = $url_array;
             }
         }
         $prefix = TP_NAMESPACE;
@@ -115,7 +116,7 @@ class BunnyPHP
                 $controller = $controllerPrefix . 'OtherController';
             }
         }
-        $request_method = isset($_SERVER['REQUEST_METHOD']) ? strtolower($_SERVER['REQUEST_METHOD']) : 'cli';
+        $request_method = strtolower($_SERVER['REQUEST_METHOD'] ?? 'cli');
         $actionFunc = 'ac_' . $actionName . '_' . $request_method;
         if (method_exists($controller, $actionFunc)) {
             $dispatch = new $controller($controllerName, $actionName, $this->mode);
@@ -154,83 +155,85 @@ class BunnyPHP
                     } else {
                         $defVal = '';
                     }
-                    if (!empty($type)) {
-                        if ($type == 'array') {
-                            $value[] = $pathParam;
-                        } elseif ($type == 'string') {
-                            $p = isset($pathValue[$name]) ? $pathValue[$name] : $defVal;
-                            $p = isset($_REQUEST[$name]) ? $_REQUEST[$name] : $p;
-                            $value[] = $p;
-                        } elseif ($type == 'int') {
-                            $p = isset($pathValue[$name]) ? intval($pathValue[$name]) : $defVal;
-                            $p = isset($_REQUEST[$name]) ? intval($_REQUEST[$name]) : $p;
-                            $value[] = $p;
-                        } elseif ($type == 'float') {
-                            $p = isset($pathValue[$name]) ? floatval($pathValue[$name]) : $defVal;
-                            $p = isset($_REQUEST[$name]) ? floatval($_REQUEST[$name]) : $p;
-                            $value[] = $p;
-                        } else {
-                            if (!isset($this->container[$type])) {
-                                $this->container[$type] = new $type();
-                            }
-                            $value[] = $this->container[$type];
-                        }
-                    } else {
-                        $p = isset($pathValue[$name]) ? $pathValue[$name] : $defVal;
-                        $p = isset($_REQUEST[$name]) ? $_REQUEST[$name] : $p;
-                        $value[] = $p;
-                    }
+                    $value[] = $this->getVal($type, $name, $defVal, $pathValue);
                 }
                 call_user_func_array([$dispatch, $action], $value);
             } else {
-                call_user_func_array([$dispatch, $action], [$pathParam]);
+                call_user_func_array([$dispatch, $action], []);
             }
         } catch (ReflectionException $e) {
-            call_user_func_array([$dispatch, $action], [$pathParam]);
+            call_user_func_array([$dispatch, $action], []);
+        }
+    }
+
+    private function getVal($type, $name, $def, $path)
+    {
+        if (in_array($type, ['int', 'float', 'bool', 'string', ''])) {
+            $val = $path[$name] ?? $_REQUEST[$name] ?? $def;
+            if (in_array($type, ['int', 'float', 'bool'])) {
+                return ($type . 'val')($val);
+            }
+            return $val;
+        } else if ($type == 'array') {
+            return $path;
+        } else {
+            if (!isset($this->container[$type])) {
+                $this->container[$type] = new $type();
+            }
+            return $this->container[$type];
         }
     }
 
     private function processAnnotation($docComment, $pathParam = [])
     {
-        /**
-         * @var $filter Filter
-         */
         $pattern = "#(@[a-zA-Z]+\s*[a-zA-Z0-9, ()_].*)#";
         $pathValue = [];
         $assignValue = [];
         if (preg_match_all($pattern, $docComment, $matches, PREG_PATTERN_ORDER)) {
             foreach ($matches[1] as $decorate) {
                 if (strpos($decorate, '@filter') === 0) {
-                    $filterInfo = explode(' ', trim($decorate));
-                    array_filter($filterInfo);
-                    array_shift($filterInfo);
-                    $filterName = trim(array_shift($filterInfo));
-                    $filterName = self::getClassName($filterName, 'filter', TP_NAMESPACE);
-                    $filter = new $filterName($this->mode);
-                    $result = $filter->doFilter($filterInfo);
-                    if ($result == Filter::STOP) {
-                        return [Filter::STOP];
-                    }
-                    $assignValue = array_merge($assignValue, $filter->getVariable());
+                    $result = $this->processFilter($decorate, $assignValue);
+                    if ($result == Filter::STOP) return [Filter::STOP];
                 } elseif (strpos($decorate, '@param') === 0) {
-                    $patName = '/\$([\w]+)\s*/';
-                    $patPath = '/path\(([0-9])(,(.*))?\)/';
-                    if (preg_match($patName, $decorate, $matName)) {
-                        if (preg_match($patPath, $decorate, $matPath)) {
-                            if (isset($pathParam[intval($matPath[1])])) {
-                                $pathValue[trim($matName[1])] = $pathParam[intval($matPath[1])];
-                            } else {
-                                if (isset($matPath[3])) {
-                                    $pathValue[trim($matName[1])] = $matPath[3];
-                                }
-                            }
-                        }
-                    }
+                    $this->processPathParam($decorate, $pathParam, $pathValue);
                 }
             }
             return [Filter::NEXT, $pathValue, $assignValue];
         }
         return [Filter::NEXT];
+    }
+
+    private function processFilter($decorate, &$assignValue)
+    {
+        /**
+         * @var $filter Filter
+         */
+        $filterInfo = explode(' ', trim($decorate));
+        array_filter($filterInfo);
+        array_shift($filterInfo);
+        $filterName = trim(array_shift($filterInfo));
+        $filterName = self::getClassName($filterName, 'filter', TP_NAMESPACE);
+        $filter = new $filterName($this->mode);
+        $result = $filter->doFilter($filterInfo);
+        $assignValue = array_merge($assignValue, $filter->getVariable());
+        return $result;
+    }
+
+    private function processPathParam($decorate, &$pathParam, &$pathValue)
+    {
+        $patName = '/\$([\w]+)\s*/';
+        $patPath = '/path\(([0-9])(,(.*))?\)/';
+        if (preg_match($patName, $decorate, $matName)) {
+            if (preg_match($patPath, $decorate, $matPath)) {
+                if (isset($pathParam[intval($matPath[1])])) {
+                    $pathValue[trim($matName[1])] = $pathParam[intval($matPath[1])];
+                } else {
+                    if (isset($matPath[3])) {
+                        $pathValue[trim($matName[1])] = $matPath[3];
+                    }
+                }
+            }
+        }
     }
 
     public function get($key)
@@ -352,13 +355,13 @@ class BunnyPHP
 
     public function handleErr($err_no, $err_str, $err_file, $err_line)
     {
+        $err = ['ret' => '-8', 'status' => 'internal error', 'bunny_error' => "$err_str\nFile: $err_file\nLine: $err_line"];
         if (APP_DEBUG) {
             $trace = debug_backtrace();
             array_shift($trace);
-        } else {
-            $trace = null;
+            $err['bunny_error_trace'] = $trace;
         }
-        View::error(['bunny_error' => "$err_str\nFile: $err_file\nLine: $err_line", 'bunny_error_trace' => $trace], $this->mode);
+        View::error($err, $this->mode);
         return false;
     }
 
