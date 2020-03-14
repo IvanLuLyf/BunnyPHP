@@ -220,6 +220,10 @@ return [
 > 样例
 
 ```php
+<?php
+
+use BunnyPHP\Model;
+
 class MessageModel extends Model
 {
     protected $_column = [
@@ -300,6 +304,10 @@ select tp_hello.content,tp_hello.id,tp_test.message from tp_hello left join tp_t
 > 样例
 
 ```php
+<?php
+
+use BunnyPHP\Controller;
+
 class MessageController extends Controller
 {
     public function ac_init_cli()
@@ -395,7 +403,11 @@ public function ac_test(UserModel $userModel,string $name,int $id=1){
 例如:
 
 ```php
-class TestController{
+<?php
+
+use BunnyPHP\Controller;
+
+class TestController extends Controller {
     /**
      * @param $name string path(0,Test)
      * @param $page integer path(1,1)
@@ -423,7 +435,11 @@ class TestController{
 例如
 
 ```php
-class TestController{
+<?php
+
+use BunnyPHP\Controller;
+
+class TestController extends Controller {
     /**
      * @filter test
      * @filter hello

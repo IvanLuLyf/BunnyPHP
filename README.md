@@ -220,6 +220,10 @@ Every Model **must extend** ```Model```
 > Sample
 
 ```php
+<?php
+
+use BunnyPHP\Model;
+
 class MessageModel extends Model
 {
     protected $_column = [
@@ -300,6 +304,10 @@ Every Controller **must extend** ```Controller```
 > Sample
 
 ```php
+<?php
+
+use BunnyPHP\Controller;
+
 class MessageController extends Controller
 {
     public function ac_init_cli()
@@ -399,7 +407,11 @@ If there is ```path(postion)``` or ```path(position,default)```. in the @param a
 For example:
 
 ```php
-class TestController{
+<?php
+
+use BunnyPHP\Controller;
+
+class TestController extends Controller {
     /**
      * @param $name string path(0,Test)
      * @param $page integer path(1,1)
@@ -427,7 +439,11 @@ If the @filter annotation is defined in the function, the ```doFilter``` functio
 For example
 
 ```php
-class TestController{
+<?php
+
+use BunnyPHP\Controller;
+
+class TestController extends Controller {
     /**
      * @filter test
      * @filter hello
