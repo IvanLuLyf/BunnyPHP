@@ -18,21 +18,21 @@ class PdoDatabase implements Database
             $dsn = $conf['dsn'];
             $this->db_type = explode(':', $dsn)[0];
         } else {
-            $db_type = isset($conf['type']) ? strtolower($conf['type']) : 'mysql';
-            if (!isset($conf['host'])) $conf['host'] = 'host';
+            $db_type = strtolower($conf['type'] ?? 'mysql');
+            $host = $conf['host'] ?? 'localhost';
             if ($db_type == 'mysql') {
-                if (!isset($conf['port'])) $conf['port'] = 3306;
-                $dsn = "mysql:host=${conf['host']};port=${conf['port']};dbname=${conf['database']};charset=utf8mb4";
+                $port = $conf['port'] ?? 3306;
+                $dsn = "mysql:host=$host;port=$port;dbname=${conf['database']};charset=utf8mb4";
             } elseif ($db_type == 'sqlite') {
                 $dsn = "sqlite:${conf['database']}";
             } elseif ($db_type == 'pgsql') {
-                if (!isset($conf['port'])) $conf['port'] = 5432;
-                $dsn = "pgsql:host=${conf['host']};port=${conf['port']};dbname=${conf['database']}";
+                $port = $conf['port'] ?? 5432;
+                $dsn = "pgsql:host=$host;port=$port;dbname=${conf['database']}";
             }
             $this->db_type = $db_type;
         }
-        $username = isset($conf['username']) ? $conf['username'] : '';
-        $password = isset($conf['password']) ? $conf['password'] : '';
+        $username = $conf['username'] ?? '';
+        $password = $conf['password'] ?? '';
         if (!empty($dsn)) {
             $option = [PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC, PDO::ATTR_STRINGIFY_FETCHES => false, PDO::ATTR_EMULATE_PREPARES => false];
             $this->conn = new PDO($dsn, $username, $password, $option);

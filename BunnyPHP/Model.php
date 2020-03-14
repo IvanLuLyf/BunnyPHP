@@ -37,9 +37,9 @@ class Model
     {
         $table = self::name();
         $vars = get_class_vars(get_called_class());
-        $pk = isset($vars['_pk']) ? $vars['_pk'] : [];
-        $ai = isset($vars['_ai']) ? $vars['_ai'] : '';
-        $uk = isset($vars['_uk']) ? $vars['_uk'] : [];
+        $pk = $vars['_pk'] ?? [];
+        $ai = $vars['_ai'] ?? '';
+        $uk = $vars['_uk'] ?? [];
         return BunnyPHP::getDatabase()->createTable($table, $vars['_column'], $pk, $ai, $uk, $debug);
     }
 
@@ -88,11 +88,11 @@ class Model
 
     public function join($tableName, $condition = [], $select = [], $mod = 'left')
     {
-        if (substr($tableName, -5) == "Model") {
+        if (substr($tableName, -5) == 'Model') {
             $tableName = $tableName::name();
         }
         if (count($select) == 0) {
-            $this->_column[] = $tableName . ".*";
+            $this->_column[] = $tableName . '.*';
         } else {
             foreach ($select as $item) {
                 if (is_array($item)) {
@@ -113,7 +113,7 @@ class Model
                 $conditionArr[] = "{$tableName}.{$k}={$v}";
             }
         }
-        $this->_join .= " on (" . implode(' and ', $conditionArr) . ")";
+        $this->_join .= ' on (' . implode(' and ', $conditionArr) . ')';
         return $this;
     }
 

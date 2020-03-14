@@ -60,7 +60,7 @@ class Config
             }
             return $tmp;
         } else {
-            return isset($this->configs[$key]) ? $this->configs[$key] : $defaultVal;
+            return $this->configs[$key] ?? $defaultVal;
         }
     }
 

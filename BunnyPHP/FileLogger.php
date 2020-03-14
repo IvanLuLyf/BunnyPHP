@@ -14,7 +14,7 @@ class FileLogger implements Logger
 
     public function __construct($config)
     {
-        $this->filename = isset($config['filename']) ? $config['filename'] : APP_PATH . 'log.log';
+        $this->filename = $config['filename'] ?? (APP_PATH . 'log.log');
     }
 
     private function makeMessage($message, array $context = [], $type = '')
@@ -23,7 +23,7 @@ class FileLogger implements Logger
         foreach ($context as $k => $v) {
             $replace['{' . $k . '}'] = $v;
         }
-        return date("[Y-m-d H:i] ", time()) . '[' . $type . '] ' . strtr($message, $context) . "\n";
+        return date('[Y-m-d H:i] ', time()) . '[' . $type . '] ' . strtr($message, $context) . "\n";
     }
 
     public function info($message, array $context = [])
@@ -38,13 +38,13 @@ class FileLogger implements Logger
 
     public function warn($message, array $context = [])
     {
-        error_log($this->makeMessage($message, $context, "WARN"), 3, $this->filename);
+        error_log($this->makeMessage($message, $context, 'WARN'), 3, $this->filename);
     }
 
     public function debug($message, array $context = [])
     {
         if (APP_DEBUG === true) {
-            error_log($this->makeMessage($message, $context, "DEBUG"), 3, $this->filename);
+            error_log($this->makeMessage($message, $context, 'DEBUG'), 3, $this->filename);
         }
     }
 }

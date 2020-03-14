@@ -52,7 +52,7 @@ class Language implements \ArrayAccess
 
     public function translate($key)
     {
-        return isset($this->translation[$key]) ? $this->translation[$key] : '';
+        return $this->translation[$key] ?? '';
     }
 
     public static function getInstance($lang = null, $basePath = null)
@@ -89,11 +89,7 @@ class Language implements \ArrayAccess
 
     public function offsetGet($offset)
     {
-        if (isset($this->translation[$offset])) {
-            return $this->translation[$offset];
-        } else {
-            return $offset;
-        }
+        return $this->translation[$offset] ?? $offset;
     }
 
     public function offsetSet($offset, $value)

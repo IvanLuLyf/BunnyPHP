@@ -79,19 +79,7 @@ class View
 
     private static function get_message($context)
     {
-        if (isset($context['bunny_error'])) {
-            return $context['bunny_error'];
-        } elseif (isset($context['bunny_info'])) {
-            return $context['bunny_info'];
-        } elseif (isset($context['response'])) {
-            return $context['response'];
-        } elseif (isset($context['tp_error_msg'])) {
-            return $context['tp_error_msg'];
-        } elseif (isset($context['tp_info_msg'])) {
-            return $context['tp_info_msg'];
-        } else {
-            return '';
-        }
+        return $context['bunny_error'] ?? $context['bunny_info'] ?? $context['response'] ?? $context['tp_error_msg'] ?? $context['tp_info_msg'] ?? '';
     }
 
     public static function get_url($mod, $action, $params = [])

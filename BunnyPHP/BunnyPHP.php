@@ -100,7 +100,7 @@ class BunnyPHP
         if (!empty($appName)) {
             self::set('app', $appName);
             $appConf = $this->apps[$appName];
-            $prefix = isset($appConf['namespace']) ? $appConf['namespace'] : '';
+            $prefix = $appConf['namespace'] ?? '';
             if (isset($appConf['path'])) define('SUB_APP_PATH', $appConf['path']);
         }
         if (!empty($prefix)) {
@@ -238,7 +238,7 @@ class BunnyPHP
 
     public function get($key)
     {
-        return isset($this->variable[$key]) ? $this->variable[$key] : null;
+        return $this->variable[$key] ?? null;
     }
 
     public function set($key, $value)

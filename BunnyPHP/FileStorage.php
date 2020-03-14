@@ -15,7 +15,7 @@ class FileStorage implements Storage
 
     public function __construct($config)
     {
-        $this->dir = isset($config['dir']) ? $config['dir'] : 'upload';
+        $this->dir = $config['dir'] ?? 'upload';
         $this->uploadPath = APP_PATH . $this->dir . '/';
         if (!is_dir($this->uploadPath)) {
             mkdir($this->uploadPath, 0777, true);
@@ -43,7 +43,7 @@ class FileStorage implements Storage
             mkdir($this->uploadPath . $dir, 0777, true);
         }
         move_uploaded_file($path, $this->uploadPath . $filename);
-        return "/$this->dir/" . $filename;
+        return "/{$this->dir}/$filename";
     }
 
     public function remove($filename)

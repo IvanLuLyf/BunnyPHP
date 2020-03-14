@@ -14,7 +14,7 @@ class Request implements \ArrayAccess
 
     public function getHeader($name)
     {
-        $header_name = "HTTP_" . strtoupper($name);
+        $header_name = 'HTTP_' . strtoupper($name);
         if (isset($_SERVER[$header_name])) {
             return $_SERVER[$header_name];
         }
