@@ -19,12 +19,13 @@ class View
             http_response_code($code);
         }
         if ($mode === BunnyPHP::MODE_API or $mode === BunnyPHP::MODE_AJAX) {
-            header("Content-Type: application/json; charset=UTF-8");
+            header('Content-Type: application/json; charset=UTF-8');
             echo json_encode($context);
         } elseif ($mode === BunnyPHP::MODE_CLI) {
             echo self::get_message($context);
         } else {
-            header("Content-Type: text/html; charset=UTF-8");
+            header('Content-Type: text/html; charset=UTF-8');
+            $_LANG = Language::getInstance();
             if (is_string($view)) {
                 if (!empty($view) && file_exists(APP_PATH . "template/{$view}")) {
                     extract($context);
@@ -32,28 +33,33 @@ class View
                 } else if (empty($view)) {
                     echo self::get_message($context);
                 } else {
-                    self::error(['ret' => '-4', 'status' => 'template does not exist', 'tp_error_msg' => Language::get('view_not_exists', ['view' => $view])]);
+                    self::error(['ret' => '-4', 'status' => 'template does not exist', 'bunny_error' => Language::get('view_not_exists', ['view' => $view])]);
                 }
             } elseif (is_array($view)) {
                 if (!empty($view[0]) && is_dir($view[1]) && file_exists($view[1] . "/{$view[0]}")) {
                     extract($context);
                     include $view[1] . "/{$view[0]}";
                 } else {
-                    self::error(['ret' => '-4', 'status' => 'template does not exist', 'tp_error_msg' => Language::get('view_not_exists', ['view' => $view])]);
+                    self::error(['ret' => '-4', 'status' => 'template does not exist', 'bunny_error' => Language::get('view_not_exists', ['view' => $view])]);
                 }
             } elseif ($view === self::MODE_ERROR) {
-                if (file_exists("template/error.html")) {
+                if (file_exists('template/error.html')) {
                     extract($context);
-                    include APP_PATH . "template/error.html";
+                    include APP_PATH . 'template/error.html';
                 } else {
-                    echo Language::get('bunny_error', ['error' => self::get_message($context)]);
+                    $bunny_error = self::get_message($context);
+                    if (isset($context['bunny_error_trace'])) {
+                        $bunny_error_trace = $context['bunny_error_trace'];
+                    }
+                    include BUNNY_PATH . '/template/error.html';
                 }
             } elseif ($view === self::MODE_INFO) {
-                if (file_exists("template/info.html")) {
+                if (file_exists('template/info.html')) {
                     extract($context);
-                    include APP_PATH . "template/info.html";
+                    include APP_PATH . 'template/info.html';
                 } else {
-                    echo Language::get('bunny_info', ['info' => self::get_message($context)]);
+                    $bunny_info = self::get_message($context);
+                    include BUNNY_PATH . '/template/info.html';
                 }
             }
         }
@@ -73,10 +79,10 @@ class View
 
     private static function get_message($context)
     {
-        if (isset($context['tp_error_msg'])) {
-            return $context['tp_error_msg'];
-        } elseif (isset($context['tp_info_msg'])) {
-            return $context['tp_info_msg'];
+        if (isset($context['bunny_error'])) {
+            return $context['bunny_error'];
+        } elseif (isset($context['bunny_info'])) {
+            return $context['bunny_info'];
         } elseif (isset($context['response'])) {
             return $context['response'];
         } else {

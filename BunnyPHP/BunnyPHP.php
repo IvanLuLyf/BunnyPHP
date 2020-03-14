@@ -110,7 +110,7 @@ class BunnyPHP
         $controller = $controllerPrefix . $controllerName . 'Controller';
         if (!class_exists($controller)) {
             if (!class_exists($controllerPrefix . 'OtherController')) {
-                View::error(['ret' => '-2', 'status' => 'mod does not exist', 'tp_error_msg' => Language::get('mod_not_exists', ['mod' => $controller])], $this->mode);
+                View::error(['ret' => '-2', 'status' => 'mod does not exist', 'bunny_error' => Language::get('mod_not_exists', ['mod' => $controller])], $this->mode);
             } else {
                 $controller = $controllerPrefix . 'OtherController';
             }
@@ -127,7 +127,7 @@ class BunnyPHP
             $dispatch = new $controller($controllerName, $actionName, $this->mode);
             $this->callAction($controller, $dispatch, 'other', $param);
         } else {
-            View::error(['ret' => '-3', 'status' => 'action does not exist', 'tp_error_msg' => Language::get('action_not_exists', ['action' => $actionName])], $this->mode);
+            View::error(['ret' => '-3', 'status' => 'action does not exist', 'bunny_error' => Language::get('action_not_exists', ['action' => $actionName])], $this->mode);
         }
     }
 
@@ -350,9 +350,15 @@ class BunnyPHP
         BunnyPHP::$request = new Request();
     }
 
-    public static function handleErr($err_no, $err_str, $err_file, $err_line)
+    public function handleErr($err_no, $err_str, $err_file, $err_line)
     {
-        View::error(['tp_error_msg' => "$err_str<br/>File: $err_file<br/>Line: $err_line"]);
+        if (APP_DEBUG) {
+            $trace = debug_backtrace();
+            array_shift($trace);
+        } else {
+            $trace = null;
+        }
+        View::error(['bunny_error' => "$err_str\nFile: $err_file\nLine: $err_line", 'bunny_error_trace' => $trace], $this->mode);
         return false;
     }
 
