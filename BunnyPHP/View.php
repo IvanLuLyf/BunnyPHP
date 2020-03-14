@@ -85,6 +85,10 @@ class View
             return $context['bunny_info'];
         } elseif (isset($context['response'])) {
             return $context['response'];
+        } elseif (isset($context['tp_error_msg'])) {
+            return $context['tp_error_msg'];
+        } elseif (isset($context['tp_info_msg'])) {
+            return $context['tp_info_msg'];
         } else {
             return '';
         }
