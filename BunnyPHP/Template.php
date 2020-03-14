@@ -24,14 +24,15 @@ class Template
     public static function render($view, $context = [], $mode = BunnyPHP::MODE_NORMAL, $code = 200)
     {
         if ($code !== 200) {
-            http_send_status($code);
+            http_response_code($code);
         }
         if ($mode === BunnyPHP::MODE_API or $mode === BunnyPHP::MODE_AJAX) {
-            header("Content-Type: application/json; charset=UTF-8");
+            header('Content-Type: application/json; charset=UTF-8');
             echo json_encode($context, JSON_NUMERIC_CHECK);
         } else {
-            header("Content-Type: text/html; charset=UTF-8");
+            header('Content-Type: text/html; charset=UTF-8');
             extract($context);
+            $_LANG = Language::getInstance();
             $cacheDir = APP_PATH . 'cache/template/';
             if (file_exists($cacheDir . $view)) {
                 if (filemtime(APP_PATH . "template/{$view}") > filemtime($cacheDir . $view)) {
@@ -117,10 +118,10 @@ class Template
         if (preg_match_all($_patternIf, $this->content, $match)) {
             foreach ($match[0] as $exp) {
                 if (preg_match($_patternEnd, $this->content)) {
-                    $this->content = preg_replace($_patternIf, "<?php if($1):?>", $this->content, 1);
-                    $this->content = preg_replace($_patternEnd, "<?php endif; ?>", $this->content, 1);
+                    $this->content = preg_replace($_patternIf, '<?php if($1):?>', $this->content, 1);
+                    $this->content = preg_replace($_patternEnd, '<?php endif; ?>', $this->content, 1);
                     if (preg_match($_patternElse, $this->content)) {
-                        $this->content = preg_replace($_patternElse, "<?php else: ?>", $this->content, 1);
+                        $this->content = preg_replace($_patternElse, '<?php else: ?>', $this->content, 1);
                     }
                 } else {
                     View::error(['ret' => -5, 'status' => 'template rendering error', 'bunny_error' => $exp . '没有结束标签']);
@@ -148,7 +149,7 @@ class Template
             foreach ($match[0] as $i => $exp) {
                 if (preg_match($_patternEnd, $this->content)) {
                     $this->content = str_replace($exp, '<?php foreach($' . $match[3][$i] . ' as ' . $this->var_name($match[1][$i]) . '=>' . $this->var_name($match[2][$i]) . '):?>', $this->content);
-                    $this->content = preg_replace($_patternEnd, "<?php endforeach; ?>", $this->content, 1);
+                    $this->content = preg_replace($_patternEnd, '<?php endforeach; ?>', $this->content, 1);
                 } else {
                     View::error(['ret' => -5, 'status' => 'template rendering error', 'bunny_error' => $exp . '没有结束标签']);
                 }
@@ -160,7 +161,7 @@ class Template
     {
         $pattern = '/\{u\s+(.*)\s+\}/';
         if (preg_match($pattern, $this->content)) {
-            $this->content = preg_replace($pattern, "<?=BunnyPHP\View::get_url($1)?>", $this->content);
+            $this->content = preg_replace($pattern, '<?=BunnyPHP\View::get_url($1)?>', $this->content);
         }
     }
 
@@ -168,7 +169,7 @@ class Template
     {
         $pattern = '/\{L\s*([\'"\w+]*)\s*\}/';
         if (preg_match($pattern, $this->content)) {
-            $this->content = preg_replace($pattern, "<?=BunnyPHP\Language::get($1)?>", $this->content);
+            $this->content = preg_replace($pattern, '<?=$_LANG[$1]?>', $this->content);
         }
     }
 
