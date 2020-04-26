@@ -1,3 +1,4 @@
 site_name: BunnyPHP
 pages:
-  - [index.md,Home]
+  - [index.md, Home]
+theme: readthedocs
