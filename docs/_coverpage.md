@@ -1,4 +1,4 @@
-![logo](https://github.com/bunniescc/media/blob/master/php.png?raw=true)
+![logo](_media/logo.png)
 
 > a lightweight PHP MVC Framework.
 
