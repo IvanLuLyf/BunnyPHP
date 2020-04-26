@@ -1,2 +1,4 @@
 * [Home](/)
-* [Guide](guide)
+* Getting Start
+
+    * [Quick start](quickStart.md)
