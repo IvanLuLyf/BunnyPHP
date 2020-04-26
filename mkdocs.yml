@@ -4,6 +4,6 @@ site_author: 'Ivan Lu'
 copyright: '2018-2020,Ivan Lu'
 docs_dir: 'docs'
 theme:
-  name: 'material'
+  name: 'readthedocs'
 nav:
   - Home: index.md
