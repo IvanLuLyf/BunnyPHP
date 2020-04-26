@@ -1,3 +1,0 @@
-# BunnyPHP
-
-Docs
