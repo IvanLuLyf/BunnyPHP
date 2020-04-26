@@ -1,4 +1,9 @@
 site_name: BunnyPHP
-pages:
-  - [index.md, Home]
-theme: readthedocs
+repo_url: https://github.com/IvanLuLyf/BunnyPHP.git
+site_author: 'Ivan Lu'
+copyright: '2018-2020,Ivan Lu'
+docs_dir: 'docs'
+theme:
+  name: 'material'
+nav:
+  - Home: index.md
