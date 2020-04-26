@@ -2,7 +2,7 @@ site_name: BunnyPHP
 repo_url: https://github.com/IvanLuLyf/BunnyPHP.git
 site_author: 'Ivan Lu'
 copyright: '2018-2020,Ivan Lu'
-docs_dir: '/'
+docs_dir: 'docs'
 theme:
   name: 'readthedocs'
 nav:
