@@ -6,3 +6,7 @@
     * [Directory Structure](dirStructure.md)
     * [Configure](configure.md)
     * [Framework Error Code](errorCode.md)
+    
+* The Basics
+
+    * [Model](model.md)
