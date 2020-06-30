@@ -10,3 +10,4 @@
 * The Basics
 
     * [Model](model.md)
+    * [Controller](controller.md)
