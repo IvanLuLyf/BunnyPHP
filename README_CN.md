@@ -24,7 +24,7 @@ BunnyPHP是一个轻量的PHP MVC框架.
 
 ## 文档
 
-你可以在[BunnyPHP官网](https://ivanlulyf.github.io/BunnyPHP) 查看BunnyPHP的文档
+你可以在[BunnyPHP官网](https://ivanlulyf.github.io/BunnyPHP/#/zh-cn/) 查看BunnyPHP的文档
 
 ## 许可证
 
