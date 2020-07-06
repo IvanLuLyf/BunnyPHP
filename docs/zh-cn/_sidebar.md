@@ -10,4 +10,4 @@
 * 基础知识
 
     * [模型类](zh-cn/model.md)
-    * [](zh-cn/controller.md)
+    * [控制器](zh-cn/controller.md)
