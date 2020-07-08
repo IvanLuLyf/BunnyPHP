@@ -18,7 +18,11 @@ class Language implements \ArrayAccess
     public function loadLanguage($lang, $basePath)
     {
         if (!$lang) {
-            $lang = strtolower(trim(explode(',', $_SERVER['HTTP_ACCEPT_LANGUAGE'])[0]));
+            if (key_exists('HTTP_ACCEPT_LANGUAGE', $_SERVER)) {
+                $lang = strtolower(trim(explode(',', $_SERVER['HTTP_ACCEPT_LANGUAGE'])[0]));
+            } elseif (key_exists('LANG', $_SERVER)) {
+                $lang = str_replace('_', '-', strtolower(trim(explode('.', $_SERVER['LANG'])[0])));
+            }
         }
         if (!$basePath) {
             $basePath = APP_PATH . 'lang/';
