@@ -1,31 +1,91 @@
 <?php
 
-/**
- * Created by PhpStorm.
- * User: IvanLu
- * Date: 2018/1/1
- * Time: 15:08
- */
-
 namespace BunnyPHP;
+
+use Generator;
 
 interface Database
 {
-    public function insert(array $data, $table, $debug = false);
+    /**
+     * Insert data into table
+     * @param array $data key-value pair
+     * @param string $table table name
+     * @param bool $debug
+     * @return mixed
+     */
+    public function insert(array $data, string $table, bool $debug = false);
 
-    public function update(array $data, $table, $where = null, $condition = [], $updates = null, $debug = false);
+    /**
+     * Update table data
+     * @param array $data key-value pair
+     * @param string $table table name
+     * @param string|null $where where expression with placeholders
+     * @param array $condition where param bindings
+     * @param string|null $updates specify set expression
+     * @param bool $debug
+     * @return mixed
+     */
+    public function update(array $data, string $table, string $where = null, array $condition = [], string $updates = null, bool $debug = false);
 
-    public function delete($table, $where = null, $condition = [], $debug = false);
+    /**
+     * Delete table data
+     * @param string $table table name
+     * @param string|null $where where expression with placeholders
+     * @param array $condition where param bindings
+     * @param bool $debug
+     * @return mixed
+     */
+    public function delete(string $table, string $where = null, array $condition = [], bool $debug = false);
 
-    public function fetchOne($sql, $condition = [], $debug = false);
+    /**
+     * Returns a row of the result set
+     * @param string $sql sql expression
+     * @param array $condition param bindings
+     * @param bool $debug
+     * @return mixed
+     */
+    public function fetchOne(string $sql, array $condition = [], bool $debug = false);
 
-    public function fetchAll($sql, $condition = [], $debug = false);
+    /**
+     * Returns an array containing all of the result set rows
+     * @param string $sql sql expression
+     * @param array $condition param bindings
+     * @param bool $debug
+     * @return mixed
+     */
+    public function fetchAll(string $sql, array $condition = [], bool $debug = false);
 
-    public function cursor($sql, $condition = []);
+    /**
+     * Returns an iterator for traversing the result set rows
+     * @param string $sql sql expression
+     * @param array $condition param bindings
+     * @return Generator
+     */
+    public function cursor(string $sql, array $condition = []): Generator;
 
-    public function createTable($tableName, $columns = [], $primary = [], $a_i = '', $unique = [], $debug = false);
+    /**
+     * Create a table
+     * @param string $tableName name of table
+     * @param array $columns definition of columns
+     * @param array $primary primary key list
+     * @param string $a_i auto increment key
+     * @param array $unique unique key
+     * @param bool $debug
+     * @return mixed
+     */
+    public function createTable(string $tableName, array $columns = [], array $primary = [], string $a_i = '', array $unique = [], bool $debug = false);
 
-    public function exec($sql);
+    /**
+     * Execute a sql
+     * @param string $sql
+     * @return mixed
+     */
+    public function exec(string $sql);
 
-    public function query($sql);
+    /**
+     * Query a sql and returns an array containing all of the result set rows
+     * @param string $sql
+     * @return mixed
+     */
+    public function query(string $sql);
 }
