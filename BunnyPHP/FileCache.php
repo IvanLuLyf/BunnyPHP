@@ -1,13 +1,6 @@
 <?php
-/**
- * Created by PhpStorm.
- * User: IvanLu
- * Date: 2018/10/31
- * Time: 14:09
- */
 
 namespace BunnyPHP;
-
 class FileCache implements Cache
 {
     protected $dir;
@@ -22,7 +15,7 @@ class FileCache implements Cache
         }
     }
 
-    public function get($key, $expire = 0)
+    public function get(string $key, $expire = 0)
     {
         $filename = $this->cacheDir . md5($key);
         if (file_exists($filename)) {
@@ -37,18 +30,18 @@ class FileCache implements Cache
         }
     }
 
-    public function has($key, $expire = 0)
+    public function has(string $key, $expire = 0): bool
     {
         $filename = $this->cacheDir . md5($key);
         return file_exists($filename) && ((filemtime($filename) + $expire > time()) || $expire === 0);
     }
 
-    public function set($key, $value, $expire = 0)
+    public function set(string $key, $value, $expire = 0)
     {
         file_put_contents($this->cacheDir . md5($key), $value);
     }
 
-    public function del($key)
+    public function del(string $key)
     {
         $filename = $this->cacheDir . md5($key);
         if (file_exists($filename)) {
