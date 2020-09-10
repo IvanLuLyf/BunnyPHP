@@ -1,9 +1,8 @@
 <?php
 
-
 namespace BunnyPHP;
 
-
+use Generator;
 use PDO;
 use PDOStatement;
 
@@ -39,7 +38,7 @@ class PdoDatabase implements Database
         }
     }
 
-    public function insert(array $data, $table, $debug = false)
+    public function insert(array $data, string $table, bool $debug = false): string
     {
         $keys = implode(',', array_keys($data));
         $values = implode(',:', array_keys($data));
@@ -55,7 +54,7 @@ class PdoDatabase implements Database
         return $this->conn->lastInsertId();
     }
 
-    public function update(array $data, $table, $where = null, $condition = [], $updates = null, $debug = false)
+    public function update(array $data, string $table, string $where = null, array $condition = [], string $updates = null, bool $debug = false)
     {
         if ($updates === null) {
             $sets = [];
@@ -78,7 +77,7 @@ class PdoDatabase implements Database
         return $pst->rowCount();
     }
 
-    public function delete($table, $where = null, $condition = [], $debug = false)
+    public function delete(string $table, string $where = null, array $condition = [], bool $debug = false)
     {
         $where = $where == null ? '' : ' WHERE ' . $where;
         $sql = "delete from {$table} {$where}";
@@ -91,7 +90,7 @@ class PdoDatabase implements Database
         return $pst->rowCount();
     }
 
-    public function fetchOne($sql, $condition = [], $debug = false)
+    public function fetchOne(string $sql, array $condition = [], bool $debug = false)
     {
         if ($debug) {
             return $sql;
@@ -102,7 +101,7 @@ class PdoDatabase implements Database
         return $pst->fetch();
     }
 
-    public function fetchAll($sql, $condition = [], $debug = false)
+    public function fetchAll(string $sql, array $condition = [], bool $debug = false)
     {
         if ($debug) {
             return $sql;
@@ -113,7 +112,7 @@ class PdoDatabase implements Database
         return $pst->fetchAll();
     }
 
-    public function cursor($sql, $condition = [])
+    public function cursor(string $sql, array $condition = []): Generator
     {
         $pst = $this->conn->prepare($sql);
         $pst = $this->bindParam($pst, $condition);
@@ -135,17 +134,17 @@ class PdoDatabase implements Database
         return $statement;
     }
 
-    public function exec($sql)
+    public function exec(string $sql)
     {
         return $this->conn->exec($sql);
     }
 
-    public function query($sql)
+    public function query(string $sql)
     {
         return $this->conn->query($sql);
     }
 
-    public function createTable($tableName, $columns = [], $primary = [], $a_i = '', $unique = [], $debug = false)
+    public function createTable(string $tableName, array $columns = [], array $primary = [], string $a_i = '', array $unique = [], bool $debug = false)
     {
         $db_type = $this->db_type;
         $columnsData = [];
