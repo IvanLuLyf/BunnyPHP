@@ -102,7 +102,7 @@ class Template
 
     private function parse_var()
     {
-        $pattern = '/\{\{\s*(.*)\s*\}\}/';
+        $pattern = '/\{\{\s*(.*?)\s*\}\}/';
         if (preg_match_all($pattern, $this->content, $match)) {
             foreach ($match[1] as $index => $word) {
                 $this->content = str_replace($match[0][$index], '<?=' . $this->var_name($word) . '?>', $this->content);
