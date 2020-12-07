@@ -21,12 +21,12 @@ class Config
         $this->configs = $c;
     }
 
-    public function all()
+    public function all(): array
     {
         return $this->configs;
     }
 
-    public function has($key)
+    public function has($key): bool
     {
         if (is_string($key) && strpos($key, '.') !== false) {
             $key = array_filter(explode('.', $key));
@@ -64,7 +64,7 @@ class Config
         }
     }
 
-    public static function check($name, $mode = self::MODE_ARRAY, $basePath = APP_PATH . "config/")
+    public static function check($name, $mode = self::MODE_ARRAY, $basePath = APP_PATH . "config/"): bool
     {
         if ($mode == self::MODE_CONST || $mode == self::MODE_ARRAY)
             return file_exists("{$basePath}{$name}.php");
@@ -76,12 +76,12 @@ class Config
             return false;
     }
 
-    public static function checkLock($name, $basePath = APP_PATH . "config/")
+    public static function checkLock($name, $basePath = APP_PATH . 'config/'): bool
     {
         return file_exists("{$basePath}{$name}.lock");
     }
 
-    public static function load($name, $basePath = APP_PATH . "config/")
+    public static function load($name, $basePath = APP_PATH . 'config/'): Config
     {
         if (file_exists("{$basePath}{$name}.php")) {
             return new self(require "{$basePath}{$name}.php");
@@ -96,7 +96,7 @@ class Config
         }
     }
 
-    public static function make($configs = [], $type = self::MODE_ARRAY)
+    public static function make($configs = [], $type = self::MODE_ARRAY): string
     {
         $config_text = "<?php\r\n";
         if ($type == self::MODE_CONST) {
@@ -106,12 +106,12 @@ class Config
         } elseif ($type == self::MODE_SERIAL) {
             $config_text = serialize($configs);
         } else {
-            $config_text .= "return " . var_export($configs, true) . ";\r\n";
+            $config_text .= 'return ' . var_export($configs, true) . ";\r\n";
         }
         return $config_text;
     }
 
-    private static function make_const_config($configs = [], $nameSpace = '')
+    private static function make_const_config($configs = [], $nameSpace = ''): string
     {
         $config_text = '';
         foreach ($configs as $k => $v) {

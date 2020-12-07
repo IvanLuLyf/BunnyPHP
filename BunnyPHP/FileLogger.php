@@ -17,13 +17,13 @@ class FileLogger implements Logger
         $this->filename = $config['filename'] ?? (APP_PATH . 'log.log');
     }
 
-    private function makeMessage($message, array $context = [], $type = '')
+    private function makeMessage($message, array $context = [], $type = ''): string
     {
         $replace = [];
         foreach ($context as $k => $v) {
             $replace['{' . $k . '}'] = $v;
         }
-        return date('[Y-m-d H:i] ', time()) . '[' . $type . '] ' . strtr($message, $context) . "\n";
+        return date('[Y-m-d H:i] ', time()) . '[' . $type . '] ' . strtr($message, $replace) . "\n";
     }
 
     public function info($message, array $context = [])

@@ -8,8 +8,9 @@
 
 namespace BunnyPHP;
 
+use ArrayAccess;
 
-class Language implements \ArrayAccess
+class Language implements ArrayAccess
 {
     public $lang;
     protected $translation;
@@ -54,12 +55,12 @@ class Language implements \ArrayAccess
         }
     }
 
-    public function translate($key)
+    public function translate($key): string
     {
         return $this->translation[$key] ?? '';
     }
 
-    public static function getInstance($lang = null, $basePath = null)
+    public static function getInstance($lang = null, $basePath = null): Language
     {
         if (!self::$instance) {
             self::$instance = new Language();
@@ -86,7 +87,7 @@ class Language implements \ArrayAccess
         return $content;
     }
 
-    public function offsetExists($offset)
+    public function offsetExists($offset): bool
     {
         return isset($this->translation[$offset]);
     }
@@ -98,7 +99,6 @@ class Language implements \ArrayAccess
 
     public function offsetSet($offset, $value)
     {
-        return;
     }
 
     public function offsetUnset($offset)

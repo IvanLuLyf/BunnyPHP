@@ -36,7 +36,7 @@ class FileStorage implements Storage
         file_put_contents($this->uploadPath . $filename, $content);
     }
 
-    public function upload($filename, $path)
+    public function upload($filename, $path): string
     {
         $dir = dirname($filename);
         if ($dir !== '.' && !is_dir($this->uploadPath . $dir)) {

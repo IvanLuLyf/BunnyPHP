@@ -4,6 +4,7 @@
 namespace BunnyPHP;
 
 
+use Generator;
 use PDO;
 use PDOStatement;
 
@@ -39,7 +40,7 @@ class PdoDatabase implements Database
         }
     }
 
-    public function insert(array $data, $table, $debug = false)
+    public function insert(array $data, $table, $debug = false): string
     {
         $keys = implode(',', array_keys($data));
         $values = implode(',:', array_keys($data));
@@ -113,7 +114,7 @@ class PdoDatabase implements Database
         return $pst->fetchAll();
     }
 
-    public function cursor($sql, $condition = [])
+    public function cursor($sql, $condition = []): Generator
     {
         $pst = $this->conn->prepare($sql);
         $pst = $this->bindParam($pst, $condition);

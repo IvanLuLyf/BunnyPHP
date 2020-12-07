@@ -43,7 +43,7 @@ class Model
         return BunnyPHP::getDatabase()->createTable($table, $vars['_column'], $pk, $ai, $uk, $debug);
     }
 
-    public static function name()
+    public static function name(): string
     {
         $vars = get_class_vars(get_called_class());
         if (isset($vars['_table'])) {
@@ -66,13 +66,13 @@ class Model
         $this->_debug = false;
     }
 
-    public function debug()
+    public function debug(): self
     {
         $this->_debug = true;
         return $this;
     }
 
-    public function where($where, $param = [])
+    public function where($where, $param = []): self
     {
         if ($where) {
             $this->_has_where = true;
@@ -86,7 +86,7 @@ class Model
         return $this;
     }
 
-    public function join($tableName, $condition = [], $select = [], $mod = 'left')
+    public function join($tableName, $condition = [], $select = [], $mod = 'left'): self
     {
         if (substr($tableName, -5) == 'Model') {
             $tableName = $tableName::name();
@@ -117,13 +117,13 @@ class Model
         return $this;
     }
 
-    public function limit($size, $start = 0)
+    public function limit($size, $start = 0): self
     {
         $this->_filter .= " limit $size offset $start";
         return $this;
     }
 
-    public function order($order = [])
+    public function order($order = []): self
     {
         if (is_array($order)) {
             $this->_filter .= ' order by ';
@@ -174,7 +174,7 @@ class Model
         return $result;
     }
 
-    private function buildSelect($columns = '*')
+    private function buildSelect($columns = '*'): string
     {
         $selection = $columns;
         if (!empty($this->_join)) {

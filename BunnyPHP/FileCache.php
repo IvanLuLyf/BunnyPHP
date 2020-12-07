@@ -37,7 +37,7 @@ class FileCache implements Cache
         }
     }
 
-    public function has($key, $expire = 0)
+    public function has($key, $expire = 0): bool
     {
         $filename = $this->cacheDir . md5($key);
         return file_exists($filename) && ((filemtime($filename) + $expire > time()) || $expire === 0);

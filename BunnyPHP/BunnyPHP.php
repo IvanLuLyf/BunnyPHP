@@ -14,7 +14,7 @@ use ReflectionException;
 
 class BunnyPHP
 {
-    const BUNNY_VERSION = '2.4.0';
+    const BUNNY_VERSION = '2.5.0';
     const MODE_NORMAL = 0;
     const MODE_API = 1;
     const MODE_AJAX = 2;
@@ -76,13 +76,14 @@ class BunnyPHP
             if ($request_url && !in_array(strtolower($request_url), ['index.php', 'api.php', 'ajax.php'])) {
                 $url_array = explode('/', $request_url);
                 $url_array = array_filter($url_array);
-                if (strtolower($url_array[0]) == "api" || strtolower($url_array[0]) == "api.php") {
+                $mod = strtolower($url_array[0]);
+                if ($mod === 'api' || $mod === 'api.php') {
                     array_shift($url_array);
                     $this->mode = BunnyPHP::MODE_API;
-                } elseif (strtolower($url_array[0]) == "ajax" || strtolower($url_array[0]) == "ajax.php") {
+                } elseif ($mod === 'ajax' || $mod === 'ajax.php') {
                     array_shift($url_array);
                     $this->mode = BunnyPHP::MODE_AJAX;
-                } elseif (strtolower($url_array[0]) == "index.php") {
+                } elseif ($mod === 'index.php') {
                     array_shift($url_array);
                 }
                 if (isset($url_array[0]) && in_array($url_array[0], array_keys($this->apps))) {
@@ -161,7 +162,7 @@ class BunnyPHP
             } else {
                 call_user_func_array([$dispatch, $action], []);
             }
-        } catch (ReflectionException $e) {
+        } catch (ReflectionException $ex) {
             call_user_func_array([$dispatch, $action], []);
         }
     }
@@ -184,9 +185,9 @@ class BunnyPHP
         }
     }
 
-    private function processAnnotation($docComment, $pathParam = [])
+    private function processAnnotation($docComment, $pathParam = []): array
     {
-        $pattern = "#(@[a-zA-Z]+\s*[a-zA-Z0-9, ()_].*)#";
+        $pattern = '#(@[a-zA-Z]+\s*[a-zA-Z0-9, ()_].*)#';
         $pathValue = [];
         $assignValue = [];
         if (preg_match_all($pattern, $docComment, $matches, PREG_PATTERN_ORDER)) {
@@ -203,7 +204,7 @@ class BunnyPHP
         return [Filter::NEXT];
     }
 
-    private function processFilter($decorate, &$assignValue)
+    private function processFilter($decorate, &$assignValue): int
     {
         /**
          * @var $filter Filter
@@ -212,7 +213,7 @@ class BunnyPHP
         array_filter($filterInfo);
         array_shift($filterInfo);
         $filterName = trim(array_shift($filterInfo));
-        $filterName = self::getClassName($filterName, 'filter', TP_NAMESPACE);
+        $filterName = self::getClassName($filterName, 'filter');
         $filter = new $filterName($this->mode);
         $result = $filter->doFilter($filterInfo);
         $assignValue = array_merge($assignValue, $filter->getVariable());
@@ -353,9 +354,9 @@ class BunnyPHP
         BunnyPHP::$request = new Request();
     }
 
-    public function handleErr($err_no, $err_str, $err_file, $err_line)
+    public function handleErr($err_no, $err_str, $err_file, $err_line): bool
     {
-        $err = ['ret' => '-8', 'status' => 'internal error', 'bunny_error' => "$err_str\nFile: $err_file\nLine: $err_line"];
+        $err = ['ret' => '-8', 'status' => 'internal error', 'bunny_error' => "$err_str\nNo: $err_no\nFile: $err_file\nLine: $err_line"];
         if (APP_DEBUG) {
             $trace = debug_backtrace();
             array_shift($trace);
@@ -367,7 +368,7 @@ class BunnyPHP
 
     private static function loadClass($class)
     {
-        list($shortName, $type, $prefix) = self::getClassNameInfo($class);
+        list($shortName, $type) = self::getClassNameInfo($class);
         $frameworkFile = BUNNY_PATH . '/' . $shortName . '.php';
         $classType = ($type) ? strtolower($type) : strtolower(self::getClassType($shortName));
         $classFile = APP_PATH . 'app' . '/' . $classType . '/' . $shortName . '.php';
@@ -385,7 +386,7 @@ class BunnyPHP
         }
     }
 
-    private static function getClassType($class)
+    private static function getClassType($class): string
     {
         $i = strlen($class) - 1;
         while ($i >= 0 && ($class[$i] < 'A' || $class[$i] > 'Z')) {
@@ -395,7 +396,7 @@ class BunnyPHP
     }
 
 
-    public static function getClassName($class, $type = '', $base = TP_NAMESPACE)
+    public static function getClassName($class, $type = '', $base = TP_NAMESPACE): string
     {
         $tmp = explode('.', $class);
         $shortName = ucfirst(array_pop($tmp));
@@ -412,7 +413,7 @@ class BunnyPHP
         }
     }
 
-    private static function getClassNameInfo($class)
+    private static function getClassNameInfo($class): array
     {
         $tmp = explode('\\', $class);
         $shortName = array_pop($tmp);

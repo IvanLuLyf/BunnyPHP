@@ -97,7 +97,7 @@ class Request implements \ArrayAccess
         }
     }
 
-    public function offsetExists($offset)
+    public function offsetExists($offset): bool
     {
         return isset($this->param[$offset]);
     }
@@ -113,7 +113,6 @@ class Request implements \ArrayAccess
 
     public function offsetSet($offset, $value)
     {
-        return;
     }
 
     public function offsetUnset($offset)

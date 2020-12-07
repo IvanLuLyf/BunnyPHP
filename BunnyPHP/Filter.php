@@ -31,7 +31,7 @@ class Filter
         $this->_variables[$name] = $value;
     }
 
-    public function getVariable()
+    public function getVariable(): array
     {
         return $this->_variables;
     }

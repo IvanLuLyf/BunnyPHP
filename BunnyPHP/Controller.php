@@ -21,12 +21,12 @@ class Controller
         $this->_mode = $mode;
     }
 
-    public function getController()
+    public function getController(): string
     {
         return $this->_controller;
     }
 
-    public function getAction()
+    public function getAction(): string
     {
         return $this->_action;
     }
