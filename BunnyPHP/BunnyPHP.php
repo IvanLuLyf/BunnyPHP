@@ -5,6 +5,7 @@
  * Date: 2018/7/28
  * Time: 17:42
  */
+declare(strict_types=1);
 
 namespace BunnyPHP;
 defined('BUNNY_PATH') or define('BUNNY_PATH', __DIR__);
