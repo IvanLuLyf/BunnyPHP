@@ -1,12 +1,12 @@
 <div align="center">
 
-![BunnyPHP](https://github.com/bunniescc/media/blob/master/php.png?raw=true)
+[![BunnyPHP](https://github.com/bunniescc/media/blob/master/php.png?raw=true)](https://ivanlulyf.github.io/BunnyPHP)
 
 BunnyPHP is a lightweight PHP MVC Framework.
 
 [![Latest Stable Version](https://img.shields.io/packagist/v/ivanlulyf/bunnyphp.svg?color=orange&style=flat-square)](https://packagist.org/packages/ivanlulyf/bunnyphp)
 [![Total Downloads](https://img.shields.io/packagist/dt/ivanlulyf/bunnyphp.svg?color=brightgreen&style=flat-square)](https://packagist.org/packages/ivanlulyf/bunnyphp)
-![License](https://img.shields.io/packagist/l/ivanlulyf/bunnyphp.svg?color=blue&style=flat-square)
+[![License](https://img.shields.io/packagist/l/ivanlulyf/bunnyphp.svg?color=blue&style=flat-square)](LICENSE)
 
 ![Code Size](https://img.shields.io/github/languages/code-size/ivanlulyf/bunnyphp.svg?color=yellow&style=flat-square)
 [![GitHub stars](https://img.shields.io/github/stars/ivanlulyf/bunnyphp.svg?style=social)](https://github.com/IvanLuLyf/BunnyPHP)
