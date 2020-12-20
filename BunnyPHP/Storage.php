@@ -1,19 +1,33 @@
 <?php
-/**
- * Created by PhpStorm.
- * User: IvanLu
- * Date: 2018/8/4
- * Time: 18:38
- */
 
 namespace BunnyPHP;
 interface Storage
 {
-    public function read($filename);
+    /**
+     * Returns file content in storage
+     * @param $filename
+     * @return mixed
+     */
+    public function read(string $filename);
 
-    public function write($filename, $content);
+    /**
+     * Write content to storage in specific filename
+     * @param string $filename
+     * @param mixed $content
+     */
+    public function write(string $filename, $content);
 
-    public function upload($filename, $path);
+    /**
+     * Upload file
+     * @param string $filename destination file path
+     * @param string $path source file path
+     * @return string full path
+     */
+    public function upload(string $filename, string $path): string;
 
-    public function remove($filename);
+    /**
+     * Remove file by specific filename
+     * @param string $filename
+     */
+    public function remove(string $filename);
 }

@@ -1,20 +1,38 @@
 <?php
-/**
- * Created by PhpStorm.
- * User: IvanLu
- * Date: 2018/10/31
- * Time: 14:07
- */
 
 namespace BunnyPHP;
 
 interface Cache
 {
-    public function get($key, $expire = 0);
+    /**
+     * Get the value related to the specified key
+     * @param string $key
+     * @param int $expire
+     * @return mixed
+     */
+    public function get(string $key, $expire = 0);
 
-    public function has($key, $expire = 0);
+    /**
+     * Verify if the specified key exists
+     * @param string $key
+     * @param int $expire [Optional] expire time in seconds
+     * @return bool
+     */
+    public function has(string $key, $expire = 0): bool;
 
-    public function set($key, $value, $expire = 0);
+    /**
+     * Set an value by the specified key
+     * @param string $key
+     * @param mixed $value
+     * @param int $expire
+     * @return mixed
+     */
+    public function set(string $key, $value, $expire = 0);
 
-    public function del($key);
+    /**
+     * Delete an value by the specified key
+     * @param string $key
+     * @return mixed
+     */
+    public function del(string $key);
 }

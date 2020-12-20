@@ -1,10 +1,4 @@
 <?php
-/**
- * Created by PhpStorm.
- * User: IvanLu
- * Date: 2018/8/4
- * Time: 19:11
- */
 
 namespace BunnyPHP;
 
@@ -22,12 +16,12 @@ class FileStorage implements Storage
         }
     }
 
-    public function read($filename)
+    public function read(string $filename)
     {
         return file_get_contents($this->uploadPath . $filename);
     }
 
-    public function write($filename, $content)
+    public function write(string $filename, $content)
     {
         $dir = dirname($filename);
         if ($dir !== '.' && !is_dir($this->uploadPath . $dir)) {
@@ -36,7 +30,7 @@ class FileStorage implements Storage
         file_put_contents($this->uploadPath . $filename, $content);
     }
 
-    public function upload($filename, $path): string
+    public function upload(string $filename, string $path): string
     {
         $dir = dirname($filename);
         if ($dir !== '.' && !is_dir($this->uploadPath . $dir)) {
@@ -46,7 +40,7 @@ class FileStorage implements Storage
         return "/{$this->dir}/$filename";
     }
 
-    public function remove($filename)
+    public function remove(string $filename)
     {
         unlink($this->uploadPath . $filename);
     }
