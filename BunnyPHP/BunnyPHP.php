@@ -10,7 +10,7 @@ use ReflectionNamedType;
 
 class BunnyPHP
 {
-    const BUNNY_VERSION = '2.7.0';
+    const BUNNY_VERSION = '2.7.1';
     const MODE_NORMAL = 0;
     const MODE_API = 1;
     const MODE_AJAX = 2;
