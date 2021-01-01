@@ -10,7 +10,7 @@ use ReflectionNamedType;
 
 class BunnyPHP
 {
-    const BUNNY_VERSION = '2.7.1';
+    const BUNNY_VERSION = '2.7.2';
     const MODE_NORMAL = 0;
     const MODE_API = 1;
     const MODE_AJAX = 2;
@@ -24,11 +24,11 @@ class BunnyPHP
     protected array $apps = [];
 
     private static BunnyPHP $instance;
-    private static Database $db;
-    private static Storage $storage;
-    private static Cache $cache;
-    private static Request $request;
-    private static Logger $logger;
+    private static ?Database $db = null;
+    private static ?Storage $storage = null;
+    private static ?Cache $cache = null;
+    private static ?Request $request = null;
+    private static ?Logger $logger = null;
 
     private array $variable = [];
     private array $container = [];

@@ -8,8 +8,8 @@ use ArrayAccess;
 class Language implements ArrayAccess
 {
     public string $lang;
-    protected array $translation;
-    private static Language $instance;
+    protected array $translation = [];
+    private static ?Language $instance = null;
 
     public function loadLanguage($lang, $basePath)
     {
