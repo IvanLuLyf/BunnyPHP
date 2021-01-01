@@ -5,7 +5,8 @@
     "framework",
     "mvc"
   ],
-  "minimum-stability": "stable",
+  "minimum-stability": "dev",
+  "prefer-stable": true,
   "license": "MIT",
   "authors": [
     {
@@ -13,14 +14,22 @@
       "email": "me@ivanlu.cn"
     }
   ],
+  "homepage": "https://ivanlulyf.github.io/BunnyPHP",
+  "support": {
+    "source": "https://github.com/IvanLuLyf/BunnyPHP",
+    "issues": "https://github.com/IvanLuLyf/BunnyPHP/issues",
+    "forum": "https://github.com/IvanLuLyf/BunnyPHP/discussions",
+    "docs": "https://ivanlulyf.github.io/BunnyPHP"
+  },
   "autoload": {
     "psr-4": {
       "BunnyPHP\\": "BunnyPHP/"
     }
   },
   "require": {
-    "php": ">=7.0",
+    "php": ">=7.0|>=8.0",
     "ext-pdo": "*",
-    "ext-json": "*"
+    "ext-json": "*",
+    "ext-mbstring": "*"
   }
 }

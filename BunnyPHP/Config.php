@@ -1,10 +1,4 @@
 <?php
-/**
- * Created by PhpStorm.
- * User: IvanLu
- * Date: 2018/9/28
- * Time: 15:21
- */
 
 namespace BunnyPHP;
 class Config

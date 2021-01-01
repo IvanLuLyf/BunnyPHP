@@ -1,10 +1,4 @@
 <?php
-/**
- * Created by PhpStorm.
- * User: IvanLu
- * Date: 2018/7/28
- * Time: 18:06
- */
 
 namespace BunnyPHP;
 
