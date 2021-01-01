@@ -6,6 +6,7 @@ defined('BUNNY_PATH') or define('BUNNY_PATH', __DIR__);
 
 use ReflectionClass;
 use ReflectionException;
+use ReflectionNamedType;
 
 class BunnyPHP
 {
@@ -18,19 +19,19 @@ class BunnyPHP
     /**
      * @var $config Config
      */
-    protected static $config;
+    protected static Config $config;
     protected $mode = BunnyPHP::MODE_NORMAL;
-    protected $apps = [];
+    protected array $apps = [];
 
-    private static $instance;
-    private static $db;
-    private static $storage;
-    private static $cache;
-    private static $request;
-    private static $logger;
+    private static BunnyPHP $instance;
+    private static Database $db;
+    private static Storage $storage;
+    private static Cache $cache;
+    private static Request $request;
+    private static Logger $logger;
 
-    private $variable = [];
-    private $container = [];
+    private array $variable = [];
+    private array $container = [];
 
     public function __construct($m = BunnyPHP::MODE_NORMAL)
     {
@@ -144,14 +145,15 @@ class BunnyPHP
                 $params = $method->getParameters();
                 $value = [];
                 foreach ($params as $param) {
-                    $type = '' . $param->getType();
+                    $type = $param->getType();
+                    $typeName = ($type instanceof ReflectionNamedType) ? $type->getName() : '';
                     $name = '' . $param->getName();
                     if ($param->isOptional()) {
                         $defVal = $param->getDefaultValue();
                     } else {
                         $defVal = '';
                     }
-                    $value[] = $this->getVal($type, $name, $defVal, $pathValue);
+                    $value[] = $this->getVal($typeName, $name, $defVal, $pathValue);
                 }
                 call_user_func_array([$dispatch, $action], $value);
             } else {
@@ -215,7 +217,7 @@ class BunnyPHP
         return $result;
     }
 
-    private function processPathParam($decorate, &$pathParam, &$pathValue)
+    private function processPathParam($decorate, $pathParam, &$pathValue)
     {
         $patName = '/\$([\w]+)\s*/';
         $patPath = '/path\(([0-9])(,(.*))?\)/';
@@ -322,12 +324,6 @@ class BunnyPHP
             ini_set('display_errors', 'Off');
             ini_set('log_errors', 'On');
         }
-    }
-
-    private function stripSlashesDeep($value)
-    {
-        $value = is_array($value) ? array_map([$this, 'stripSlashesDeep'], $value) : stripslashes($value);
-        return $value;
     }
 
     private function loadConfig()

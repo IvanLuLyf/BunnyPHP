@@ -1,17 +1,12 @@
 <?php
-/**
- * Created by PhpStorm.
- * User: IvanLu
- * Date: 2018/7/28
- * Time: 18:03
- */
+declare(strict_types=1);
 
 namespace BunnyPHP;
 class Controller
 {
-    protected $_variables = [];
-    protected $_controller;
-    protected $_action;
+    protected array $_variables = [];
+    protected string $_controller;
+    protected string $_action;
     protected $_mode;
 
     public function __construct($controller, $action, $mode = BunnyPHP::MODE_NORMAL)

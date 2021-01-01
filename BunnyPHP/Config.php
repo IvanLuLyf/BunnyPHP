@@ -1,4 +1,5 @@
 <?php
+declare(strict_types=1);
 
 namespace BunnyPHP;
 class Config
@@ -8,7 +9,7 @@ class Config
     const MODE_JSON = 2;
     const MODE_SERIAL = 3;
 
-    private $configs = [];
+    private $configs;
 
     private function __construct($c = [])
     {
@@ -58,7 +59,7 @@ class Config
         }
     }
 
-    public static function check($name, $mode = self::MODE_ARRAY, $basePath = APP_PATH . "config/"): bool
+    public static function check($name, $mode = self::MODE_ARRAY, $basePath = APP_PATH . 'config/'): bool
     {
         if ($mode == self::MODE_CONST || $mode == self::MODE_ARRAY)
             return file_exists("{$basePath}{$name}.php");

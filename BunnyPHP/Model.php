@@ -1,27 +1,21 @@
 <?php
-/**
- * Created by PhpStorm.
- * User: IvanLu
- * Date: 2018/7/29
- * Time: 1:03
- */
+declare(strict_types=1);
 
 namespace BunnyPHP;
-
 class Model
 {
-    protected $_table;
-    protected $_name;
-    private $_filter = '';
-    private $_join = '';
-    private $_param = [];
-    private $_column = [];
-    private $_has_where = false;
-    private $_debug = false;
+    protected string $_table;
+    protected string $_name;
+    private string $_filter = '';
+    private string $_join = '';
+    private array $_param = [];
+    private array $_column = [];
+    private bool $_has_where = false;
+    private bool $_debug = false;
 
     public function __construct($name = '')
     {
-        if (!$this->_table) {
+        if (empty($this->_table)) {
             if (!empty($name)) {
                 $this->_name = $name;
             } else {

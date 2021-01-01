@@ -1,7 +1,7 @@
 <?php
+declare(strict_types=1);
 
 namespace BunnyPHP;
-
 class View
 {
     const MODE_INFO = 1;
@@ -71,12 +71,12 @@ class View
         exit();
     }
 
-    private static function get_message($context)
+    private static function get_message($context): string
     {
         return $context['bunny_error'] ?? $context['bunny_info'] ?? $context['response'] ?? $context['tp_error_msg'] ?? $context['tp_info_msg'] ?? '';
     }
 
-    public static function get_url($mod, $action, $params = [])
+    public static function get_url($mod, $action, $params = []): string
     {
         $query = http_build_query($params);
         if (TP_SITE_REWRITE === true) {

@@ -1,14 +1,7 @@
 <?php
-/**
- * Created by PhpStorm.
- * User: IvanLu
- * Date: 2018/7/28
- * Time: 23:24
- */
+declare(strict_types=1);
 
 namespace BunnyPHP;
-
 class Service
 {
-
 }

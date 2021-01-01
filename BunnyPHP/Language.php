@@ -1,10 +1,5 @@
 <?php
-/**
- * Created by PhpStorm.
- * User: IvanLu
- * Date: 2019/11/29
- * Time: 13:59
- */
+declare(strict_types=1);
 
 namespace BunnyPHP;
 
@@ -12,9 +7,9 @@ use ArrayAccess;
 
 class Language implements ArrayAccess
 {
-    public $lang;
-    protected $translation;
-    private static $instance;
+    public string $lang;
+    protected array $translation;
+    private static Language $instance;
 
     public function loadLanguage($lang, $basePath)
     {

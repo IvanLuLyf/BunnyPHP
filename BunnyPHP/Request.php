@@ -1,16 +1,12 @@
 <?php
-/**
- * Created by PhpStorm.
- * User: IvanLu
- * Date: 2019/4/7
- * Time: 2:05
- */
+declare(strict_types=1);
 
 namespace BunnyPHP;
+use ArrayAccess;
 
-class Request implements \ArrayAccess
+class Request implements ArrayAccess
 {
-    private $param = [];
+    private array $param = [];
 
     public function getHeader($name)
     {

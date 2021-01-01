@@ -1,13 +1,7 @@
 <?php
-/**
- * Created by PhpStorm.
- * User: IvanLu
- * Date: 2019/4/19
- * Time: 22:31
- */
+declare(strict_types=1);
 
 namespace BunnyPHP;
-
 class FileLogger implements Logger
 {
     protected $filename;

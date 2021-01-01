@@ -1,11 +1,11 @@
 <?php
+declare(strict_types=1);
 
 namespace BunnyPHP;
-
 class FileStorage implements Storage
 {
-    protected $uploadPath;
-    protected $dir;
+    protected string $uploadPath;
+    protected string $dir;
 
     public function __construct($config)
     {

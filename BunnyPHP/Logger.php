@@ -1,13 +1,7 @@
 <?php
-/**
- * Created by PhpStorm.
- * User: IvanLu
- * Date: 2019/4/19
- * Time: 22:27
- */
+declare(strict_types=1);
 
 namespace BunnyPHP;
-
 interface Logger
 {
     public function info($message, array $context = []);

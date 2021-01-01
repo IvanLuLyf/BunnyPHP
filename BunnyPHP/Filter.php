@@ -1,20 +1,14 @@
 <?php
-/**
- * Created by PhpStorm.
- * User: IvanLu
- * Date: 2018/9/29
- * Time: 13:59
- */
+declare(strict_types=1);
 
 namespace BunnyPHP;
-
 class Filter
 {
     const NEXT = 0;
     const STOP = 1;
 
     protected $_mode;
-    protected $_variables = [];
+    protected array $_variables = [];
 
     public function __construct($mode = BunnyPHP::MODE_NORMAL)
     {

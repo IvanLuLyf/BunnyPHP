@@ -1,10 +1,11 @@
 <?php
+declare(strict_types=1);
 
 namespace BunnyPHP;
 class FileCache implements Cache
 {
-    protected $dir;
-    protected $cacheDir;
+    protected string $dir;
+    protected string $cacheDir;
 
     public function __construct($config)
     {

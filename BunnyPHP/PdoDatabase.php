@@ -1,4 +1,5 @@
 <?php
+declare(strict_types=1);
 
 namespace BunnyPHP;
 
@@ -8,7 +9,7 @@ use PDOStatement;
 
 class PdoDatabase implements Database
 {
-    private $conn;
+    private PDO $conn;
     private $db_type;
 
     public function __construct($conf = [])

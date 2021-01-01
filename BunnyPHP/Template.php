@@ -1,17 +1,11 @@
 <?php
-/**
- * Created by PhpStorm.
- * User: IvanLu
- * Date: 2018/10/31
- * Time: 14:50
- */
+declare(strict_types=1);
 
 namespace BunnyPHP;
-
 class Template
 {
-    protected $template;
-    protected $content;
+    protected string $template;
+    protected string $content;
 
     public function __construct($template)
     {
@@ -59,7 +53,7 @@ class Template
         file_put_contents($output, $this->parse()->content);
     }
 
-    private function parse()
+    private function parse(): Template
     {
         $this->parse_var();
         $this->parse_if();
@@ -90,7 +84,7 @@ class Template
         }
     }
 
-    private function var_name($word)
+    private function var_name($word): string
     {
         $word_arr = explode('.', trim($word));
         $var_name = '$' . array_shift($word_arr);

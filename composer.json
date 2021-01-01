@@ -27,7 +27,7 @@
     }
   },
   "require": {
-    "php": ">=7.0|>=8.0",
+    "php": "^7.4|^8.0",
     "ext-pdo": "*",
     "ext-json": "*",
     "ext-mbstring": "*"

@@ -1,4 +1,5 @@
 <?php
+declare(strict_types=1);
 
 namespace BunnyPHP;
 
@@ -42,7 +43,7 @@ interface Database
      * @param string $sql sql expression
      * @param array $condition param bindings
      * @param bool $debug
-     * @return mixed
+     * @return array|string
      */
     public function fetchOne(string $sql, array $condition = [], bool $debug = false);
 
@@ -51,7 +52,7 @@ interface Database
      * @param string $sql sql expression
      * @param array $condition param bindings
      * @param bool $debug
-     * @return mixed
+     * @return array|string
      */
     public function fetchAll(string $sql, array $condition = [], bool $debug = false);
 
