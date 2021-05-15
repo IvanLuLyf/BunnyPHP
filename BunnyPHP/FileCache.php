@@ -16,7 +16,7 @@ class FileCache implements Cache
         }
     }
 
-    public function get(string $key, $expire = 0)
+    public function get(string $key, int $expire = 0)
     {
         $filename = $this->cacheDir . md5($key);
         if (file_exists($filename)) {
@@ -31,13 +31,13 @@ class FileCache implements Cache
         }
     }
 
-    public function has(string $key, $expire = 0): bool
+    public function has(string $key, int $expire = 0): bool
     {
         $filename = $this->cacheDir . md5($key);
         return file_exists($filename) && ((filemtime($filename) + $expire > time()) || $expire === 0);
     }
 
-    public function set(string $key, $value, $expire = 0)
+    public function set(string $key, $value, int $expire = 0)
     {
         file_put_contents($this->cacheDir . md5($key), $value);
     }
