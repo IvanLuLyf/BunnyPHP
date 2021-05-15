@@ -4,11 +4,15 @@ declare(strict_types=1);
 namespace BunnyPHP;
 class FileLogger implements Logger
 {
-    protected $filename;
+    protected string $filename;
 
     public function __construct($config)
     {
-        $this->filename = $config['filename'] ?? (APP_PATH . 'log.log');
+        $logDir = $config['dir'] ?? APP_PATH . 'logs/';
+        if (!is_dir($logDir)) {
+            mkdir($logDir, 0777, true);
+        }
+        $this->filename = $logDir . date('Y-m-d') . '.log';
     }
 
     private function makeMessage($message, array $context = [], $type = ''): string
@@ -22,23 +26,23 @@ class FileLogger implements Logger
 
     public function info($message, array $context = [])
     {
-        error_log($this->makeMessage($message, $context, 'INFO'), 3, $this->filename);
+        error_log($this->makeMessage($message, $context, Logger::INFO), 3, $this->filename);
     }
 
     public function error($message, array $context = [])
     {
-        error_log($this->makeMessage($message, $context, 'ERROR'), 3, $this->filename);
+        error_log($this->makeMessage($message, $context, Logger::ERROR), 3, $this->filename);
     }
 
     public function warn($message, array $context = [])
     {
-        error_log($this->makeMessage($message, $context, 'WARN'), 3, $this->filename);
+        error_log($this->makeMessage($message, $context, Logger::WARN), 3, $this->filename);
     }
 
     public function debug($message, array $context = [])
     {
         if (APP_DEBUG === true) {
-            error_log($this->makeMessage($message, $context, 'DEBUG'), 3, $this->filename);
+            error_log($this->makeMessage($message, $context, Logger::DEBUG), 3, $this->filename);
         }
     }
 }
