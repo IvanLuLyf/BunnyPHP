@@ -5,14 +5,19 @@ namespace BunnyPHP;
 class Template
 {
     protected string $template;
-    protected string $content;
+    protected $content;
 
     public function __construct($template)
     {
-        if (file_exists(APP_PATH . "template/{$template}")) {
+        if (file_exists(APP_PATH . "template/$template")) {
             $this->template = $template;
-            $this->content = file_get_contents(APP_PATH . "template/{$template}");
+            $this->content = file_get_contents(APP_PATH . "template/$template");
         }
+    }
+
+    private static function tag($txt): string
+    {
+        return '<?php ' . $txt . ' ?>';
     }
 
     public static function render($view, $context = [], $mode = BunnyPHP::MODE_NORMAL, $code = 200)
@@ -26,14 +31,15 @@ class Template
         } else {
             header('Content-Type: text/html; charset=UTF-8');
             extract($context);
+            global $_LANG;
             $_LANG = Language::getInstance();
             $cacheDir = APP_PATH . 'cache/template/';
             if (file_exists($cacheDir . $view)) {
-                if (filemtime(APP_PATH . "template/{$view}") > filemtime($cacheDir . $view)) {
+                if (filemtime(APP_PATH . "template/$view") > filemtime($cacheDir . $view)) {
                     (new self($view))->compile();
                 }
                 include $cacheDir . $view;
-            } elseif (file_exists(APP_PATH . "template/{$view}")) {
+            } elseif (file_exists(APP_PATH . "template/$view")) {
                 (new self($view))->compile();
                 include $cacheDir . $view;
             } else {
@@ -44,7 +50,7 @@ class Template
 
     public function compile($output = '')
     {
-        $cacheFile = $cacheDir = APP_PATH . 'cache/template/' . $this->template;
+        $cacheFile = APP_PATH . 'cache/template/' . $this->template;
         $output = empty($output) ? $cacheFile : $output;
         $cacheDir = dirname($output);
         if (!is_dir($cacheDir)) {
@@ -66,9 +72,9 @@ class Template
 
     public static function process($template, $context = [])
     {
-        if (file_exists(APP_PATH . "template/{$template}")) {
-            $content = file_get_contents(APP_PATH . "template/{$template}");
-            $pattern = '/\{\{\s*([\w]+)\s*\}\}/';
+        if (file_exists(APP_PATH . "template/$template")) {
+            $content = file_get_contents(APP_PATH . "template/$template");
+            $pattern = '/{{\s*([\w]+)\s*}}/';
             if (preg_match_all($pattern, $content, $match)) {
                 $ps = [];
                 $rs = [];
@@ -96,7 +102,7 @@ class Template
 
     private function parse_var()
     {
-        $pattern = '/\{\{\s*(.*?)\s*\}\}/';
+        $pattern = '/{{\s*(.*?)\s*}}/';
         if (preg_match_all($pattern, $this->content, $match)) {
             foreach ($match[1] as $index => $word) {
                 $this->content = str_replace($match[0][$index], '<?=' . $this->var_name($word) . '?>', $this->content);
@@ -106,16 +112,16 @@ class Template
 
     private function parse_if()
     {
-        $_patternIf = '/\{%\s?if\s+(.*)\s?%\}/';
-        $_patternEnd = '/\{%\s?endif\s?%\}/';
-        $_patternElse = '/\{%\s?else\s?%\}/';
+        $_patternIf = '/{%\s?if\s+(.*)\s?%}/';
+        $_patternEnd = '/{%\s?endif\s?%}/';
+        $_patternElse = '/{%\s?else\s?%}/';
         if (preg_match_all($_patternIf, $this->content, $match)) {
             foreach ($match[0] as $exp) {
                 if (preg_match($_patternEnd, $this->content)) {
-                    $this->content = preg_replace($_patternIf, '<?php if($1):?>', $this->content, 1);
-                    $this->content = preg_replace($_patternEnd, '<?php endif; ?>', $this->content, 1);
+                    $this->content = preg_replace($_patternIf, self::tag('if($1):'), $this->content, 1);
+                    $this->content = preg_replace($_patternEnd, self::tag('endif;'), $this->content, 1);
                     if (preg_match($_patternElse, $this->content)) {
-                        $this->content = preg_replace($_patternElse, '<?php else: ?>', $this->content, 1);
+                        $this->content = preg_replace($_patternElse, self::tag('else:'), $this->content, 1);
                     }
                 } else {
                     View::error(['ret' => -5, 'status' => 'template rendering error', 'bunny_error' => $exp . '没有结束标签']);
@@ -126,14 +132,14 @@ class Template
 
     private function parse_for()
     {
-        $_patternFor = '/\{%\s?for\s+(\w+)\s+in\s+(\w+)\s?%\}/';
-        $_patternForKV = '/\{%\s?for\s+(\w+)\s?,\s?(\w+)\s+in\s+(\w+)\s?%\}/';
-        $_patternEnd = '/\{%\s?endfor\s?%\}/';
+        $_patternFor = '/{%\s?for\s+(\w+)\s+in\s+(\w+)\s?%}/';
+        $_patternForKV = '/{%\s?for\s+(\w+)\s?,\s?(\w+)\s+in\s+(\w+)\s?%}/';
+        $_patternEnd = '/{%\s?endfor\s?%}/';
         if (preg_match_all($_patternFor, $this->content, $match)) {
             foreach ($match[0] as $i => $exp) {
                 if (preg_match($_patternEnd, $this->content)) {
-                    $this->content = str_replace($exp, '<?php foreach($' . $match[2][$i] . ' as ' . $this->var_name($match[1][$i]) . '):?>', $this->content);
-                    $this->content = preg_replace($_patternEnd, "<?php endforeach; ?>", $this->content, 1);
+                    $this->content = str_replace($exp, self::tag('foreach($' . $match[2][$i] . ' as ' . $this->var_name($match[1][$i]) . '):'), $this->content);
+                    $this->content = preg_replace($_patternEnd, self::tag('endforeach;'), $this->content, 1);
                 } else {
                     View::error(['ret' => -5, 'status' => 'template rendering error', 'bunny_error' => $exp . '没有结束标签']);
                 }
@@ -142,8 +148,8 @@ class Template
         if (preg_match_all($_patternForKV, $this->content, $match)) {
             foreach ($match[0] as $i => $exp) {
                 if (preg_match($_patternEnd, $this->content)) {
-                    $this->content = str_replace($exp, '<?php foreach($' . $match[3][$i] . ' as ' . $this->var_name($match[1][$i]) . '=>' . $this->var_name($match[2][$i]) . '):?>', $this->content);
-                    $this->content = preg_replace($_patternEnd, '<?php endforeach; ?>', $this->content, 1);
+                    $this->content = str_replace($exp, self::tag('foreach($' . $match[3][$i] . ' as ' . $this->var_name($match[1][$i]) . '=>' . $this->var_name($match[2][$i]) . '):'), $this->content);
+                    $this->content = preg_replace($_patternEnd, self::tag('endforeach;'), $this->content, 1);
                 } else {
                     View::error(['ret' => -5, 'status' => 'template rendering error', 'bunny_error' => $exp . '没有结束标签']);
                 }
@@ -153,7 +159,7 @@ class Template
 
     private function parse_url()
     {
-        $pattern = '/\{u\s+(.*)\s+\}/';
+        $pattern = '/{u\s+(.*)\s+}/';
         if (preg_match($pattern, $this->content)) {
             $this->content = preg_replace($pattern, '<?=BunnyPHP\View::get_url($1)?>', $this->content);
         }
@@ -161,7 +167,7 @@ class Template
 
     private function parse_lang()
     {
-        $pattern = '/\{L\s*([\'"\w+]*)\s*\}/';
+        $pattern = '/{L\s*([\'"\w+]*)\s*}/';
         if (preg_match($pattern, $this->content)) {
             $this->content = preg_replace($pattern, '<?=$_LANG[$1]?>', $this->content);
         }
@@ -169,7 +175,7 @@ class Template
 
     private function parse_include()
     {
-        $_patternInclude = '/\{%\s?include\s+\'(.*)\'\s?%\}/';
+        $_patternInclude = '/{%\s?include\s+\'(.*)\'\s?%}/';
         if (preg_match_all($_patternInclude, $this->content, $match)) {
             foreach ($match[1] as $index => $file) {
                 $file_content = (new self($file))->parse()->content;
