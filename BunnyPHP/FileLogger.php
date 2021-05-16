@@ -9,6 +9,7 @@ class FileLogger implements Logger
     public function __construct($config)
     {
         $logDir = $config['dir'] ?? APP_PATH . 'logs/';
+        $logDir = $logDir . (defined('BUNNY_APP') ? (BUNNY_APP . '/') : '') . BUNNY_CONTROLLER . '/';
         if (!is_dir($logDir)) {
             mkdir($logDir, 0777, true);
         }
