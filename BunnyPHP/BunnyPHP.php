@@ -7,7 +7,6 @@ defined('BUNNY_PATH') or define('BUNNY_PATH', __DIR__);
 use ReflectionClass;
 use ReflectionException;
 use ReflectionMethod;
-use ReflectionNamedType;
 
 class BunnyPHP
 {
@@ -286,7 +285,7 @@ class BunnyPHP
             $params = $method->getParameters();
             foreach ($params as $param) {
                 $paramType = $param->getType();
-                $type = ($paramType instanceof ReflectionNamedType) ? $paramType->getName() : '';
+                $type = (method_exists($paramType, 'getName')) ? $paramType->getName() : '';
                 $name = '' . $param->getName();
                 $defVal = $param->isOptional() ? $param->getDefaultValue() : '';
                 $attrVal = null;
