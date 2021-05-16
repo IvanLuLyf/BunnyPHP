@@ -4,7 +4,6 @@ declare(strict_types=1);
 namespace BunnyPHP;
 defined('BUNNY_PATH') or define('BUNNY_PATH', __DIR__);
 
-use BunnyPHP\Annotation\BaseParam;
 use ReflectionClass;
 use ReflectionException;
 use ReflectionMethod;

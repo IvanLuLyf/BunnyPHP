@@ -1,6 +1,9 @@
 <?php
 
 namespace BunnyPHP\Annotation;
+
+use BunnyPHP\BaseParam;
+
 #[\Attribute(\Attribute::TARGET_PARAMETER)]
 class RequestParam extends BaseParam
 {

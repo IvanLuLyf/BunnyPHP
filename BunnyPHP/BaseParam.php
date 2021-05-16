@@ -1,6 +1,6 @@
 <?php
 
-namespace BunnyPHP\Annotation;
+namespace BunnyPHP;
 abstract class BaseParam
 {
     protected mixed $name;
