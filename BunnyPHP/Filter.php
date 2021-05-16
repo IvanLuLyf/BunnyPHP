@@ -7,12 +7,12 @@ class Filter
     const NEXT = 0;
     const STOP = 1;
 
-    protected $_mode;
     protected array $_variables = [];
 
-    public function __construct($mode = BunnyPHP::MODE_NORMAL)
+    public function __get($name)
     {
-        $this->_mode = $mode;
+        if ($name === '_mode') return BUNNY_APP_MODE;
+        return null;
     }
 
     public function doFilter($param = []): int
@@ -32,12 +32,12 @@ class Filter
 
     public function render($variable, $template = '')
     {
-        View::render($template, $variable, $this->_mode);
+        View::render($template, $variable, BUNNY_APP_MODE);
     }
 
     public function error($variable, $code = 200)
     {
-        View::error($variable, $this->_mode, $code);
+        View::error($variable, BUNNY_APP_MODE, $code);
     }
 
     public function redirect($url, $action = null, $params = [])
