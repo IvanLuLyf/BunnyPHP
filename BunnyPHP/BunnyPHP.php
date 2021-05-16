@@ -4,6 +4,7 @@ declare(strict_types=1);
 namespace BunnyPHP;
 defined('BUNNY_PATH') or define('BUNNY_PATH', __DIR__);
 
+use BunnyPHP\Annotation\BaseParam;
 use ReflectionClass;
 use ReflectionException;
 use ReflectionMethod;
@@ -130,6 +131,8 @@ class BunnyPHP
             $class = new ReflectionClass($controller);
             $assignedValue = [];
             $paramContext = [];
+            $result = $this->runAttrFilter($class, $assignedValue);
+            if ($result === Filter::STOP) return;
             if ($classDocComment = $class->getDocComment()) {
                 $classDoc = $this->processDocComment($classDocComment);
                 if (isset($classDoc['filter'])) {
@@ -157,6 +160,8 @@ class BunnyPHP
                 $method = $class->getMethod('other');
             }
             if (!$method) View::error(['ret' => '-3', 'status' => 'action does not exist', 'bunny_error' => Language::get('action_not_exists', ['action' => $action])], $this->mode);
+            $result = $this->runAttrFilter($method, $assignedValue);
+            if ($result === Filter::STOP) return;
             if ($methodDocComment = $method->getDocComment()) {
                 $methodDoc = $this->processDocComment($methodDocComment);
                 if (isset($methodDoc['filter'])) {
@@ -212,6 +217,22 @@ class BunnyPHP
         $paramContext = array_merge($paramContext, $result);
     }
 
+    private function runAttrFilter($reflect, &$assignedValue): int
+    {
+        if (method_exists($reflect, 'getAttributes')) {
+            $filters = $reflect->getAttributes();
+            foreach ($filters as $filter) {
+                $f = $filter->newInstance();
+                if ($f instanceof Filter) {
+                    $result = $f->doFilter($filter->getArguments());
+                    if ($result === Filter::STOP) return Filter::STOP;
+                    $assignedValue = array_merge($assignedValue, $f->getVariable());
+                }
+            }
+        }
+        return Filter::NEXT;
+    }
+
     private function runFilter($filters, &$assignedValue): int
     {
         foreach ($filters as $filterInfo) {
@@ -222,7 +243,7 @@ class BunnyPHP
             array_filter($filterInfo);
             $filterName = trim(array_shift($filterInfo));
             $filterName = self::getClassName($filterName, 'filter');
-            $filter = new $filterName($this->mode);
+            $filter = new $filterName($filterInfo);
             $result = $filter->doFilter($filterInfo);
             if ($result === Filter::STOP) return Filter::STOP;
             $assignedValue = array_merge($assignedValue, $filter->getVariable());
@@ -256,11 +277,11 @@ class BunnyPHP
     /**
      * @throws ReflectionException
      */
-    private function inject(ReflectionMethod $method, $paramContext = [], $useRequest = false): array
+    private function inject(?ReflectionMethod $method, $paramContext = [], $useRequest = false): array
     {
         $value = [];
         if (!$method) return $value;
-        $REQ_TYPE = ['int', 'float', 'bool', 'string', ''];
+        $REQ_TYPE = ['array', 'int', 'float', 'bool', 'string', ''];
         $AUTO_CONVERT_TYPE = ['int', 'float', 'bool'];
         if ($method->getNumberOfParameters() > 0) {
             $params = $method->getParameters();
@@ -269,8 +290,16 @@ class BunnyPHP
                 $type = ($paramType instanceof ReflectionNamedType) ? $paramType->getName() : '';
                 $name = '' . $param->getName();
                 $defVal = $param->isOptional() ? $param->getDefaultValue() : '';
+                $attrVal = null;
+                if (method_exists($param, 'getAttributes')) {
+                    $attrs = $param->getAttributes();
+                    foreach ($attrs as $attr) {
+                        $p = $attr->newInstance();
+                        if ($p instanceof BaseParam) $attrVal = $p->value();
+                    }
+                }
                 if (in_array($type, $REQ_TYPE)) {
-                    $val = $paramContext[$name] ?? ($useRequest ? ($_REQUEST[$name] ?? $defVal) : $defVal);
+                    $val = $attrVal ?? $paramContext[$name] ?? ($useRequest ? ($_REQUEST[$name] ?? $defVal) : $defVal);
                     if (in_array($type, $AUTO_CONVERT_TYPE)) $value[] = ($type . 'val')($val);
                     elseif ($type == 'array' && !is_array($val)) $val = [];
                     $value[] = $val;
@@ -298,6 +327,11 @@ class BunnyPHP
     public static function app(): BunnyPHP
     {
         return self::$instance;
+    }
+
+    public static function getPath(): array
+    {
+        return self::app()->path;
     }
 
     public static function getDatabase(): Database
