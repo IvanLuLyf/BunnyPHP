@@ -13,12 +13,12 @@ class View
             http_response_code($code);
         }
         if ($mode === BunnyPHP::MODE_API or $mode === BunnyPHP::MODE_AJAX) {
-            header('Content-Type: application/json; charset=UTF-8');
-            echo json_encode($context);
+            self::json($context);
         } elseif ($mode === BunnyPHP::MODE_CLI) {
             echo self::get_message($context);
         } else {
             header('Content-Type: text/html; charset=UTF-8');
+            global $_LANG;
             $_LANG = Language::getInstance();
             if (is_string($view)) {
                 if (!empty($view) && file_exists(APP_PATH . "template/{$view}")) {
@@ -41,6 +41,7 @@ class View
                     extract($context);
                     include APP_PATH . 'template/error.html';
                 } else {
+                    global $bunny_error, $bunny_error_trace;
                     $bunny_error = self::get_message($context);
                     if (isset($context['bunny_error_trace'])) {
                         $bunny_error_trace = $context['bunny_error_trace'];
@@ -52,11 +53,18 @@ class View
                     extract($context);
                     include APP_PATH . 'template/info.html';
                 } else {
+                    global $bunny_info;
                     $bunny_info = self::get_message($context);
                     include BUNNY_PATH . '/template/info.html';
                 }
             }
         }
+    }
+
+    public static function json($context)
+    {
+        header('Content-Type: application/json; charset=UTF-8');
+        exit(json_encode($context));
     }
 
     public static function error($context = [], $mode = BunnyPHP::MODE_NORMAL, $code = 200)
