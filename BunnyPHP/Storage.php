@@ -6,7 +6,7 @@ interface Storage
 {
     /**
      * Returns file content in storage
-     * @param $filename
+     * @param string $filename
      * @return mixed
      */
     public function read(string $filename);
