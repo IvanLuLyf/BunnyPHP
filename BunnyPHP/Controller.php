@@ -5,25 +5,23 @@ namespace BunnyPHP;
 class Controller
 {
     protected array $_variables = [];
-    protected string $_controller;
-    protected string $_action;
-    protected $_mode;
 
-    public function __construct($controller, $action, $mode = BunnyPHP::MODE_NORMAL)
+    public function __get($name)
     {
-        $this->_controller = $controller;
-        $this->_action = $action;
-        $this->_mode = $mode;
+        if ($name === '_mode') return BUNNY_APP_MODE;
+        else if ($name === '_controller') return BUNNY_CONTROLLER;
+        else if ($name === '_action') return BUNNY_ACTION;
+        return null;
     }
 
     public function getController(): string
     {
-        return $this->_controller;
+        return BUNNY_CONTROLLER;
     }
 
     public function getAction(): string
     {
-        return $this->_action;
+        return BUNNY_ACTION;
     }
 
     public function assign($name, $value): Controller
@@ -40,22 +38,22 @@ class Controller
 
     public function render($template = '', $code = 200)
     {
-        View::render($template, $this->_variables, $this->_mode, $code);
+        View::render($template, $this->_variables, BUNNY_APP_MODE, $code);
     }
 
     public function renderTemplate($template = '', $code = 200)
     {
-        Template::render($template, $this->_variables, $this->_mode, $code);
+        Template::render($template, $this->_variables, BUNNY_APP_MODE, $code);
     }
 
     public function error($code = 200)
     {
-        View::error($this->_variables, $this->_mode, $code);
+        View::error($this->_variables, BUNNY_APP_MODE, $code);
     }
 
     public function info($code = 200)
     {
-        View::info($this->_variables, $this->_mode, $code);
+        View::info($this->_variables, BUNNY_APP_MODE, $code);
     }
 
     public function redirect($url, $action = null, $params = [])
