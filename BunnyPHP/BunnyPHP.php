@@ -6,11 +6,12 @@ defined('BUNNY_PATH') or define('BUNNY_PATH', __DIR__);
 
 use ReflectionClass;
 use ReflectionException;
+use ReflectionMethod;
 use ReflectionNamedType;
 
 class BunnyPHP
 {
-    const BUNNY_VERSION = '2.7.2';
+    const BUNNY_VERSION = '3.0.0';
     const MODE_NORMAL = 0;
     const MODE_API = 1;
     const MODE_AJAX = 2;
@@ -20,7 +21,7 @@ class BunnyPHP
      * @var $config Config
      */
     protected static Config $config;
-    protected $mode = BunnyPHP::MODE_NORMAL;
+    protected int $mode = BunnyPHP::MODE_NORMAL;
     protected array $apps = [];
 
     private static BunnyPHP $instance;
@@ -32,8 +33,9 @@ class BunnyPHP
 
     private array $variable = [];
     private array $container = [];
+    private array $path = [];
 
-    public function __construct($m = BunnyPHP::MODE_NORMAL)
+    public function __construct(int $m = BunnyPHP::MODE_NORMAL)
     {
         $this->mode = $m;
         BunnyPHP::$instance = $this;
@@ -94,6 +96,7 @@ class BunnyPHP
             }
         }
         $prefix = TP_NAMESPACE;
+        $this->path = $param;
         if (!empty($appName)) {
             self::set('app', $appName);
             $appConf = $this->apps[$appName];
@@ -105,6 +108,10 @@ class BunnyPHP
         } else {
             $controllerPrefix = '';
         }
+        define('BUNNY_APP', $prefix);
+        define('BUNNY_APP_MODE', $this->mode);
+        define('BUNNY_CONTROLLER', $controllerName);
+        define('BUNNY_ACTION', $controllerName);
         $controller = $controllerPrefix . $controllerName . 'Controller';
         if (!class_exists($controller)) {
             if (!class_exists($controllerPrefix . 'OtherController')) {
@@ -114,124 +121,168 @@ class BunnyPHP
             }
         }
         $request_method = strtolower($_SERVER['REQUEST_METHOD'] ?? 'cli');
-        $actionFunc = 'ac_' . $actionName . '_' . $request_method;
-        if (method_exists($controller, $actionFunc)) {
-            $dispatch = new $controller($controllerName, $actionName, $this->mode);
-            $this->callAction($controller, $dispatch, $actionFunc, $param);
-        } elseif (method_exists($controller, 'ac_' . $actionName)) {
-            $dispatch = new $controller($controllerName, $actionName, $this->mode);
-            $this->callAction($controller, $dispatch, 'ac_' . $actionName, $param);
-        } elseif (method_exists($controller, 'other')) {
-            $dispatch = new $controller($controllerName, $actionName, $this->mode);
-            $this->callAction($controller, $dispatch, 'other', $param);
-        } else {
-            View::error(['ret' => '-3', 'status' => 'action does not exist', 'bunny_error' => Language::get('action_not_exists', ['action' => $actionName])], $this->mode);
-        }
+        $this->dispatch($controller, $actionName, $request_method);
     }
 
-    private function callAction($controller, $dispatch, $action, $pathParam = [])
+    private function dispatch($controller, $action, $requestMethod)
     {
         try {
             $class = new ReflectionClass($controller);
-            $method = $class->getMethod($action);
-            $pathValue = [];
-            $assignValue = [];
-            if ($docComment = $method->getDocComment()) {
-                list($flag, $pathValue, $assignValue) = $this->processAnnotation($docComment, $pathParam);
-                if ($flag == Filter::STOP) return;
+            $assignedValue = [];
+            $paramContext = [];
+            if ($classDocComment = $class->getDocComment()) {
+                $classDoc = $this->processDocComment($classDocComment);
+                if (isset($classDoc['filter'])) {
+                    $result = $this->runFilter($classDoc['filter'], $assignedValue);
+                    if ($result === Filter::STOP) return;
+                }
             }
-            call_user_func_array([$dispatch, 'assignAll'], [$assignValue]);
-            if ($method->getNumberOfParameters() > 0) {
-                $params = $method->getParameters();
-                $value = [];
-                foreach ($params as $param) {
-                    $type = $param->getType();
-                    $typeName = ($type instanceof ReflectionNamedType) ? $type->getName() : '';
-                    $name = '' . $param->getName();
-                    if ($param->isOptional()) {
-                        $defVal = $param->getDefaultValue();
-                    } else {
-                        $defVal = '';
+            if (!$class->isInstantiable()) View::error([], $this->mode);
+            $constructor = $class->getConstructor();
+            if ($constructor) {
+                if ($methodDocComment = $constructor->getDocComment()) {
+                    $methodDoc = $this->processDocComment($methodDocComment);
+                    if (isset($methodDoc['param'])) {
+                        $this->processParamContext($methodDoc['param'], $paramContext);
                     }
-                    $value[] = $this->getVal($typeName, $name, $defVal, $pathValue);
-                }
-                call_user_func_array([$dispatch, $action], $value);
-            } else {
-                call_user_func_array([$dispatch, $action], []);
-            }
-        } catch (ReflectionException $ex) {
-            call_user_func_array([$dispatch, $action], []);
-        }
-    }
-
-    private function getVal($type, $name, $def, $path)
-    {
-        if (in_array($type, ['int', 'float', 'bool', 'string', ''])) {
-            $val = $path[$name] ?? $_REQUEST[$name] ?? $def;
-            if (in_array($type, ['int', 'float', 'bool'])) {
-                return ($type . 'val')($val);
-            }
-            return $val;
-        } else if ($type == 'array') {
-            return $path;
-        } else {
-            if (!isset($this->container[$type])) {
-                $this->container[$type] = new $type();
-            }
-            return $this->container[$type];
-        }
-    }
-
-    private function processAnnotation($docComment, $pathParam = []): array
-    {
-        $pattern = '#(@[a-zA-Z]+\s*[a-zA-Z0-9, ()_].*)#';
-        $pathValue = [];
-        $assignValue = [];
-        if (preg_match_all($pattern, $docComment, $matches, PREG_PATTERN_ORDER)) {
-            foreach ($matches[1] as $decorate) {
-                if (strpos($decorate, '@filter') === 0) {
-                    $result = $this->processFilter($decorate, $assignValue);
-                    if ($result == Filter::STOP) return [Filter::STOP];
-                } elseif (strpos($decorate, '@param') === 0) {
-                    $this->processPathParam($decorate, $pathParam, $pathValue);
                 }
             }
-            return [Filter::NEXT, $pathValue, $assignValue];
+            $instance = $class->newInstanceArgs($this->inject($constructor, $paramContext, true));
+            $method = null;
+            if ($class->hasMethod("ac_{$action}_{$requestMethod}")) {
+                $method = $class->getMethod("ac_{$action}_{$requestMethod}");
+            } else if ($class->hasMethod("ac_{$action}")) {
+                $method = $class->getMethod("ac_{$action}");
+            } else if ($class->hasMethod('other')) {
+                $method = $class->getMethod('other');
+            }
+            if (!$method) View::error(['ret' => '-3', 'status' => 'action does not exist', 'bunny_error' => Language::get('action_not_exists', ['action' => $action])], $this->mode);
+            if ($methodDocComment = $method->getDocComment()) {
+                $methodDoc = $this->processDocComment($methodDocComment);
+                if (isset($methodDoc['filter'])) {
+                    $result = $this->runFilter($methodDoc['filter'], $assignedValue);
+                    if ($result === Filter::STOP) return;
+                }
+                if (isset($methodDoc['param'])) {
+                    $this->processParamContext($methodDoc['param'], $paramContext);
+                }
+            }
+            if ($class->hasMethod('assignAll')) {
+                $instance->assignAll($assignedValue);
+            }
+            $result = $method->invokeArgs($instance, $this->inject($method, $paramContext, true));
+            if (is_array($result) || is_object($result)) {
+                View::json($result);
+            }
+        } catch (ReflectionException $e) {
+            View::error([], $this->mode);
         }
-        return [Filter::NEXT];
     }
 
-    private function processFilter($decorate, &$assignValue): int
-    {
-        /**
-         * @var $filter Filter
-         */
-        $filterInfo = explode(' ', trim($decorate));
-        array_filter($filterInfo);
-        array_shift($filterInfo);
-        $filterName = trim(array_shift($filterInfo));
-        $filterName = self::getClassName($filterName, 'filter');
-        $filter = new $filterName($this->mode);
-        $result = $filter->doFilter($filterInfo);
-        $assignValue = array_merge($assignValue, $filter->getVariable());
-        return $result;
-    }
-
-    private function processPathParam($decorate, $pathParam, &$pathValue)
+    private function processParamContext($params, &$paramContext)
     {
         $patName = '/\$([\w]+)\s*/';
-        $patPath = '/path\(([0-9])(,(.*))?\)/';
-        if (preg_match($patName, $decorate, $matName)) {
-            if (preg_match($patPath, $decorate, $matPath)) {
-                if (isset($pathParam[intval($matPath[1])])) {
-                    $pathValue[trim($matName[1])] = $pathParam[intval($matPath[1])];
-                } else {
-                    if (isset($matPath[3])) {
-                        $pathValue[trim($matName[1])] = $matPath[3];
+        $patValue = '/(path|header|request|config)\(([^)]*)\)/';
+        $result = [];
+        foreach ($params as $paramInfo) {
+            if (preg_match($patName, $paramInfo, $matName)) {
+                $name = trim($matName[1]);
+                if (preg_match_all($patValue, $paramInfo, $matAll)) {
+                    foreach ($matAll[1] as $i => $type) {
+                        $key = trim($matAll[2][$i]);
+                        $tmpVal = null;
+                        if ($type === 'path') {
+                            if ($key !== '') {
+                                $keys = explode(',', $key);
+                                $pos = intval(trim($keys[0]));
+                                $tmpVal = $this->path[$pos] ?? ($keys[1] ?? null);
+                            } else {
+                                $tmpVal = $this->path;
+                            }
+                        } elseif ($type === 'header') {
+                            $tmpVal = self::getRequest()->getHeader($key ?? $name);
+                        } elseif ($type === 'config') {
+                            $tmpVal = self::$config->get($key);
+                        }
+                        if ($tmpVal !== null) $result[$name] = $tmpVal;
                     }
                 }
             }
         }
+        $paramContext = array_merge($paramContext, $result);
+    }
+
+    private function runFilter($filters, &$assignedValue): int
+    {
+        foreach ($filters as $filterInfo) {
+            /**
+             * @var $filter Filter
+             */
+            $filterInfo = explode(' ', trim($filterInfo));
+            array_filter($filterInfo);
+            $filterName = trim(array_shift($filterInfo));
+            $filterName = self::getClassName($filterName, 'filter');
+            $filter = new $filterName($this->mode);
+            $result = $filter->doFilter($filterInfo);
+            if ($result === Filter::STOP) return Filter::STOP;
+            $assignedValue = array_merge($assignedValue, $filter->getVariable());
+        }
+        return Filter::NEXT;
+    }
+
+    private function createContainer($type): ?object
+    {
+        try {
+            $class = new ReflectionClass($type);
+            if (!$class->isInstantiable()) return null;
+            return $class->newInstanceArgs($this->inject($class->getConstructor()));
+        } catch (ReflectionException $e) {
+            return null;
+        }
+    }
+
+    private function processDocComment($docComment): array
+    {
+        $pattern = '#(@([a-zA-Z]+)\s*([a-zA-Z0-9, ()_].*))#';
+        $values = [];
+        if (preg_match_all($pattern, $docComment, $matches, PREG_PATTERN_ORDER)) {
+            foreach ($matches[2] as $i => $decorate) {
+                $values[$decorate][] = $matches[3][$i];
+            }
+        }
+        return $values;
+    }
+
+    /**
+     * @throws ReflectionException
+     */
+    private function inject(ReflectionMethod $method, $paramContext = [], $useRequest = false): array
+    {
+        $value = [];
+        if (!$method) return $value;
+        $REQ_TYPE = ['int', 'float', 'bool', 'string', ''];
+        $AUTO_CONVERT_TYPE = ['int', 'float', 'bool'];
+        if ($method->getNumberOfParameters() > 0) {
+            $params = $method->getParameters();
+            foreach ($params as $param) {
+                $paramType = $param->getType();
+                $type = ($paramType instanceof ReflectionNamedType) ? $paramType->getName() : '';
+                $name = '' . $param->getName();
+                $defVal = $param->isOptional() ? $param->getDefaultValue() : '';
+                if (in_array($type, $REQ_TYPE)) {
+                    $val = $paramContext[$name] ?? ($useRequest ? ($_REQUEST[$name] ?? $defVal) : $defVal);
+                    if (in_array($type, $AUTO_CONVERT_TYPE)) $value[] = ($type . 'val')($val);
+                    elseif ($type == 'array' && !is_array($val)) $val = [];
+                    $value[] = $val;
+                } else {
+                    if (!isset($this->container[$type])) {
+                        $this->container[$type] = $this->createContainer($type);
+                    }
+                    $value[] = $this->container[$type];
+                }
+            }
+        }
+        return $value;
     }
 
     public function get($key)
