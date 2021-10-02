@@ -10,7 +10,7 @@ use ReflectionMethod;
 
 class BunnyPHP
 {
-    const BUNNY_VERSION = '3.0.0';
+    const BUNNY_VERSION = '3.0.1';
     const MODE_NORMAL = 0;
     const MODE_API = 1;
     const MODE_AJAX = 2;
@@ -285,7 +285,7 @@ class BunnyPHP
             $params = $method->getParameters();
             foreach ($params as $param) {
                 $paramType = $param->getType();
-                $type = (method_exists($paramType, 'getName')) ? $paramType->getName() : '';
+                $type = ($paramType !== null && method_exists($paramType, 'getName')) ? $paramType->getName() : '';
                 $name = '' . $param->getName();
                 $defVal = $param->isOptional() ? $param->getDefaultValue() : '';
                 $attrVal = null;
