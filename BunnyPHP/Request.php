@@ -2,11 +2,18 @@
 declare(strict_types=1);
 
 namespace BunnyPHP;
+
 use ArrayAccess;
 
 class Request implements ArrayAccess
 {
     private array $param = [];
+    private bool $processed = false;
+
+    public function __construct()
+    {
+        $this->process();
+    }
 
     public function getHeader($name)
     {
@@ -46,47 +53,43 @@ class Request implements ArrayAccess
 
     public function process()
     {
-        if (isset($_SERVER['CONTENT_TYPE'])) {
-            $content = file_get_contents('php://input');
-            if (strpos(strtolower($_SERVER['CONTENT_TYPE']), 'application/json') === 0) {
-                $this->param = json_decode($content, true);
-            } elseif (strpos(strtolower($_SERVER['CONTENT_TYPE']), 'application/x-www-form-urlencoded') === 0) {
-                parse_str($content, $this->param);
-            } elseif (strpos(strtolower($_SERVER['CONTENT_TYPE']), 'multipart/form-data;') === 0) {
-                if (strtolower($_SERVER['REQUEST_METHOD']) === 'post') {
-                    $this->param = $_POST;
-                    return;
+        if ($this->processed || !isset($_SERVER['CONTENT_TYPE'])) return;
+        $content = file_get_contents('php://input');
+        $contentType = strtolower($_SERVER['CONTENT_TYPE']);
+        if (strpos($contentType, 'application/json') === 0) {
+            $this->param = json_decode($content, true);
+        } elseif (strpos($contentType, 'application/x-www-form-urlencoded') === 0) {
+            parse_str($content, $this->param);
+        } elseif (strpos($contentType, 'multipart/form-data;') === 0) {
+            if (strtolower($_SERVER['REQUEST_METHOD']) === 'post') {
+                $this->param = $_POST;
+                return;
+            }
+            $boundary = substr($content, 0, strpos($content, "\r\n"));
+            if (empty($boundary)) return;
+            $parts = array_slice(explode($boundary, $content), 1);
+            foreach ($parts as $part) {
+                if ($part == "--\r\n") break;
+                $part = ltrim($part, "\r\n");
+                list($raw_headers, $body) = explode("\r\n\r\n", $part, 2);
+                $raw_headers = explode("\r\n", $raw_headers);
+                $headers = [];
+                foreach ($raw_headers as $header) {
+                    list($name, $value) = explode(':', $header);
+                    $headers[strtolower($name)] = ltrim($value, ' ');
                 }
-                $boundary = substr($content, 0, strpos($content, "\r\n"));
-                if (empty($boundary)) return;
-                $parts = array_slice(explode($boundary, $content), 1);
-                foreach ($parts as $part) {
-                    if ($part == "--\r\n") break;
-                    $part = ltrim($part, "\r\n");
-                    list($raw_headers, $body) = explode("\r\n\r\n", $part, 2);
-                    $raw_headers = explode("\r\n", $raw_headers);
-                    $headers = [];
-                    foreach ($raw_headers as $header) {
-                        list($name, $value) = explode(':', $header);
-                        $headers[strtolower($name)] = ltrim($value, ' ');
-                    }
-                    if (isset($headers['content-disposition'])) {
-                        $filename = null;
-                        $tmp_name = null;
-                        preg_match('/^(.+); *name="([^"]+)"(; *filename="([^"]+)")?/', $headers['content-disposition'], $matches);
-                        list(, $type, $name) = $matches;
-                        if (isset($matches[4])) {
-                            if (isset($_FILES[$matches[2]])) {
-                                continue;
-                            }
-                            $filename = $matches[4];
-                            $filename_parts = pathinfo($filename);
-                            $tmp_name = tempnam(ini_get('upload_tmp_dir'), $filename_parts['filename']);
-                            $_FILES[$matches[2]] = ['error' => 0, 'name' => $filename, 'tmp_name' => $tmp_name, 'size' => strlen($body), 'type' => $value];
-                            file_put_contents($tmp_name, $body);
-                        } else {
-                            $this->param[$name] = substr($body, 0, strlen($body) - 2);
-                        }
+                if (isset($headers['content-disposition'])) {
+                    preg_match('/^(.+); *name="([^"]+)"(; *filename="([^"]+)")?/', $headers['content-disposition'], $matches);
+                    $name = $matches[2];
+                    if (isset($matches[4])) {
+                        if (isset($_FILES[$name])) continue;
+                        $filename = $matches[4];
+                        $filename_parts = pathinfo($filename);
+                        $tmp_name = tempnam(ini_get('upload_tmp_dir'), $filename_parts['filename']);
+                        $_FILES[$name] = ['error' => 0, 'name' => $filename, 'tmp_name' => $tmp_name, 'size' => strlen($body), 'type' => $headers['content-type']];
+                        file_put_contents($tmp_name, $body);
+                    } else {
+                        $this->param[$name] = substr($body, 0, strlen($body) - 2);
                     }
                 }
             }
@@ -109,6 +112,7 @@ class Request implements ArrayAccess
 
     public function offsetSet($offset, $value)
     {
+        $this->param[$offset] = $value;
     }
 
     public function offsetUnset($offset)
