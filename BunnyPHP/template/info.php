@@ -1,8 +1,8 @@
 <!DOCTYPE html>
-<html lang="<?=$_LANG->lang?>">
+<html lang="<?= $_LANG->lang ?>">
 <head>
     <meta charset="utf-8">
-    <title><?=$_LANG['bunny_info']?></title>
+    <title><?= $_LANG['bunny_info'] ?></title>
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1.0, user-scalable=0">
     <style>
@@ -31,8 +31,8 @@
     </style>
 </head>
 <body>
-<h1 class="title"><?=$_LANG['bunny_info']?></h1>
-<pre class="message"><?=$bunny_info?></pre>
-<p class="message">Powered By <a class="link" href="http://github.com/IvanLuLyf/BunnyPHP">BunnyPHP</a></p>
+<h1 class="title"><?= $_LANG['bunny_info'] ?></h1>
+<pre class="message"><?= $bunny_info ?></pre>
+<p class="message">Powered By <a class="link" href="https://github.com/IvanLuLyf/BunnyPHP">BunnyPHP</a></p>
 </body>
 </html>

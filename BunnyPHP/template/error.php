@@ -1,8 +1,8 @@
 <!DOCTYPE html>
-<html lang="<?=$_LANG->lang?>">
+<html lang="<?= $_LANG->lang ?>">
 <head>
     <meta charset="utf-8">
-    <title><?=$_LANG['bunny_error']?></title>
+    <title><?= $_LANG['bunny_error'] ?></title>
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1.0, user-scalable=0">
     <style>
@@ -54,33 +54,31 @@
     </style>
 </head>
 <body>
-<h1 class="title"><?=$_LANG['bunny_error']?></h1>
-<pre class="message"><?=$bunny_error?></pre>
-<?php if(isset($bunny_error_trace)): ?>
-<h4 class="sub-title">Trace</h4>
-<div class="message">
-    <table>
-        <tbody>
-        <tr class="bg2">
-            <td>No.</td>
-            <td>File</td>
-            <td>Line</td>
-            <td>Code</td>
-        </tr>
-        <?php foreach($bunny_error_trace as $i=>$t):?>
-        <tr class="bg1">
-            <td><?=($i+1)?></td>
-            <td><?=isset($t['file'])?$t['file']:'-'?></td>
-            <td><?=isset($t['line'])?$t['line']:'-'?></td>
-            <td><?=isset($t['class'])?$t['class']:''?><?=isset($t['type'])?$t['type']:''?><?=isset($t['function'])?$t['function']:''?>
-                ()
-            </td>
-        </tr>
-        <?php endforeach; ?>
-        </tbody>
-    </table>
-</div>
-<?php endif;?>
-<p class="message">Powered By <a class="link" href="http://github.com/IvanLuLyf/BunnyPHP">BunnyPHP</a></p>
+<h1 class="title"><?= $_LANG['bunny_error'] ?></h1>
+<pre class="message"><?= $bunny_error ?></pre>
+<?php if (isset($bunny_error_trace)): ?>
+    <h4 class="sub-title">Trace</h4>
+    <div class="message">
+        <table>
+            <tbody>
+            <tr class="bg2">
+                <td>No.</td>
+                <td>File</td>
+                <td>Line</td>
+                <td>Code</td>
+            </tr>
+            <?php foreach ($bunny_error_trace as $i => $t): ?>
+                <tr class="bg1">
+                    <td><?= ($i + 1) ?></td>
+                    <td><?= $t['file'] ?? '-' ?></td>
+                    <td><?= $t['line'] ?? '-' ?></td>
+                    <td><?= $t['class'] ?? '' ?><?= $t['type'] ?? '' ?><?= $t['function'] ?? '' ?>()</td>
+                </tr>
+            <?php endforeach; ?>
+            </tbody>
+        </table>
+    </div>
+<?php endif; ?>
+<p class="message">Powered By <a class="link" href="https://github.com/IvanLuLyf/BunnyPHP">BunnyPHP</a></p>
 </body>
 </html>
