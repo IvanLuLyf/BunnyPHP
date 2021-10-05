@@ -10,32 +10,39 @@ use PDOStatement;
 class PdoDatabase implements Database
 {
     private PDO $conn;
-    private $db_type;
+    private string $db_type;
+    private static array $DB_TYPE = [
+        'postgresql' => 'pgsql',
+        'postgres' => 'pgsql',
+    ];
 
     public function __construct($conf = [])
     {
-        if (isset($conf['dsn'])) {
+        $urlInfo = !empty($conf['url']) ? parse_url($conf['url']) : [];
+        if (!empty($conf['dsn'])) {
             $dsn = $conf['dsn'];
-            $this->db_type = explode(':', $dsn)[0];
         } else {
-            $db_type = strtolower($conf['type'] ?? 'mysql');
-            $host = $conf['host'] ?? 'localhost';
+            $db_type = strtolower($conf['type'] ?? self::$DB_TYPE[$urlInfo['scheme']] ?? $urlInfo['scheme'] ?? 'mysql');
+            $host = $conf['host'] ?? $urlInfo['host'] ?? 'localhost';
+            $port = $conf['port'] ?? $urlInfo['port'] ?? null;
+            $database = $conf['database'] ?? trim($urlInfo['path'], '/');
             if ($db_type == 'mysql') {
-                $port = $conf['port'] ?? 3306;
-                $dsn = "mysql:host=$host;port=$port;dbname=${conf['database']};charset=utf8mb4";
+                if (!$port) $port = 3306;
+                $dsn = "mysql:host=$host;port=$port;dbname=$database;charset=utf8mb4";
             } elseif ($db_type == 'sqlite') {
-                $dsn = "sqlite:${conf['database']}";
+                $database = $conf['database'] ?? $urlInfo['path'];
+                $dsn = "sqlite:$database";
             } elseif ($db_type == 'pgsql') {
-                $port = $conf['port'] ?? 5432;
-                $dsn = "pgsql:host=$host;port=$port;dbname=${conf['database']}";
+                if (!$port) $port = 5432;
+                $dsn = "pgsql:host=$host;port=$port;dbname=$database";
             }
-            $this->db_type = $db_type;
         }
-        $username = $conf['username'] ?? '';
-        $password = $conf['password'] ?? '';
+        $username = $conf['username'] ?? $urlInfo['user'] ?? '';
+        $password = $conf['password'] ?? $urlInfo['pass'] ?? '';
         if (!empty($dsn)) {
             $option = [PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC, PDO::ATTR_STRINGIFY_FETCHES => false, PDO::ATTR_EMULATE_PREPARES => false];
             $this->conn = new PDO($dsn, $username, $password, $option);
+            $this->db_type = $this->conn->getAttribute(PDO::ATTR_DRIVER_NAME);
         }
     }
 
@@ -93,9 +100,7 @@ class PdoDatabase implements Database
 
     public function fetchOne(string $sql, array $condition = [], bool $debug = false)
     {
-        if ($debug) {
-            return $sql;
-        }
+        if ($debug) return $sql;
         $pst = $this->conn->prepare($sql);
         $pst = $this->bindParam($pst, $condition);
         $pst->execute();
@@ -104,9 +109,7 @@ class PdoDatabase implements Database
 
     public function fetchAll(string $sql, array $condition = [], bool $debug = false)
     {
-        if ($debug) {
-            return $sql;
-        }
+        if ($debug) return $sql;
         $pst = $this->conn->prepare($sql);
         $pst = $this->bindParam($pst, $condition);
         $pst->execute();
