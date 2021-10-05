@@ -10,7 +10,7 @@ use ReflectionMethod;
 
 class BunnyPHP
 {
-    const BUNNY_VERSION = '3.0.1';
+    const BUNNY_VERSION = '3.0.2';
     const MODE_NORMAL = 0;
     const MODE_API = 1;
     const MODE_AJAX = 2;
@@ -260,13 +260,13 @@ class BunnyPHP
         }
     }
 
-    private function processDocComment($docComment): array
+    public static function processDocComment($docComment): array
     {
         $pattern = '#(@([a-zA-Z]+)\s*([a-zA-Z0-9, ()_].*))#';
         $values = [];
         if (preg_match_all($pattern, $docComment, $matches, PREG_PATTERN_ORDER)) {
             foreach ($matches[2] as $i => $decorate) {
-                $values[$decorate][] = $matches[3][$i];
+                $values[$decorate][] = rtrim($matches[3][$i], "\r\n");
             }
         }
         return $values;
