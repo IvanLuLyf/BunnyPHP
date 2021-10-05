@@ -37,7 +37,10 @@ class View
                     self::error(['ret' => '-4', 'status' => 'template does not exist', 'bunny_error' => Language::get('view_not_exists', ['view' => $view])]);
                 }
             } elseif ($view === self::MODE_ERROR) {
-                if (file_exists(APP_PATH . 'template/error.html')) {
+                if (file_exists(APP_PATH . 'template/error.php')) {
+                    extract($context);
+                    include APP_PATH . 'template/error.php';
+                } elseif (file_exists(APP_PATH . 'template/error.html')) {
                     extract($context);
                     include APP_PATH . 'template/error.html';
                 } else {
@@ -49,7 +52,10 @@ class View
                     include BUNNY_PATH . '/template/error.php';
                 }
             } elseif ($view === self::MODE_INFO) {
-                if (file_exists(APP_PATH . 'template/info.html')) {
+                if (file_exists(APP_PATH . 'template/info.php')) {
+                    extract($context);
+                    include APP_PATH . 'template/info.php';
+                } elseif (file_exists(APP_PATH . 'template/info.html')) {
                     extract($context);
                     include APP_PATH . 'template/info.html';
                 } else {
