@@ -144,7 +144,11 @@ class Model
 
     public function cursor($columns = '*')
     {
-        $result = BunnyPHP::getDatabase()->fetchAll($this->buildSelect($columns), $this->_param, $this->_debug);
+        if ($this->_debug) {
+            $result = BunnyPHP::getDatabase()->fetchAll($this->buildSelect($columns), $this->_param, true);
+        } else {
+            $result = BunnyPHP::getDatabase()->cursor($this->buildSelect($columns), $this->_param);
+        }
         $this->reset();
         return $result;
     }
