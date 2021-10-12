@@ -73,9 +73,7 @@ class PdoDatabase implements Database
         }
         $where = $where == null ? '' : ' where ' . $where;
         $sql = "update {$table} set {$updates} {$where}";
-        if ($debug) {
-            return $sql;
-        }
+        if ($debug) return ['sql' => $sql, 'bind' => $condition];
         $pst = $this->conn->prepare($sql);
         foreach ($data as $k => &$v) {
             $pst->bindParam(':' . $k, $v);
@@ -89,9 +87,7 @@ class PdoDatabase implements Database
     {
         $where = $where == null ? '' : ' WHERE ' . $where;
         $sql = "delete from {$table} {$where}";
-        if ($debug) {
-            return $sql;
-        }
+        if ($debug) return ['sql' => $sql, 'bind' => $condition];
         $pst = $this->conn->prepare($sql);
         $pst = $this->bindParam($pst, $condition);
         $pst->execute();
@@ -100,7 +96,7 @@ class PdoDatabase implements Database
 
     public function fetchOne(string $sql, array $condition = [], bool $debug = false)
     {
-        if ($debug) return $sql;
+        if ($debug) return ['sql' => $sql, 'bind' => $condition];
         $pst = $this->conn->prepare($sql);
         $pst = $this->bindParam($pst, $condition);
         $pst->execute();
@@ -109,7 +105,7 @@ class PdoDatabase implements Database
 
     public function fetchAll(string $sql, array $condition = [], bool $debug = false)
     {
-        if ($debug) return $sql;
+        if ($debug) return ['sql' => $sql, 'bind' => $condition];
         $pst = $this->conn->prepare($sql);
         $pst = $this->bindParam($pst, $condition);
         $pst->execute();
