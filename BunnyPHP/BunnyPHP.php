@@ -10,7 +10,7 @@ use ReflectionMethod;
 
 class BunnyPHP
 {
-    const BUNNY_VERSION = '3.0.3';
+    const BUNNY_VERSION = '3.0.4';
     const MODE_NORMAL = 0;
     const MODE_API = 1;
     const MODE_AJAX = 2;
@@ -110,7 +110,7 @@ class BunnyPHP
         define('BUNNY_APP', $prefix);
         define('BUNNY_APP_MODE', $this->mode);
         define('BUNNY_CONTROLLER', $controllerName);
-        define('BUNNY_ACTION', $controllerName);
+        define('BUNNY_ACTION', $actionName);
         $controller = $controllerPrefix . $controllerName . 'Controller';
         if (!class_exists($controller)) {
             if (!class_exists($controllerPrefix . 'OtherController')) {
