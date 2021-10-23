@@ -2,6 +2,7 @@
   "mod_not_exists": "Controller {{mod}} is not exists",
   "action_not_exists": "Action {{action}} is not exists",
   "view_not_exists": "View {{view}} is not exists",
+  "parameter_required": "Parameter {{name}} is required",
   "bunny_error": "BunnyPHP Error",
   "bunny_info": "BunnyPHP Information"
 }

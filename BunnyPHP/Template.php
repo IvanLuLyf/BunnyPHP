@@ -43,7 +43,7 @@ class Template
                 (new self($view))->compile();
                 include $cacheDir . $view;
             } else {
-                View::error(['ret' => '-4', 'status' => 'template does not exist', 'bunny_error' => Language::get('view_not_exists', ['view' => $view])]);
+                View::error(['ret' => -4, 'status' => 'template does not exist', 'bunny_error' => Language::get('view_not_exists', ['view' => $view])]);
             }
         }
     }

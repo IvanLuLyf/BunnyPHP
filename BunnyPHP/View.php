@@ -27,14 +27,14 @@ class View
                 } else if (empty($view)) {
                     echo self::get_message($context);
                 } else {
-                    self::error(['ret' => '-4', 'status' => 'template does not exist', 'bunny_error' => Language::get('view_not_exists', ['view' => $view])]);
+                    self::error(['ret' => -4, 'status' => 'template does not exist', 'bunny_error' => Language::get('view_not_exists', ['view' => $view])]);
                 }
             } elseif (is_array($view)) {
                 if (!empty($view[0]) && is_dir($view[1]) && file_exists($view[1] . "/{$view[0]}")) {
                     extract($context);
                     include $view[1] . "/{$view[0]}";
                 } else {
-                    self::error(['ret' => '-4', 'status' => 'template does not exist', 'bunny_error' => Language::get('view_not_exists', ['view' => $view])]);
+                    self::error(['ret' => -4, 'status' => 'template does not exist', 'bunny_error' => Language::get('view_not_exists', ['view' => $view])]);
                 }
             } elseif ($view === self::MODE_ERROR) {
                 if (file_exists(APP_PATH . 'template/error.php')) {

@@ -2,6 +2,7 @@
   "mod_not_exists": "控制器{{mod}}不存在",
   "action_not_exists": "控制器方法{{action}}不存在",
   "view_not_exists": "视图{{view}}不存在",
+  "parameter_required": "参数{{name}}不能为空",
   "bunny_error": "BunnyPHP 错误",
   "bunny_info": "BunnyPHP 信息"
 }

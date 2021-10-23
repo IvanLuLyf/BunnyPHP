@@ -117,7 +117,7 @@ class BunnyPHP
         $controller = $controllerPrefix . $controllerName . 'Controller';
         if (!class_exists($controller)) {
             if (!class_exists($controllerPrefix . 'OtherController')) {
-                View::error(['ret' => '-2', 'status' => 'mod does not exist', 'bunny_error' => Language::get('mod_not_exists', ['mod' => $controller])], $this->mode);
+                View::error(['ret' => -2, 'status' => 'mod does not exist', 'bunny_error' => Language::get('mod_not_exists', ['mod' => $controller])], $this->mode);
             } else {
                 $controller = $controllerPrefix . 'OtherController';
             }
@@ -160,7 +160,7 @@ class BunnyPHP
             } else if ($class->hasMethod('other')) {
                 $method = $class->getMethod('other');
             }
-            if (!$method) View::error(['ret' => '-3', 'status' => 'action does not exist', 'bunny_error' => Language::get('action_not_exists', ['action' => $action])], $this->mode);
+            if (!$method) View::error(['ret' => -3, 'status' => 'action does not exist', 'bunny_error' => Language::get('action_not_exists', ['action' => $action])], $this->mode);
             $result = $this->runAttrFilter($method, $assignedValue);
             if ($result === Filter::STOP) return;
             if ($methodDocComment = $method->getDocComment()) {
@@ -292,7 +292,6 @@ class BunnyPHP
                 $paramType = $param->getType();
                 $type = ($paramType !== null && method_exists($paramType, 'getName')) ? $paramType->getName() : '';
                 $name = '' . $param->getName();
-                $defVal = $param->isOptional() ? $param->getDefaultValue() : '';
                 $attrVal = null;
                 if (method_exists($param, 'getAttributes')) {
                     $attrs = $param->getAttributes();
@@ -302,7 +301,14 @@ class BunnyPHP
                     }
                 }
                 if (in_array($type, $REQ_TYPE)) {
-                    $val = $attrVal ?? $paramContext[$name] ?? ($useRequest ? ($_REQUEST[$name] ?? $defVal) : $defVal);
+                    $val = $attrVal ?? $paramContext[$name] ?? null;
+                    if ($val === null) {
+                        if (!$param->isOptional() && !isset(self::$request[$name])) {
+                            View::error(['ret' => -7, 'status' => 'parameter cannot be empty', 'bunny_error' => Language::get('parameter_required', ['name' => $name])], $this->mode);
+                        }
+                        $defVal = $param->isOptional() ? $param->getDefaultValue() : '';
+                        $val = $useRequest ? (self::$request[$name] ?? $defVal) : $defVal;
+                    }
                     if (in_array($type, $AUTO_CONVERT_TYPE)) $value[] = ($type . 'val')($val);
                     elseif ($type == 'array' && !is_array($val)) $val = [];
                     $value[] = $val;
@@ -406,7 +412,7 @@ class BunnyPHP
 
     public function handleErr($err_no, $err_str, $err_file, $err_line): bool
     {
-        $err = ['ret' => '-8', 'status' => 'internal error', 'bunny_error' => "$err_str\nNo: $err_no\nFile: $err_file\nLine: $err_line"];
+        $err = ['ret' => -8, 'status' => 'internal error', 'bunny_error' => "$err_str\nNo: $err_no\nFile: $err_file\nLine: $err_line"];
         if (APP_DEBUG) {
             $trace = debug_backtrace();
             array_shift($trace);
@@ -444,7 +450,6 @@ class BunnyPHP
         }
         return substr($class, $i);
     }
-
 
     public static function getClassName($class, $type = '', $base = TP_NAMESPACE): string
     {
