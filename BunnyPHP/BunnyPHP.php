@@ -10,11 +10,17 @@ use ReflectionMethod;
 
 class BunnyPHP
 {
-    const BUNNY_VERSION = '3.0.4';
+    const BUNNY_VERSION = '3.0.5';
     const MODE_NORMAL = 0;
     const MODE_API = 1;
     const MODE_AJAX = 2;
     const MODE_CLI = 3;
+    protected static array $INTERNAL_CLASS_MAP = [
+        Database::class => [PdoDatabase::class, 'database', 'db'],
+        Cache::class => [FileCache::class, 'cache'],
+        Logger::class => [FileLogger::class, 'logger'],
+        Storage::class => [FileStorage::class, 'storage'],
+    ];
 
     /**
      * @var $config Config
@@ -24,11 +30,8 @@ class BunnyPHP
     protected array $apps = [];
 
     private static BunnyPHP $instance;
-    private static ?Database $db = null;
-    private static ?Storage $storage = null;
-    private static ?Cache $cache = null;
+    private static array $internals = [];
     private static ?Request $request = null;
-    private static ?Logger $logger = null;
 
     private array $variable = [];
     private array $container = [];
@@ -252,6 +255,8 @@ class BunnyPHP
     private function createContainer($type): ?object
     {
         try {
+            if ($type === Request::class) return self::getRequest();
+            elseif (isset(self::$INTERNAL_CLASS_MAP[$type])) return self::getInternalInstance($type);
             $class = new ReflectionClass($type);
             if (!$class->isInstantiable()) return null;
             return $class->newInstanceArgs($this->inject($class->getConstructor()));
@@ -332,49 +337,30 @@ class BunnyPHP
         return self::app()->path;
     }
 
+    private static function getInternalInstance($base)
+    {
+        if (!isset(self::$internals[$base])) {
+            $info = self::$INTERNAL_CLASS_MAP[$base];
+            $conf = self::$config->get($info[2] ?? $info[1], []);
+            $name = self::getClassName($conf['name'] ?? '', $info[1]) ?: $info[0];
+            self::$internals[$base] = new $name($conf);
+        }
+        return self::$internals[$base];
+    }
+
     public static function getDatabase(): Database
     {
-        if (self::$db === null) {
-            $dbName = '\\BunnyPHP\\PdoDatabase';
-            if (self::$config->has('db')) {
-                $name = self::$config->get('db.name');
-                if ($name) {
-                    $dbName = self::getClassName($name, 'database');
-                }
-            }
-            self::$db = new $dbName(self::$config->get('db'), []);
-        }
-        return self::$db;
+        return self::getInternalInstance(Database::class);
     }
 
     public static function getStorage(): Storage
     {
-        if (self::$storage === null) {
-            $storageName = '\\BunnyPHP\\FileStorage';
-            if (self::$config->has('storage')) {
-                $name = self::$config->get('storage.name');
-                if ($name) {
-                    $storageName = self::getClassName($name, 'storage');
-                }
-            }
-            self::$storage = new $storageName(self::$config->get('storage', []));
-        }
-        return self::$storage;
+        return self::getInternalInstance(Storage::class);
     }
 
     public static function getCache(): Cache
     {
-        if (self::$cache === null) {
-            $cacheName = '\\BunnyPHP\\FileCache';
-            if (self::$config->has('cache')) {
-                $name = self::$config->get('cache.name');
-                if ($name) {
-                    $cacheName = self::getClassName($name, 'cache');
-                }
-            }
-            self::$cache = new $cacheName(self::$config->get('cache', []));
-        }
-        return self::$cache;
+        return self::getInternalInstance(Cache::class);
     }
 
     public static function getRequest(): Request
@@ -384,17 +370,7 @@ class BunnyPHP
 
     public static function getLogger(): Logger
     {
-        if (self::$logger === null) {
-            $loggerName = '\\BunnyPHP\\FileLogger';
-            if (self::$config->has('logger')) {
-                $name = self::$config->get('logger.name');
-                if ($name) {
-                    $loggerName = self::getClassName($name, 'logger');
-                }
-            }
-            self::$logger = new $loggerName(self::$config->get('logger', []));
-        }
-        return self::$logger;
+        return self::getInternalInstance(Logger::class);
     }
 
     private function setReporting()
@@ -472,6 +448,7 @@ class BunnyPHP
 
     public static function getClassName($class, $type = '', $base = TP_NAMESPACE): string
     {
+        if (!$class) return '';
         $tmp = explode('.', $class);
         $shortName = ucfirst(array_pop($tmp));
         $prefix = '';
