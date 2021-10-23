@@ -132,6 +132,7 @@ class BunnyPHP
             $class = new ReflectionClass($controller);
             $assignedValue = [];
             $paramContext = [];
+            $paramRequired = [];
             $result = $this->runAttrFilter($class, $assignedValue);
             if ($result === Filter::STOP) return;
             if ($classDocComment = $class->getDocComment()) {
@@ -147,11 +148,11 @@ class BunnyPHP
                 if ($methodDocComment = $constructor->getDocComment()) {
                     $methodDoc = $this->processDocComment($methodDocComment);
                     if (isset($methodDoc['param'])) {
-                        $this->processParamContext($methodDoc['param'], $paramContext);
+                        $this->processParamContext($methodDoc['param'], $paramContext, $paramRequired);
                     }
                 }
             }
-            $instance = $class->newInstanceArgs($this->inject($constructor, $paramContext, true));
+            $instance = $class->newInstanceArgs($this->inject($constructor, $paramContext, true, $paramRequired));
             $method = null;
             if ($class->hasMethod("ac_{$action}_{$requestMethod}")) {
                 $method = $class->getMethod("ac_{$action}_{$requestMethod}");
@@ -170,13 +171,13 @@ class BunnyPHP
                     if ($result === Filter::STOP) return;
                 }
                 if (isset($methodDoc['param'])) {
-                    $this->processParamContext($methodDoc['param'], $paramContext);
+                    $this->processParamContext($methodDoc['param'], $paramContext, $paramRequired);
                 }
             }
             if ($class->hasMethod('assignAll')) {
                 $instance->assignAll($assignedValue);
             }
-            $result = $method->invokeArgs($instance, $this->inject($method, $paramContext, true));
+            $result = $method->invokeArgs($instance, $this->inject($method, $paramContext, true, $paramRequired));
             if (is_array($result) || is_object($result)) {
                 View::json($result);
             }
@@ -185,11 +186,12 @@ class BunnyPHP
         }
     }
 
-    private function processParamContext($params, &$paramContext)
+    private function processParamContext($params, &$paramContext, &$paramRequired)
     {
         $patName = '/\$([\w]+)\s*/';
-        $patValue = '/(path|header|request|config)\(([^)]*)\)/';
+        $patValue = '/(path|header|request|config|session|cookie|not_empty|required)\(([^)]*)\)/';
         $result = [];
+        $required = [];
         foreach ($params as $paramInfo) {
             if (preg_match($patName, $paramInfo, $matName)) {
                 $name = trim($matName[1]);
@@ -197,7 +199,13 @@ class BunnyPHP
                     foreach ($matAll[1] as $i => $type) {
                         $key = trim($matAll[2][$i]);
                         $tmpVal = null;
-                        if ($type === 'path') {
+                        if ($type === 'required') {
+                            $required[$name] = true;
+                        } elseif ($type === 'not_empty') {
+                            if (self::emptyText(self::$request[$key ?: $name])) {
+                                View::error(['ret' => -7, 'status' => 'parameter cannot be empty', 'bunny_error' => Language::get('parameter_required', ['name' => $name])], $this->mode);
+                            }
+                        } elseif ($type === 'path') {
                             if ($key !== '') {
                                 $keys = explode(',', $key);
                                 $pos = intval(trim($keys[0]));
@@ -206,9 +214,13 @@ class BunnyPHP
                                 $tmpVal = $this->path;
                             }
                         } elseif ($type === 'header') {
-                            $tmpVal = self::getRequest()->getHeader($key ?? $name);
+                            $tmpVal = self::$request->getHeader($key ?: $name);
                         } elseif ($type === 'config') {
                             $tmpVal = self::$config->get($key);
+                        } elseif ($type === 'cookie') {
+                            $tmpVal = Request::cookie($key ?: $name);
+                        } elseif ($type === 'session') {
+                            $tmpVal = Request::session($key ?: $name);
                         }
                         if ($tmpVal !== null) $result[$name] = $tmpVal;
                     }
@@ -216,6 +228,7 @@ class BunnyPHP
             }
         }
         $paramContext = array_merge($paramContext, $result);
+        $paramRequired = array_merge($paramRequired, $required);
     }
 
     private function runAttrFilter($reflect, &$assignedValue): int
@@ -280,7 +293,7 @@ class BunnyPHP
     /**
      * @throws ReflectionException
      */
-    private function inject(?ReflectionMethod $method, $paramContext = [], $useRequest = false): array
+    private function inject(?ReflectionMethod $method, $paramContext = [], $useRequest = false, $paramRequired = []): array
     {
         $value = [];
         if (!$method) return $value;
@@ -303,7 +316,7 @@ class BunnyPHP
                 if (in_array($type, $REQ_TYPE)) {
                     $val = $attrVal ?? $paramContext[$name] ?? null;
                     if ($val === null) {
-                        if (!$param->isOptional() && !isset(self::$request[$name])) {
+                        if (isset($paramRequired[$name]) && !$param->isOptional() && !isset(self::$request[$name])) {
                             View::error(['ret' => -7, 'status' => 'parameter cannot be empty', 'bunny_error' => Language::get('parameter_required', ['name' => $name])], $this->mode);
                         }
                         $defVal = $param->isOptional() ? $param->getDefaultValue() : '';
@@ -476,5 +489,10 @@ class BunnyPHP
         $type = array_pop($tmp);
         $prefix = implode('\\', $tmp);
         return [$shortName, $type, $prefix];
+    }
+
+    public static function emptyText($text): bool
+    {
+        return is_null($text) || strlen(trim($text)) === 0;
     }
 }

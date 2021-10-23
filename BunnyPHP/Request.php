@@ -7,21 +7,18 @@ use ArrayAccess;
 
 class Request implements ArrayAccess
 {
-    private array $param = [];
+    private array $param = [], $query = [];
     private bool $processed = false;
 
     public function __construct()
     {
+        $this->query = $_GET;
         $this->process();
     }
 
     public function getHeader($name)
     {
-        $header_name = 'HTTP_' . strtoupper($name);
-        if (isset($_SERVER[$header_name])) {
-            return $_SERVER[$header_name];
-        }
-        return null;
+        return $_SERVER['HTTP_' . strtoupper($name)] ?? null;
     }
 
     public static function cookie($nameOrValue, $value = '', $expire = 0, $path = '/', $domain = '', $httpOnly = true)
@@ -79,12 +76,17 @@ class Request implements ArrayAccess
         if ($this->processed || !isset($_SERVER['CONTENT_TYPE'])) return;
         $content = file_get_contents('php://input');
         $contentType = strtolower($_SERVER['CONTENT_TYPE']);
+        $method = strtolower($_SERVER['REQUEST_METHOD']);
         if (strpos($contentType, 'application/json') >= 0) {
             $this->param = json_decode($content, true);
         } elseif (strpos($contentType, 'application/x-www-form-urlencoded') >= 0) {
+            if ($method === 'post') {
+                $this->param = $_POST;
+                return;
+            }
             parse_str($content, $this->param);
         } elseif (strpos($contentType, 'multipart/form-data;') >= 0) {
-            if (strtolower($_SERVER['REQUEST_METHOD']) === 'post') {
+            if ($method === 'post') {
                 $this->param = $_POST;
                 return;
             }
@@ -121,13 +123,15 @@ class Request implements ArrayAccess
 
     public function offsetExists($offset): bool
     {
-        return isset($this->param[$offset]);
+        return isset($this->param[$offset]) || isset($this->query[$offset]);
     }
 
     public function offsetGet($offset)
     {
         if (isset($this->param[$offset])) {
             return $this->param[$offset];
+        } elseif (isset($this->query[$offset])) {
+            return $this->query[$offset];
         } else {
             return null;
         }
@@ -141,5 +145,6 @@ class Request implements ArrayAccess
     public function offsetUnset($offset)
     {
         unset($this->param[$offset]);
+        unset($this->query[$offset]);
     }
 }
