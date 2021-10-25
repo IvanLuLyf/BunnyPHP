@@ -18,9 +18,10 @@ BunnyPHP是一个轻量的PHP MVC框架.
 
 [English](README.md) | 中文
 
-[![Run on Repl.it](https://img.shields.io/badge/-run%20on%20repl.it-%235C6970?logo=repl.it&style=flat-square&logoColor=white)](https://repl.it/github/ivanlulyf/bunnyphp-app)
-[![Open in Gitpod](https://img.shields.io/badge/-open%20in%20Gitpod-%231966D2?logo=gitpod&style=flat-square&logoColor=white)](https://gitpod.io/#https://github.com/IvanLuLyf/BunnyPHP-App)
+[![Run on Repl.it](https://img.shields.io/badge/-Run%20on%20repl.it-%235C6970?logo=replit&style=flat-square&logoColor=white)](https://repl.it/github/ivanlulyf/bunnyphp-app)
+[![Open in Gitpod](https://img.shields.io/badge/-Open%20in%20Gitpod-%231966D2?logo=gitpod&style=flat-square&logoColor=white)](https://gitpod.io/#https://github.com/IvanLuLyf/BunnyPHP-App)
 [![Deploy to Heroku](https://img.shields.io/badge/-Deploy%20to%20Heroku-%237056BF?logo=heroku&style=flat-square&labelColor=%237056BF&logoColor=white)](https://heroku.com/deploy?template=https://github.com/IvanLuLyf/BunnyPHP-App)
+[![Deploy with Vercel](https://img.shields.io/badge/-Deploy%20with%20Vercel-%231374EF?logo=vercel&style=flat-square&labelColor=%231374EF&logoColor=white)](https://vercel.com/new/git/external?repository-url=https://github.com/IvanLuLyf/BunnyPHP-App&project-name=bunny-php-app&repository-name=bunny-php-app)
 
 ## 文档
 
