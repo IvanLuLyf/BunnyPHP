@@ -22,7 +22,11 @@ class PdoDatabase implements Database
         if (!empty($conf['dsn'])) {
             $dsn = $conf['dsn'];
         } else {
-            $db_type = strtolower(self::$DB_TYPE[$urlInfo['scheme']] ?? $urlInfo['scheme'] ?? $conf['type'] ?? 'mysql');
+            if (!empty($urlInfo['scheme'])) {
+                $db_type = strtolower(self::$DB_TYPE[$urlInfo['scheme']] ?? $urlInfo['scheme']);
+            } else {
+                $db_type = strtolower($conf['type'] ?? 'mysql');
+            }
             $host = $urlInfo['host'] ?? $conf['host'] ?? 'localhost';
             $port = $urlInfo['port'] ?? $conf['port'] ?? null;
             $database = isset($urlInfo['path']) ? trim($urlInfo['path'], '/') : $conf['database'];
