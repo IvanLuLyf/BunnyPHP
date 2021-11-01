@@ -22,10 +22,10 @@ class PdoDatabase implements Database
         if (!empty($conf['dsn'])) {
             $dsn = $conf['dsn'];
         } else {
-            $db_type = strtolower($conf['type'] ?? self::$DB_TYPE[$urlInfo['scheme']] ?? $urlInfo['scheme'] ?? 'mysql');
-            $host = $conf['host'] ?? $urlInfo['host'] ?? 'localhost';
-            $port = $conf['port'] ?? $urlInfo['port'] ?? null;
-            $database = $conf['database'] ?? trim($urlInfo['path'], '/');
+            $db_type = strtolower(self::$DB_TYPE[$urlInfo['scheme']] ?? $urlInfo['scheme'] ?? $conf['type'] ?? 'mysql');
+            $host = $urlInfo['host'] ?? $conf['host'] ?? 'localhost';
+            $port = $urlInfo['port'] ?? $conf['port'] ?? null;
+            $database = isset($urlInfo['path']) ? trim($urlInfo['path'], '/') : $conf['database'];
             if ($db_type == 'mysql') {
                 if (!$port) $port = 3306;
                 $dsn = "mysql:host=$host;port=$port;dbname=$database;charset=utf8mb4";
@@ -37,8 +37,8 @@ class PdoDatabase implements Database
                 $dsn = "pgsql:host=$host;port=$port;dbname=$database";
             }
         }
-        $username = $conf['username'] ?? $urlInfo['user'] ?? '';
-        $password = $conf['password'] ?? $urlInfo['pass'] ?? '';
+        $username = $urlInfo['user'] ?? $conf['username'] ?? '';
+        $password = $urlInfo['pass'] ?? $conf['password'] ?? '';
         if (!empty($dsn)) {
             $option = [PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC, PDO::ATTR_STRINGIFY_FETCHES => false, PDO::ATTR_EMULATE_PREPARES => false];
             $this->conn = new PDO($dsn, $username, $password, $option);
