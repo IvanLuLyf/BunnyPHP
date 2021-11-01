@@ -10,7 +10,7 @@ use ReflectionMethod;
 
 class BunnyPHP
 {
-    const BUNNY_VERSION = '3.0.8';
+    const BUNNY_VERSION = '3.0.9';
     const MODE_NORMAL = 0;
     const MODE_API = 1;
     const MODE_AJAX = 2;
@@ -322,7 +322,7 @@ class BunnyPHP
                         $defVal = $param->isOptional() ? $param->getDefaultValue() : '';
                         $val = $useRequest ? (self::$request[$name] ?? $defVal) : $defVal;
                     }
-                    if (in_array($type, $AUTO_CONVERT_TYPE)) $value[] = ($type . 'val')($val);
+                    if (in_array($type, $AUTO_CONVERT_TYPE)) $val = ($type . 'val')($val);
                     elseif ($type == 'array' && !is_array($val)) $val = [];
                     $value[] = $val;
                 } else {
