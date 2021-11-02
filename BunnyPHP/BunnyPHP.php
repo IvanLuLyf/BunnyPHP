@@ -495,4 +495,15 @@ class BunnyPHP
     {
         return is_null($text) || strlen(trim($text)) === 0;
     }
+
+    public static function getDir(string $dir): string
+    {
+        if ($dir[0] === '@') {
+            $tmpDir = APP_PATH . str_replace('@', '', $dir) . '/';
+        } else {
+            $tmpDir = $dir . '/';
+        }
+        if (!is_dir($tmpDir)) mkdir($tmpDir, 0777, true);
+        return $tmpDir;
+    }
 }
