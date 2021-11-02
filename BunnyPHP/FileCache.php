@@ -4,24 +4,24 @@ declare(strict_types=1);
 namespace BunnyPHP;
 class FileCache implements Cache
 {
-    protected string $dir;
     protected string $cacheDir;
 
     public function __construct($config)
     {
-        $this->dir = $config['dir'] ?? 'cache';
-        $this->cacheDir = APP_PATH . $this->dir . '/';
-        if (!is_dir($this->cacheDir)) {
-            mkdir($this->cacheDir, 0777, true);
-        }
+        $this->cacheDir = BunnyPHP::getDir($config['dir'] ?? '@cache');
+    }
+
+    private function k(string $key): string
+    {
+        return $this->cacheDir . sha1($key);
     }
 
     public function get(string $key, int $expire = 0)
     {
-        $filename = $this->cacheDir . md5($key);
+        $filename = $this->k($key);
         if (file_exists($filename)) {
             if ((filemtime($filename) + $expire > time()) || $expire === 0) {
-                return file_get_contents($this->cacheDir . md5($key));
+                return file_get_contents($filename);
             } else {
                 unlink($filename);
                 return null;
@@ -33,18 +33,18 @@ class FileCache implements Cache
 
     public function has(string $key, int $expire = 0): bool
     {
-        $filename = $this->cacheDir . md5($key);
+        $filename = $this->k($key);
         return file_exists($filename) && ((filemtime($filename) + $expire > time()) || $expire === 0);
     }
 
     public function set(string $key, $value, int $expire = 0)
     {
-        file_put_contents($this->cacheDir . md5($key), $value);
+        file_put_contents($this->k($key), $value);
     }
 
     public function del(string $key)
     {
-        $filename = $this->cacheDir . md5($key);
+        $filename = $this->k($key);
         if (file_exists($filename)) {
             unlink($filename);
         }
