@@ -9,11 +9,13 @@ class FileStorage implements Storage
 
     public function __construct($config)
     {
-        $this->dir = $config['dir'] ?? 'upload';
-        $this->uploadPath = APP_PATH . $this->dir . '/';
-        if (!is_dir($this->uploadPath)) {
-            mkdir($this->uploadPath, 0777, true);
+        $upload = $config['dir'] ?? '@upload';
+        if ($upload[0] === '@') {
+            $this->dir = '/' . str_replace('@', '', $upload);
+        } else {
+            $this->dir = $config['url'];
         }
+        $this->uploadPath = BunnyPHP::getDir($upload);
     }
 
     public function read(string $filename)
@@ -37,7 +39,7 @@ class FileStorage implements Storage
             mkdir($this->uploadPath . $dir, 0777, true);
         }
         move_uploaded_file($path, $this->uploadPath . $filename);
-        return "/{$this->dir}/$filename";
+        return "{$this->dir}/$filename";
     }
 
     public function remove(string $filename)
