@@ -11,6 +11,10 @@
             padding: 0;
         }
 
+        body {
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif, Apple Color Emoji, Segoe UI Emoji, Segoe UI Symbol;
+        }
+
         .title {
             border-bottom: 1px solid #9baeca;
             color: #9baeca;
