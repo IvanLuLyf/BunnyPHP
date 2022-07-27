@@ -4,13 +4,15 @@ declare(strict_types=1);
 namespace BunnyPHP;
 defined('BUNNY_PATH') or define('BUNNY_PATH', __DIR__);
 
+include_once 'polyfill.php';
+
 use ReflectionClass;
 use ReflectionException;
 use ReflectionMethod;
 
 class BunnyPHP
 {
-    const BUNNY_VERSION = '3.1.0';
+    const BUNNY_VERSION = '3.1.1';
     const MODE_NORMAL = 0;
     const MODE_API = 1;
     const MODE_AJAX = 2;

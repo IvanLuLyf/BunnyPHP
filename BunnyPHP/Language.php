@@ -4,6 +4,7 @@ declare(strict_types=1);
 namespace BunnyPHP;
 
 use ArrayAccess;
+use ReturnTypeWillChange;
 
 class Language implements ArrayAccess
 {
@@ -89,15 +90,18 @@ class Language implements ArrayAccess
         return isset($this->translation[$offset]);
     }
 
+    #[ReturnTypeWillChange]
     public function offsetGet($offset)
     {
         return $this->translation[$offset] ?? $offset;
     }
 
+    #[ReturnTypeWillChange]
     public function offsetSet($offset, $value)
     {
     }
 
+    #[ReturnTypeWillChange]
     public function offsetUnset($offset)
     {
         unset($this->translation[$offset]);

@@ -4,6 +4,7 @@ declare(strict_types=1);
 namespace BunnyPHP;
 
 use ArrayAccess;
+use ReturnTypeWillChange;
 
 class Request implements ArrayAccess
 {
@@ -126,6 +127,7 @@ class Request implements ArrayAccess
         return isset($this->param[$offset]) || isset($this->query[$offset]);
     }
 
+    #[ReturnTypeWillChange]
     public function offsetGet($offset)
     {
         if (isset($this->param[$offset])) {
@@ -137,11 +139,13 @@ class Request implements ArrayAccess
         }
     }
 
+    #[ReturnTypeWillChange]
     public function offsetSet($offset, $value)
     {
         $this->param[$offset] = $value;
     }
 
+    #[ReturnTypeWillChange]
     public function offsetUnset($offset)
     {
         unset($this->param[$offset]);
