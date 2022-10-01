@@ -50,7 +50,7 @@ class BunnyPHP
         spl_autoload_register([$this, 'loadClass']);
         set_error_handler([$this, 'handleErr']);
         $this->setReporting();
-        $this->loadConfig();
+        $this->initContext();
         $this->route();
     }
 
@@ -406,21 +406,22 @@ class BunnyPHP
         }
     }
 
-    private function loadConfig()
+    private function initContext()
     {
-        self::$config = Config::load('config');
-        define('TP_SITE_NAME', self::$config->get('site_name', 'BunnyPHP'));
-        define('TP_SITE_URL', self::$config->get('site_url', 'localhost'));
-        define('TP_SITE_REWRITE', self::$config->get('site_rewrite', true));
+        $conf = Config::load('config');
+        self::$config = $conf;
+        define('TP_SITE_NAME', $conf->get('site_name', 'BunnyPHP'));
+        define('TP_SITE_URL', $conf->get('site_url', 'localhost'));
+        define('TP_SITE_REWRITE', $conf->get('site_rewrite', true));
 
-        if (!defined('TP_NAMESPACE')) define('TP_NAMESPACE', self::$config->get('namespace', ''));
+        if (!defined('TP_NAMESPACE')) define('TP_NAMESPACE', $conf->get('namespace', ''));
 
-        if (self::$config->has('db')) {
-            define('DB_PREFIX', self::$config->get('db.prefix'));
+        if ($conf->has('db')) {
+            define('DB_PREFIX', $conf->get('db.prefix'));
         }
 
-        if (self::$config->has('apps')) {
-            $this->apps = self::$config->get('apps', []);
+        if ($conf->has('apps')) {
+            $this->apps = $conf->get('apps', []);
         }
         BunnyPHP::$request = new Request();
     }
@@ -509,3 +510,4 @@ class BunnyPHP
         return $tmpDir;
     }
 }
+
