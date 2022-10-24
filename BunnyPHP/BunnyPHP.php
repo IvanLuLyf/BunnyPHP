@@ -38,6 +38,7 @@ class BunnyPHP
     private array $variable = [];
     private array $container = [];
     private array $path = [];
+    private string $ac = 'ac_';
 
     public function __construct(int $m = BunnyPHP::MODE_NORMAL)
     {
@@ -156,10 +157,11 @@ class BunnyPHP
             }
             $instance = $class->newInstanceArgs($this->inject($constructor, $paramContext, true, $paramRequired));
             $method = null;
-            if ($class->hasMethod("ac_{$action}_{$requestMethod}")) {
-                $method = $class->getMethod("ac_{$action}_{$requestMethod}");
-            } else if ($class->hasMethod("ac_{$action}")) {
-                $method = $class->getMethod("ac_{$action}");
+            $ac = $this->ac . $action;
+            if ($class->hasMethod("{$ac}_{$requestMethod}")) {
+                $method = $class->getMethod("{$ac}_{$requestMethod}");
+            } else if ($class->hasMethod($ac)) {
+                $method = $class->getMethod($ac);
             } else if ($class->hasMethod('other')) {
                 $method = $class->getMethod('other');
             }
@@ -413,6 +415,7 @@ class BunnyPHP
         define('TP_SITE_NAME', $conf->get('site_name', 'BunnyPHP'));
         define('TP_SITE_URL', $conf->get('site_url', 'localhost'));
         define('TP_SITE_REWRITE', $conf->get('site_rewrite', true));
+        $this->ac = $conf->get('action_prefix', 'ac_');
 
         if (!defined('TP_NAMESPACE')) define('TP_NAMESPACE', $conf->get('namespace', ''));
 
