@@ -2,6 +2,9 @@
 declare(strict_types=1);
 
 namespace BunnyPHP;
+
+use Throwable;
+
 class View
 {
     const MODE_INFO = 1;
@@ -70,7 +73,22 @@ class View
     public static function json($context)
     {
         header('Content-Type: application/json; charset=UTF-8');
-        exit(json_encode($context));
+        try {
+            $flags = JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES;
+            if (defined('APP_DEBUG') && APP_DEBUG === true) {
+                $flags |= JSON_PRETTY_PRINT;
+            }
+            if (defined('JSON_THROW_ON_ERROR')) {
+                exit(json_encode($context, $flags | JSON_THROW_ON_ERROR));
+            }
+            $json = json_encode($context, $flags);
+            if ($json === false) {
+                exit(json_encode(['ret' => -8, 'status' => 'internal error', 'bunny_error' => json_last_error_msg()], $flags));
+            }
+            exit($json);
+        } catch (Throwable $e) {
+            exit(json_encode(['ret' => -8, 'status' => 'internal error', 'bunny_error' => $e->getMessage()]));
+        }
     }
 
     public static function error($context = [], $mode = BunnyPHP::MODE_NORMAL, $code = 200)
