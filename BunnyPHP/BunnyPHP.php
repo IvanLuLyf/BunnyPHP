@@ -6,13 +6,14 @@ defined('BUNNY_PATH') or define('BUNNY_PATH', __DIR__);
 
 include_once 'polyfill.php';
 
+use BunnyPHP\Annotation\UseFilter;
 use ReflectionClass;
 use ReflectionException;
 use ReflectionMethod;
 
 class BunnyPHP
 {
-    const BUNNY_VERSION = '3.1.1';
+    const BUNNY_VERSION = '3.3.0';
     const MODE_NORMAL = 0;
     const MODE_API = 1;
     const MODE_AJAX = 2;
@@ -61,8 +62,9 @@ class BunnyPHP
         $defCtr = self::$config->get('controller', 'Index');
         if ($this->mode == BunnyPHP::MODE_CLI) {
             $cli_arg = array_slice($_SERVER['argv'], 1);
-            if (in_array($cli_arg[0], array_keys($this->apps))) {
-                $appName = $cli_arg[0];
+            $first = $cli_arg[0] ?? '';
+            if ($first !== '' && isset($this->apps[$first])) {
+                $appName = $first;
                 array_shift($cli_arg);
             }
             $controllerName = ucfirst($cli_arg[0] ?? $defCtr);
@@ -89,7 +91,7 @@ class BunnyPHP
                 } elseif ($mod === 'index.php') {
                     array_shift($url_array);
                 }
-                if (isset($url_array[0]) && in_array($url_array[0], array_keys($this->apps))) {
+                if (isset($url_array[0]) && isset($this->apps[$url_array[0]])) {
                     $appName = $url_array[0];
                     array_shift($url_array);
                 }
@@ -133,54 +135,48 @@ class BunnyPHP
     {
         try {
             $class = new ReflectionClass($controller);
+            if (!$class->isInstantiable()) View::error([], $this->mode);
+
             $assignedValue = [];
             $paramContext = [];
             $paramRequired = [];
+
+            $meta = $this->loadDispatchMetadata($class, $action, $requestMethod);
+
             $result = $this->runAttrFilter($class, $assignedValue);
             if ($result === Filter::STOP) return;
-            if ($classDocComment = $class->getDocComment()) {
-                $classDoc = $this->processDocComment($classDocComment);
-                if (isset($classDoc['filter'])) {
-                    $result = $this->runFilter($classDoc['filter'], $assignedValue);
-                    if ($result === Filter::STOP) return;
-                }
+            if (!empty($meta['class_filters'])) {
+                $result = $this->runFilter($meta['class_filters'], $assignedValue);
+                if ($result === Filter::STOP) return;
             }
-            if (!$class->isInstantiable()) View::error([], $this->mode);
+
             $constructor = $class->getConstructor();
-            if ($constructor) {
-                if ($methodDocComment = $constructor->getDocComment()) {
-                    $methodDoc = $this->processDocComment($methodDocComment);
-                    if (isset($methodDoc['param'])) {
-                        $this->processParamContext($methodDoc['param'], $paramContext, $paramRequired);
-                    }
-                }
+            if ($constructor && !empty($meta['ctor_params'])) {
+                $this->processParamContext($meta['ctor_params'], $paramContext, $paramRequired);
             }
+
             $instance = $class->newInstanceArgs($this->inject($constructor, $paramContext, true, $paramRequired));
-            $method = null;
-            $ac = $this->ac . $action;
-            if ($class->hasMethod("{$ac}_{$requestMethod}")) {
-                $method = $class->getMethod("{$ac}_{$requestMethod}");
-            } else if ($class->hasMethod($ac)) {
-                $method = $class->getMethod($ac);
-            } else if ($class->hasMethod('other')) {
-                $method = $class->getMethod('other');
+
+            $methodName = $meta['method_name'] ?? '';
+            if ($methodName === '' || !$class->hasMethod($methodName)) {
+                View::error(['ret' => -3, 'status' => 'action does not exist', 'bunny_error' => Language::get('action_not_exists', ['action' => $action])], $this->mode);
             }
-            if (!$method) View::error(['ret' => -3, 'status' => 'action does not exist', 'bunny_error' => Language::get('action_not_exists', ['action' => $action])], $this->mode);
+            $method = $class->getMethod($methodName);
+
             $result = $this->runAttrFilter($method, $assignedValue);
             if ($result === Filter::STOP) return;
-            if ($methodDocComment = $method->getDocComment()) {
-                $methodDoc = $this->processDocComment($methodDocComment);
-                if (isset($methodDoc['filter'])) {
-                    $result = $this->runFilter($methodDoc['filter'], $assignedValue);
-                    if ($result === Filter::STOP) return;
-                }
-                if (isset($methodDoc['param'])) {
-                    $this->processParamContext($methodDoc['param'], $paramContext, $paramRequired);
-                }
+            if (!empty($meta['method_filters'])) {
+                $result = $this->runFilter($meta['method_filters'], $assignedValue);
+                if ($result === Filter::STOP) return;
             }
-            if ($class->hasMethod('assignAll')) {
+            if (!empty($meta['method_params'])) {
+                $this->processParamContext($meta['method_params'], $paramContext, $paramRequired);
+            }
+
+            if (!empty($meta['has_assign_all'])) {
                 $instance->assignAll($assignedValue);
             }
+
             $result = $method->invokeArgs($instance, $this->inject($method, $paramContext, true, $paramRequired));
             if (is_array($result) || is_object($result)) {
                 View::json($result);
@@ -188,6 +184,83 @@ class BunnyPHP
         } catch (ReflectionException $e) {
             View::error([], $this->mode);
         }
+    }
+
+    private function metadataCacheEnabled(): bool
+    {
+        if (defined('APP_DEBUG') && APP_DEBUG === true) return false;
+        return true;
+    }
+
+    private function getMetadataCacheFile(ReflectionClass $class, string $action, string $requestMethod): string
+    {
+        $dir = self::getDir('@cache/metadata');
+        $key = $class->getName() . '|' . $this->ac . '|' . $action . '|' . $requestMethod;
+        return $dir . sha1($key) . '.php';
+    }
+
+    private function loadDispatchMetadata(ReflectionClass $class, string $action, string $requestMethod): array
+    {
+        $file = $this->getMetadataCacheFile($class, $action, $requestMethod);
+        $classFile = $class->getFileName() ?: '';
+        $classMtime = ($classFile && file_exists($classFile)) ? filemtime($classFile) : 0;
+
+        if ($this->metadataCacheEnabled() && file_exists($file)) {
+            $cached = include $file;
+            if (is_array($cached) && ($cached['_class_mtime'] ?? -1) === $classMtime) {
+                return $cached;
+            }
+        }
+
+        $meta = $this->buildDispatchMetadata($class, $action, $requestMethod);
+        $meta['_class_mtime'] = $classMtime;
+        if ($this->metadataCacheEnabled()) {
+            @file_put_contents($file, '<?php return ' . var_export($meta, true) . ';');
+        }
+        return $meta;
+    }
+
+    private function buildDispatchMetadata(ReflectionClass $class, string $action, string $requestMethod): array
+    {
+        $meta = [
+            'class_filters' => [],
+            'ctor_params' => [],
+            'method_name' => '',
+            'method_filters' => [],
+            'method_params' => [],
+        ];
+
+        if ($classDocComment = $class->getDocComment()) {
+            $classDoc = $this->processDocComment($classDocComment);
+            if (isset($classDoc['filter'])) $meta['class_filters'] = $classDoc['filter'];
+        }
+
+        $constructor = $class->getConstructor();
+        if ($constructor && ($methodDocComment = $constructor->getDocComment())) {
+            $methodDoc = $this->processDocComment($methodDocComment);
+            if (isset($methodDoc['param'])) $meta['ctor_params'] = $methodDoc['param'];
+        }
+
+        $ac = $this->ac . $action;
+        if ($class->hasMethod("{$ac}_{$requestMethod}")) {
+            $meta['method_name'] = "{$ac}_{$requestMethod}";
+        } else if ($class->hasMethod($ac)) {
+            $meta['method_name'] = $ac;
+        } else if ($class->hasMethod('other')) {
+            $meta['method_name'] = 'other';
+        }
+
+        if ($meta['method_name'] !== '' && $class->hasMethod($meta['method_name'])) {
+            $method = $class->getMethod($meta['method_name']);
+            if ($methodDocComment = $method->getDocComment()) {
+                $methodDoc = $this->processDocComment($methodDocComment);
+                if (isset($methodDoc['filter'])) $meta['method_filters'] = $methodDoc['filter'];
+                if (isset($methodDoc['param'])) $meta['method_params'] = $methodDoc['param'];
+            }
+        }
+
+        $meta['has_assign_all'] = $class->hasMethod('assignAll');
+        return $meta;
     }
 
     private function processParamContext($params, &$paramContext, &$paramRequired)
@@ -245,6 +318,13 @@ class BunnyPHP
                     $result = $f->doFilter($filter->getArguments());
                     if ($result === Filter::STOP) return Filter::STOP;
                     $assignedValue = array_merge($assignedValue, $f->getVariable());
+                }
+                if ($f instanceof UseFilter) {
+                    $filterName = self::getClassName($f->name, 'filter');
+                    $filterObj = new $filterName($f->args);
+                    $result = $filterObj->doFilter($f->args);
+                    if ($result === Filter::STOP) return Filter::STOP;
+                    $assignedValue = array_merge($assignedValue, $filterObj->getVariable());
                 }
             }
         }
@@ -307,7 +387,24 @@ class BunnyPHP
             $params = $method->getParameters();
             foreach ($params as $param) {
                 $paramType = $param->getType();
-                $type = ($paramType !== null && method_exists($paramType, 'getName')) ? $paramType->getName() : '';
+                $type = '';
+                $unionTypes = [];
+                if ($paramType !== null && method_exists($paramType, 'getName')) {
+                    // PHP 7.4: only ReflectionNamedType exists for named/nullable types
+                    // fallback for older PHP / custom reflection types
+                    $type = $paramType->getName();
+                }
+                // PHP 8+: union types
+                if (Compat::isUnionType($paramType)) {
+                    $unionTypes = [];
+                    foreach ($paramType->getTypes() as $t) {
+                        if ($t instanceof \ReflectionNamedType) {
+                            $n = $t->getName();
+                            if ($n !== 'null') $unionTypes[] = $n;
+                        }
+                    }
+                    $type = $unionTypes[0] ?? $type;
+                }
                 $name = '' . $param->getName();
                 $attrVal = null;
                 if (method_exists($param, 'getAttributes')) {
@@ -330,10 +427,20 @@ class BunnyPHP
                     elseif ($type == 'array' && !is_array($val)) $val = [];
                     $value[] = $val;
                 } else {
-                    if (!isset($this->container[$type])) {
-                        $this->container[$type] = $this->createContainer($type);
+                    // union object types: try the first instantiable one
+                    $candidates = $unionTypes ?: [$type];
+                    $resolved = null;
+                    foreach ($candidates as $cand) {
+                        if ($cand === '' || in_array($cand, $REQ_TYPE)) continue;
+                        if (!isset($this->container[$cand])) {
+                            $this->container[$cand] = $this->createContainer($cand);
+                        }
+                        if ($this->container[$cand] !== null) {
+                            $resolved = $this->container[$cand];
+                            break;
+                        }
                     }
-                    $value[] = $this->container[$type];
+                    $value[] = $resolved;
                 }
             }
         }
