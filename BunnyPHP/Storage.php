@@ -20,9 +20,9 @@ interface Storage
 
     /**
      * Upload file
-     * @param string $filename destination file path
-     * @param string $path source file path
-     * @return string full path
+     * @param string $filename Destination path/key
+     * @param string $path Local source file path
+     * @return string Full path/url
      */
     public function upload(string $filename, string $path): string;
 

@@ -7,7 +7,7 @@ interface Cache
     /**
      * Get the value related to the specified key
      * @param string $key
-     * @param int $expire
+     * @param int $expire Expire time in seconds (0 = no expire check)
      * @return mixed
      */
     public function get(string $key, int $expire = 0);
@@ -15,8 +15,7 @@ interface Cache
     /**
      * Verify if the specified key exists
      * @param string $key
-     * @param int $expire [Optional] expire time in seconds
-     * @return bool
+     * @param int $expire Expire time in seconds (0 = no expire check)
      */
     public function has(string $key, int $expire = 0): bool;
 
@@ -24,13 +23,13 @@ interface Cache
      * Set an value by the specified key
      * @param string $key
      * @param mixed $value
-     * @param int $expire
+     * @param int $expire Expire time in seconds (0 = never)
      * @return mixed
      */
     public function set(string $key, $value, int $expire = 0);
 
     /**
-     * Delete an value by the specified key
+     * Delete a value by the specified key
      * @param string $key
      * @return mixed
      */
