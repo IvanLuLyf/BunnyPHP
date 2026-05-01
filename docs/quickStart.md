@@ -2,8 +2,8 @@
 
 ## Requirement
 
-* PHP >= 7.0
-* Database : MySQL SQLite or PostgreSQL
+- PHP >= 7.0
+- Database: MySQL / SQLite / PostgreSQL
 
 ## Using Composer
 
@@ -21,7 +21,7 @@ composer create-project ivanlulyf/bunnyphp-app PROJECT_NAME --no-dev
 composer require ivanlulyf/bunnyphp
 ```
 
-> Create file ```index.php``` with the  following content.
+> Create file ```index.php``` with the following content.
 
 ```php
 <?php
@@ -31,6 +31,22 @@ require 'vendor/autoload.php';
 (new BunnyPHP\BunnyPHP())->run();
 ``` 
 
+## Configure database
+
+Edit `config/config.php` and set `db` config. Prefer DSN:
+
+```php
+<?php
+return [
+  'db' => [
+    'dsn' => 'sqlite:bunny.sqlite3',
+    'username' => '',
+    'password' => '',
+    'prefix' => 'tp_',
+  ],
+];
+```
+
 ## Using Clone
 
 > Clone the repo to your project root
@@ -39,7 +55,7 @@ require 'vendor/autoload.php';
 git clone https://github.com/IvanLuLyf/BunnyPHP.git
 ```
 
-> Create file ```index.php``` with the  following content.
+> Create file ```index.php``` with the following content.
 
 ```php
 <?php

@@ -6,8 +6,10 @@
     * [Directory Structure](dirStructure.md)
     * [Configure](configure.md)
     * [Framework Error Code](errorCode.md)
-    
+
 * The Basics
 
     * [Model](model.md)
     * [Controller](controller.md)
+    * [Template](template.md)
+    * [i18n](i18n.md)

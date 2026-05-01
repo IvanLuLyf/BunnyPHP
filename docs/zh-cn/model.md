@@ -1,6 +1,6 @@
 # 模型类
 
-所有模型类 **必须extend** ```Model```
+所有模型类 **必须**继承 `BunnyPHP\Model`。
 
 > 样例
 
@@ -63,21 +63,26 @@ join(模型类,[连接条件(可选)],[需要的表字段(可选)],[连接方式
 
 连接条件格式
 
-|格式类型|样例|描述|
-|----|----|----|
-|字符串|```['id',]```|被连接表.id=当前表.id|
-|数组|```[['id','msg_id'],]```|被连接表.id=当前表.msg_id|
-|键值对|```['id'=>1]```|被连接表.id = 1|
+- 字符串：`['id']` => `被连接表.id = 当前表.id`
+- 数组：`[['id','msg_id']]` => `被连接表.id = 当前表.msg_id`
+- 键值对：`['id' => 1]` => `被连接表.id = 1`
 
 样例
 
 ```php
-$hellos = $this->join(TestModel::class, [['id', 'msg_id']], ['message'])
+$hellos = (new HelloModel())->join(TestModel::class, [['id', 'msg_id']], ['message'])
     ->fetchAll(['content', 'id']);
 ```
 
 生成的SQL(数据表前缀为tp_)
 
 ```sql
-select tp_hello.content,tp_hello.id,tp_test.message from tp_hello left join tp_test on (tp_test.id=tp_hello.msg_id); 
+select tp_hello.content, tp_hello.id, tp_test.message
+from tp_hello
+         left join tp_test on (tp_test.id = tp_hello.msg_id); 
 ```
+
+> 说明
+
+- `where()` 可以多次调用，条件会用 `AND` 连接。
+- 分页（limit/offset）的 SQL 会由底层数据库层内部编译，Model 层仍保持 `limit($limit, $offset)` 的使用方式即可。

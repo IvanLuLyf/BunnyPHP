@@ -2,8 +2,8 @@
 
 ## 环境要求
 
-* PHP版本 >= 7.0
-* 数据库: MySQL SQLite PostgreSQL
+- PHP版本 >= 7.0
+- 数据库: MySQL / SQLite / PostgreSQL
 
 ## 使用Composer安装
 
@@ -30,6 +30,22 @@ define("IN_TWIMI_PHP", "True", TRUE);
 require 'vendor/autoload.php';
 (new BunnyPHP\BunnyPHP())->run();
 ``` 
+
+## 配置数据库
+
+编辑 `config/config.php` 配置 `db`。建议优先使用 DSN：
+
+```php
+<?php
+return [
+  'db' => [
+    'dsn' => 'sqlite:bunny.sqlite3',
+    'username' => '',
+    'password' => '',
+    'prefix' => 'tp_',
+  ],
+];
+```
 
 ## 使用Git Clone安装
 

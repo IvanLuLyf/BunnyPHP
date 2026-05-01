@@ -3,6 +3,7 @@
 Sample
 
 ## PHP Config File
+
 ```php
 <?php
 return [
@@ -14,6 +15,7 @@ return [
         ],
     ],
     "db"=> [
+        "dsn"=>"",                    // optional, recommended. If present, BunnyPHP will use this DSN directly
         "type"=>"sqlite",             // sqlite mysql pgsql
         "host"=>"",                   // database host
         "port"=>"",                   // database port
@@ -38,34 +40,57 @@ return [
 ];
 ```
 
+## DSN Database Config
+
+If you want to migrate databases more easily, prefer `db.dsn`.
+
+Examples:
+
+```php
+// PostgreSQL
+"dsn" => "pgsql:host=127.0.0.1;port=5432;dbname=mydb",
+
+// MySQL
+"dsn" => "mysql:host=127.0.0.1;port=3306;dbname=mydb;charset=utf8mb4",
+
+// SQLite
+"dsn" => "sqlite:bunny.sqlite3",
+
+// SQLServer (sqlsrv)
+"dsn" => "sqlsrv:Server=127.0.0.1,1433;Database=mydb",
+
+// Oracle (oci)
+"dsn" => "oci:dbname=//127.0.0.1:1521/ORCLCDB",
+```
+
 ## JSON Config File
 
 to use this you **should** prevent other from getting this file.
 
 ```json
 {
-  "db":{
-    "type":"sqlite",
-    "host":"",
-    "port":"",
-    "username":"",
-    "password":"",
-    "database":"bunny.sqlite3",
-    "prefix":"tp_"
+  "db": {
+    "type": "sqlite",
+    "host": "",
+    "port": "",
+    "username": "",
+    "password": "",
+    "database": "bunny.sqlite3",
+    "prefix": "tp_"
   },
-  "storage":{
-    "name":"file"
+  "storage": {
+    "name": "file"
   },
-  "cache":{
-    "name":"file"
+  "cache": {
+    "name": "file"
   },
-  "logger":{
-    "name":"file",
-    "filename":"log.log"
+  "logger": {
+    "name": "file",
+    "filename": "log.log"
   },
-  "site_name":"Your Site Name",
-  "site_url":"YourDomain.com",
-  "controller":"Index"
+  "site_name": "Your Site Name",
+  "site_url": "YourDomain.com",
+  "controller": "Index"
 }
 ```
 

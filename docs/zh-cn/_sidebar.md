@@ -6,8 +6,10 @@
     * [目录结构](zh-cn/dirStructure.md)
     * [配置](zh-cn/configure.md)
     * [框架错误码](zh-cn/errorCode.md)
-    
+
 * 基础知识
 
     * [模型类](zh-cn/model.md)
     * [控制器](zh-cn/controller.md)
+    * [Template](zh-cn/template.md)
+    * [i18n](zh-cn/i18n.md)

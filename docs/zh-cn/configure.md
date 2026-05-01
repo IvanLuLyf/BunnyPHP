@@ -3,6 +3,7 @@
 样例
 
 ## PHP配置文件
+
 ```php
 <?php
 return [
@@ -14,6 +15,7 @@ return [
         ],
     ],
     "db"=> [
+        "dsn"=>"",                    // 可选，推荐。如果填写则优先使用 DSN 连接
         "type"=>"sqlite",             // 可使用sqlite mysql pgsql
         "host"=>"",                   // 数据库服务器
         "port"=>"",                   // 数据库端口
@@ -38,33 +40,56 @@ return [
 ];
 ```
 
+## DSN 数据库配置
+
+为了更方便迁移数据库，建议优先使用 `db.dsn`。
+
+示例：
+
+```php
+// PostgreSQL
+"dsn" => "pgsql:host=127.0.0.1;port=5432;dbname=mydb",
+
+// MySQL
+"dsn" => "mysql:host=127.0.0.1;port=3306;dbname=mydb;charset=utf8mb4",
+
+// SQLite
+"dsn" => "sqlite:bunny.sqlite3",
+
+// SQLServer (sqlsrv)
+"dsn" => "sqlsrv:Server=127.0.0.1,1433;Database=mydb",
+
+// Oracle (oci)
+"dsn" => "oci:dbname=//127.0.0.1:1521/ORCLCDB",
+```
+
 ## JSON配置文件
 
 使用JSON文件时请**保证**配置文件不会被外部直接获取.
 
 ```json
 {
-  "db":{
-    "type":"sqlite",
-    "host":"",
-    "port":"",
-    "username":"",
-    "password":"",
-    "database":"bunny.sqlite3",
-    "prefix":"tp_"
+  "db": {
+    "type": "sqlite",
+    "host": "",
+    "port": "",
+    "username": "",
+    "password": "",
+    "database": "bunny.sqlite3",
+    "prefix": "tp_"
   },
-  "storage":{
-    "name":"file"
+  "storage": {
+    "name": "file"
   },
-  "cache":{
-    "name":"file"
+  "cache": {
+    "name": "file"
   },
-  "logger":{
-    "name":"file",
-    "filename":"log.log"
+  "logger": {
+    "name": "file",
+    "filename": "log.log"
   },
-  "site_name":"Your Site Name",
-  "site_url":"YourDomain.com",
-  "controller":"Index"
+  "site_name": "Your Site Name",
+  "site_url": "YourDomain.com",
+  "controller": "Index"
 }
 ```
