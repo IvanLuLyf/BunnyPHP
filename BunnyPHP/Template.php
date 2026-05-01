@@ -20,14 +20,21 @@ class Template
         return '<?php ' . $txt . ' ?>';
     }
 
+    public static function escape($value): string
+    {
+        if ($value === null) return '';
+        if (is_bool($value)) return $value ? '1' : '0';
+        if (is_scalar($value)) return htmlspecialchars((string)$value, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
+        return htmlspecialchars(json_encode($value, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES), ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
+    }
+
     public static function render($view, $context = [], $mode = BunnyPHP::MODE_NORMAL, $code = 200)
     {
         if ($code !== 200) {
             http_response_code($code);
         }
         if ($mode === BunnyPHP::MODE_API or $mode === BunnyPHP::MODE_AJAX) {
-            header('Content-Type: application/json; charset=UTF-8');
-            echo json_encode($context, JSON_NUMERIC_CHECK);
+            View::json($context);
         } else {
             header('Content-Type: text/html; charset=UTF-8');
             extract($context);
@@ -61,6 +68,7 @@ class Template
 
     private function parse(): Template
     {
+        $this->parse_comment();
         $this->parse_var();
         $this->parse_if();
         $this->parse_for();
@@ -100,13 +108,66 @@ class Template
         return $var_name;
     }
 
+    private function compile_expr(string $expr): string
+    {
+        $expr = trim($expr);
+        if ($expr === '') return "''";
+
+        $parts = array_map('trim', explode('|', $expr));
+        $base = array_shift($parts);
+
+        if (preg_match('/^(\'[^\']*\'|"[^"]*"|\d+(\.\d+)?|true|false|null)$/i', $base)) {
+            $php = $base;
+        } else {
+            $php = $this->var_name($base);
+        }
+
+        foreach ($parts as $filter) {
+            if ($filter === '') continue;
+            if ($filter === 'safe') {
+                continue;
+            }
+            if ($filter === 'e' || $filter === 'escape') {
+                $php = '\\' . __NAMESPACE__ . '\\Template::escape(' . $php . ')';
+                continue;
+            }
+            if ($filter === 'upper') {
+                $php = 'strtoupper((string)(' . $php . '))';
+                continue;
+            }
+            if ($filter === 'lower') {
+                $php = 'strtolower((string)(' . $php . '))';
+                continue;
+            }
+            if ($filter === 'json') {
+                $php = 'json_encode(' . $php . ', JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES)';
+                continue;
+            }
+            if (preg_match('/^default\\((.*)\\)$/', $filter, $m)) {
+                $def = trim($m[1]);
+                if ($def === '') $def = "''";
+                $php = '((' . $php . ') === null || (' . $php . ') === \'\' ? ' . $def . ' : (' . $php . '))';
+                continue;
+            }
+        }
+
+        return $php;
+    }
+
+    private function parse_comment()
+    {
+        $pattern = '/{#([\\s\\S]*?)#}/';
+        $this->content = preg_replace($pattern, '', $this->content);
+    }
+
     private function parse_var()
     {
-        $pattern = '/{{\s*(.*?)\s*}}/';
-        if (preg_match_all($pattern, $this->content, $match)) {
-            foreach ($match[1] as $index => $word) {
-                $this->content = str_replace($match[0][$index], '<?=' . $this->var_name($word) . '?>', $this->content);
-            }
+        $pattern = '/{{\\s*(.*?)\\s*}}/';
+        if (!preg_match_all($pattern, $this->content, $match)) return;
+        foreach ($match[1] as $index => $word) {
+            $phpExpr = $this->compile_expr($word);
+            $replacement = '<?=(' . $phpExpr . ')?>';
+            $this->content = str_replace($match[0][$index], $replacement, $this->content);
         }
     }
 
