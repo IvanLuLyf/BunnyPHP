@@ -4,50 +4,84 @@ declare(strict_types=1);
 namespace BunnyPHP;
 
 use Generator;
+use BunnyPHP\Database\Dialect;
+use BunnyPHP\Database\TableSchema;
 use PDO;
 use PDOStatement;
+use RuntimeException;
 
 class PdoDatabase implements Database
 {
     private PDO $conn;
     private string $db_type;
+    private Dialect $dialect;
     private static array $DB_TYPE = [
         'postgresql' => 'pgsql',
         'postgres' => 'pgsql',
+        'mssql' => 'sqlsrv',
+        'sqlserver' => 'sqlsrv',
+        'oracle' => 'oci',
     ];
 
     public function __construct($conf = [])
     {
-        $urlInfo = !empty($conf['url']) ? parse_url($conf['url']) : [];
+        [$dsn, $username, $password] = $this->buildDsn((array)$conf);
+        if ($dsn === '') {
+            throw new RuntimeException('Database DSN is empty');
+        }
+        $this->conn = new PDO($dsn, $username, $password, [
+            PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
+            PDO::ATTR_STRINGIFY_FETCHES => false,
+            PDO::ATTR_EMULATE_PREPARES => false,
+        ]);
+        $this->db_type = (string)$this->conn->getAttribute(PDO::ATTR_DRIVER_NAME);
+        $this->dialect = Dialect::forDriver($this->db_type);
+    }
+
+    private function buildDsn(array $conf): array
+    {
+        $urlInfo = !empty($conf['url']) ? parse_url((string)$conf['url']) : [];
+        $username = (string)($urlInfo['user'] ?? ($conf['username'] ?? ''));
+        $password = (string)($urlInfo['pass'] ?? ($conf['password'] ?? ''));
+
         if (!empty($conf['dsn'])) {
-            $dsn = $conf['dsn'];
-        } else {
-            if (!empty($urlInfo['scheme'])) {
-                $db_type = strtolower(self::$DB_TYPE[$urlInfo['scheme']] ?? $urlInfo['scheme']);
+            return [(string)$conf['dsn'], $username, $password];
+        }
+
+        $scheme = !empty($urlInfo['scheme'])
+            ? strtolower((string)$urlInfo['scheme'])
+            : strtolower((string)($conf['type'] ?? 'mysql'));
+        $dbType = strtolower(self::$DB_TYPE[$scheme] ?? $scheme);
+
+        $host = (string)($urlInfo['host'] ?? ($conf['host'] ?? 'localhost'));
+        $port = $urlInfo['port'] ?? ($conf['port'] ?? null);
+        $database = isset($urlInfo['path']) ? trim((string)$urlInfo['path'], '/') : (string)($conf['database'] ?? '');
+
+        if ($dbType === 'mysql') {
+            if (!$port) $port = 3306;
+            $dsn = "mysql:host=$host;port=$port;dbname=$database;charset=utf8mb4";
+        } elseif ($dbType === 'sqlite') {
+            $db = $conf['database'] ?? ($urlInfo['path'] ?? '');
+            $dsn = 'sqlite:' . $db;
+        } elseif ($dbType === 'pgsql') {
+            if (!$port) $port = 5432;
+            $dsn = "pgsql:host=$host;port=$port;dbname=$database";
+        } elseif ($dbType === 'sqlsrv') {
+            if (!$port) $port = 1433;
+            $server = $host . ',' . $port;
+            $dsn = "sqlsrv:Server=$server;Database=$database";
+        } elseif ($dbType === 'oci') {
+            if (!$port) $port = 1521;
+            if ($host !== '') {
+                $dsn = "oci:dbname=//$host:$port/$database";
             } else {
-                $db_type = strtolower($conf['type'] ?? 'mysql');
+                $dsn = "oci:dbname=$database";
             }
-            $host = $urlInfo['host'] ?? $conf['host'] ?? 'localhost';
-            $port = $urlInfo['port'] ?? $conf['port'] ?? null;
-            $database = isset($urlInfo['path']) ? trim($urlInfo['path'], '/') : $conf['database'];
-            if ($db_type == 'mysql') {
-                if (!$port) $port = 3306;
-                $dsn = "mysql:host=$host;port=$port;dbname=$database;charset=utf8mb4";
-            } elseif ($db_type == 'sqlite') {
-                $database = $conf['database'] ?? $urlInfo['path'];
-                $dsn = "sqlite:$database";
-            } elseif ($db_type == 'pgsql') {
-                if (!$port) $port = 5432;
-                $dsn = "pgsql:host=$host;port=$port;dbname=$database";
-            }
+        } else {
+            $dsn = '';
         }
-        $username = $urlInfo['user'] ?? $conf['username'] ?? '';
-        $password = $urlInfo['pass'] ?? $conf['password'] ?? '';
-        if (!empty($dsn)) {
-            $option = [PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC, PDO::ATTR_STRINGIFY_FETCHES => false, PDO::ATTR_EMULATE_PREPARES => false];
-            $this->conn = new PDO($dsn, $username, $password, $option);
-            $this->db_type = $this->conn->getAttribute(PDO::ATTR_DRIVER_NAME);
-        }
+
+        return [$dsn, $username, $password];
     }
 
     public function insert(array $data, string $table, bool $debug = false): string
@@ -59,10 +93,7 @@ class PdoDatabase implements Database
             return $sql;
         }
         $pst = $this->conn->prepare($sql);
-        foreach ($data as $k => &$v) {
-            $pst->bindParam(':' . $k, $v);
-        }
-        $pst->execute();
+        $pst->execute($data);
         return $this->conn->lastInsertId();
     }
 
@@ -79,10 +110,8 @@ class PdoDatabase implements Database
         $sql = "update {$table} set {$updates} {$where}";
         if ($debug) return ['sql' => $sql, 'bind' => $condition];
         $pst = $this->conn->prepare($sql);
-        foreach ($data as $k => &$v) {
-            $pst->bindParam(':' . $k, $v);
-        }
-        $pst = $this->bindParam($pst, $condition);
+        $this->bindNamed($pst, $data);
+        $this->bindAny($pst, $condition);
         $pst->execute();
         return $pst->rowCount();
     }
@@ -93,7 +122,7 @@ class PdoDatabase implements Database
         $sql = "delete from {$table} {$where}";
         if ($debug) return ['sql' => $sql, 'bind' => $condition];
         $pst = $this->conn->prepare($sql);
-        $pst = $this->bindParam($pst, $condition);
+        $this->bindAny($pst, $condition);
         $pst->execute();
         return $pst->rowCount();
     }
@@ -102,7 +131,7 @@ class PdoDatabase implements Database
     {
         if ($debug) return ['sql' => $sql, 'bind' => $condition];
         $pst = $this->conn->prepare($sql);
-        $pst = $this->bindParam($pst, $condition);
+        $this->bindAny($pst, $condition);
         $pst->execute();
         return $pst->fetch();
     }
@@ -111,7 +140,7 @@ class PdoDatabase implements Database
     {
         if ($debug) return ['sql' => $sql, 'bind' => $condition];
         $pst = $this->conn->prepare($sql);
-        $pst = $this->bindParam($pst, $condition);
+        $this->bindAny($pst, $condition);
         $pst->execute();
         return $pst->fetchAll();
     }
@@ -119,23 +148,38 @@ class PdoDatabase implements Database
     public function cursor(string $sql, array $condition = []): Generator
     {
         $pst = $this->conn->prepare($sql);
-        $pst = $this->bindParam($pst, $condition);
+        $this->bindAny($pst, $condition);
         $pst->execute();
         while ($row = $pst->fetch()) {
             yield $row;
         }
     }
 
-    private function bindParam(PDOStatement $statement, array $data = []): PDOStatement
+    private function bindNamed(PDOStatement $statement, array $data = []): void
     {
-        foreach ($data as $k => &$v) {
-            if (is_int($k)) {
-                $statement->bindParam($k + 1, $v);
-            } else {
-                $statement->bindParam(':' . $k, $v);
-            }
+        foreach ($data as $k => $v) {
+            if (!is_string($k) || $k === '') continue;
+            $name = ($k[0] === ':') ? $k : ':' . $k;
+            $statement->bindValue($name, $v);
         }
-        return $statement;
+    }
+
+    private function bindAny(PDOStatement $statement, array $data = []): void
+    {
+        foreach ($data as $k => $v) {
+            if (is_int($k)) {
+                $statement->bindValue($k + 1, $v);
+                continue;
+            }
+            $name = $k;
+            $name = ($name !== '' && $name[0] === ':') ? $name : ':' . $name;
+            $statement->bindValue($name, $v);
+        }
+    }
+
+    public function compileSelect(array $query): string
+    {
+        return $this->dialect->compileSelect($query);
     }
 
     public function exec(string $sql)
@@ -150,47 +194,8 @@ class PdoDatabase implements Database
 
     public function createTable(string $tableName, array $columns = [], array $primary = [], string $a_i = '', array $unique = [], bool $debug = false)
     {
-        $db_type = $this->db_type;
-        $columnsData = [];
-        foreach ($columns as $name => $info) {
-            $columnData = $name . ' ';
-            if ($a_i == $name && $db_type === 'pgsql') {
-                $columnData .= ' serial ';
-            } else {
-                if (is_array($info)) {
-                    $columnData .= implode(' ', $info);
-                } else {
-                    $columnData .= ' ' . $info;
-                }
-            }
-            if ($a_i == $name) {
-                if ($db_type === 'mysql') {
-                    $columnData .= ' auto_increment ';
-                } elseif ($db_type === 'sqlite') {
-                    $columnData = $name . ' integer primary key autoincrement ';
-                }
-            }
-            $columnsData[] = $columnData;
-        }
-        $c = implode(',', $columnsData);
-        $pk = '';
-        if ($primary) {
-            $pk .= ',primary key(' . implode(',', $primary) . ')';
-        }
-        if ($db_type === 'sqlite' && !empty($a_i)) {
-            $pk = '';
-        }
-        $uk = '';
-        if ($unique) {
-            foreach ($unique as $item) {
-                if (is_array($item)) {
-                    $uk .= ',unique key(' . implode(',', $item) . ')';
-                } else {
-                    $uk .= ',unique key(' . $item . ')';
-                }
-            }
-        }
-        $sql = "create table {$tableName}({$c}{$pk}{$uk});";
+        $schema = TableSchema::fromLegacy($tableName, $columns, $primary, $a_i, $unique);
+        $sql = $this->dialect->compileCreateTable($schema);
         if (!empty($sql)) {
             if ($debug) {
                 return $sql;

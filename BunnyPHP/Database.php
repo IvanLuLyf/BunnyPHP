@@ -48,7 +48,7 @@ interface Database
     public function fetchOne(string $sql, array $condition = [], bool $debug = false);
 
     /**
-     * Returns an array containing all of the result set rows
+     * Returns all result set rows
      * @param string $sql sql expression
      * @param array $condition param bindings
      * @param bool $debug
@@ -63,6 +63,11 @@ interface Database
      * @return Generator
      */
     public function cursor(string $sql, array $condition = []): Generator;
+
+    /**
+     * Compile a SELECT sql from a structured query map.
+     */
+    public function compileSelect(array $query): string;
 
     /**
      * Create a table
