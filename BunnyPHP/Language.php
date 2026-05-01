@@ -16,7 +16,7 @@ class Language implements ArrayAccess
     public function loadLanguage($lang, $basePath)
     {
         if ($lang) {
-            self::$forcedLocale = self::normalizeLocale((string)$lang);
+            self::$forcedLocale = self::pickAvailableLocale((string)$lang);
         } else {
             self::$forcedLocale = null;
         }
@@ -73,18 +73,18 @@ class Language implements ArrayAccess
 
         // minimal: query (?lang=) -> cookie -> session -> Accept-Language -> default
         if (!empty($_GET['lang']) && is_string($_GET['lang'])) {
-            return self::normalizeLocale($_GET['lang']);
+            return self::pickAvailableLocale($_GET['lang']);
         }
         $c = Request::cookie('bunny_lang');
-        if (is_string($c) && $c !== '') return self::normalizeLocale($c);
+        if (is_string($c) && $c !== '') return self::pickAvailableLocale($c);
         $s = Request::session('bunny_lang');
-        if (is_string($s) && $s !== '') return self::normalizeLocale($s);
+        if (is_string($s) && $s !== '') return self::pickAvailableLocale($s);
         $h = $_SERVER['HTTP_ACCEPT_LANGUAGE'] ?? '';
         if (is_string($h) && $h !== '') {
             $p = self::parseAcceptLanguage($h);
-            if ($p) return $p;
+            if ($p) return self::pickAvailableLocale($p);
         }
-        return 'en';
+        return self::pickAvailableLocale('en');
     }
 
     public static function t(string $key, array $params = [], ?string $locale = null): string
@@ -187,6 +187,24 @@ class Language implements ArrayAccess
         return null;
     }
 
+    private static function pickAvailableLocale(string $locale): string
+    {
+        $locale = self::normalizeLocale($locale);
+        $short = explode('-', $locale)[0];
+        foreach ([$locale, $short, 'en'] as $loc) {
+            if ($loc !== '' && self::langFileExists($loc)) return $loc;
+        }
+        return 'en';
+    }
+
+    private static function langFileExists(string $locale): bool
+    {
+        $app = APP_PATH . 'lang' . DIRECTORY_SEPARATOR . $locale . '.json';
+        if (file_exists($app)) return true;
+        $sys = BUNNY_PATH . DIRECTORY_SEPARATOR . 'lang' . DIRECTORY_SEPARATOR . $locale . '.json';
+        return file_exists($sys);
+    }
+
     private static function cacheKey(string $domain, string $locale): string
     {
         $domain = preg_replace('/[^a-z0-9_\\-]/i', '_', $domain);
@@ -231,9 +249,9 @@ class Language implements ArrayAccess
         $locale = str_replace('_', '-', trim($locale));
         if ($locale === '') return 'en';
         $locale = strtolower($locale);
-        $parts = explode('-', $locale);
-        if (count($parts) === 1) return $parts[0];
-        $parts[1] = strtoupper($parts[1]);
-        return $parts[0] . '-' . $parts[1];
+        $locale = preg_replace('/[^a-z0-9\\-]/', '', $locale);
+        $locale = preg_replace('/\\-+/', '-', $locale);
+        $locale = trim($locale, '-');
+        return $locale !== '' ? $locale : 'en';
     }
 }
