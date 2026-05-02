@@ -159,7 +159,7 @@ class Model
 
     public function delete()
     {
-        $where = $this->_where !== '' ? $this->_where : null;
+        $where = $this->_where !== '' ? $this->_where : '';
         $result = BunnyPHP::getDatabase()->delete($this->_table, $where, $this->_param, $this->_debug);
         $this->reset();
         return $result;
@@ -172,8 +172,9 @@ class Model
 
     public function update($data = [], $what = null)
     {
-        $where = $this->_where !== '' ? $this->_where : null;
-        $result = BunnyPHP::getDatabase()->update($data, $this->_table, $where, $this->_param, $what, $this->_debug);
+        $where = $this->_where !== '' ? $this->_where : '';
+        $updates = $what ?? '';
+        $result = BunnyPHP::getDatabase()->update($data, $this->_table, $where, $this->_param, $updates, $this->_debug);
         $this->reset();
         return $result;
     }

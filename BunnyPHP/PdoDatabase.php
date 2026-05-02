@@ -97,16 +97,16 @@ class PdoDatabase implements Database
         return $this->conn->lastInsertId();
     }
 
-    public function update(array $data, string $table, string $where = null, array $condition = [], string $updates = null, bool $debug = false)
+    public function update(array $data, string $table, string $where = '', array $condition = [], string $updates = '', bool $debug = false)
     {
-        if ($updates === null) {
+        if ($updates === '') {
             $sets = [];
             foreach ($data as $key => $value) {
                 $sets[] = "{$key} = :{$key}";
             }
             $updates = implode(',', $sets);
         }
-        $where = $where == null ? '' : ' where ' . $where;
+        $where = $where === '' ? '' : ' where ' . $where;
         $sql = "update {$table} set {$updates} {$where}";
         if ($debug) return ['sql' => $sql, 'bind' => $condition];
         $pst = $this->conn->prepare($sql);
@@ -116,9 +116,9 @@ class PdoDatabase implements Database
         return $pst->rowCount();
     }
 
-    public function delete(string $table, string $where = null, array $condition = [], bool $debug = false)
+    public function delete(string $table, string $where = '', array $condition = [], bool $debug = false)
     {
-        $where = $where == null ? '' : ' WHERE ' . $where;
+        $where = $where === '' ? '' : ' WHERE ' . $where;
         $sql = "delete from {$table} {$where}";
         if ($debug) return ['sql' => $sql, 'bind' => $condition];
         $pst = $this->conn->prepare($sql);

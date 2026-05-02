@@ -20,23 +20,23 @@ interface Database
      * Update table data
      * @param array $data key-value pair
      * @param string $table table name
-     * @param string|null $where where expression with placeholders
+     * @param string $where where expression with placeholders (empty = no WHERE)
      * @param array $condition where param bindings
-     * @param string|null $updates specify set expression
+     * @param string $updates explicit SET clause (empty = build from $data)
      * @param bool $debug
      * @return mixed
      */
-    public function update(array $data, string $table, string $where = null, array $condition = [], string $updates = null, bool $debug = false);
+    public function update(array $data, string $table, string $where = '', array $condition = [], string $updates = '', bool $debug = false);
 
     /**
      * Delete table data
      * @param string $table table name
-     * @param string|null $where where expression with placeholders
+     * @param string $where where expression with placeholders (empty = no WHERE)
      * @param array $condition where param bindings
      * @param bool $debug
      * @return mixed
      */
-    public function delete(string $table, string $where = null, array $condition = [], bool $debug = false);
+    public function delete(string $table, string $where = '', array $condition = [], bool $debug = false);
 
     /**
      * Returns a row of the result set
