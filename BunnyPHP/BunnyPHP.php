@@ -13,7 +13,7 @@ use ReflectionMethod;
 
 class BunnyPHP
 {
-    const BUNNY_VERSION = '3.3.0';
+    const BUNNY_VERSION = '3.3.1';
     const MODE_NORMAL = 0;
     const MODE_API = 1;
     const MODE_AJAX = 2;
