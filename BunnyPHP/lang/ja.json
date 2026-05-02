@@ -1,0 +1,8 @@
+{
+  "mod_not_exists": "コントローラー {{mod}} は存在しません",
+  "action_not_exists": "アクション {{action}} は存在しません",
+  "view_not_exists": "ビュー {{view}} は存在しません",
+  "parameter_required": "パラメータ {{name}} は必須です",
+  "bunny_error": "BunnyPHP エラー",
+  "bunny_info": "BunnyPHP 情報"
+}

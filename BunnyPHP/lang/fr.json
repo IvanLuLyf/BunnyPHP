@@ -1,0 +1,8 @@
+{
+  "mod_not_exists": "Le contrôleur {{mod}} n'existe pas",
+  "action_not_exists": "L'action {{action}} n'existe pas",
+  "view_not_exists": "La vue {{view}} n'existe pas",
+  "parameter_required": "Le paramètre {{name}} est obligatoire",
+  "bunny_error": "Erreur BunnyPHP",
+  "bunny_info": "Information BunnyPHP"
+}

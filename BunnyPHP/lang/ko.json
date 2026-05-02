@@ -1,0 +1,8 @@
+{
+  "mod_not_exists": "컨트롤러 {{mod}}이(가) 없습니다",
+  "action_not_exists": "액션 {{action}}이(가) 없습니다",
+  "view_not_exists": "뷰 {{view}}이(가) 없습니다",
+  "parameter_required": "매개변수 {{name}}은(는) 필수입니다",
+  "bunny_error": "BunnyPHP 오류",
+  "bunny_info": "BunnyPHP 정보"
+}
