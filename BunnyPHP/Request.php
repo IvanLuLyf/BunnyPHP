@@ -72,23 +72,52 @@ class Request implements ArrayAccess
         return self::session($name, null);
     }
 
+    private function isJson(string $mime, string $method, string $content): bool
+    {
+        $mime = strtolower(trim(explode(';', $mime, 2)[0]));
+        if ($mime === 'application/json' || $mime === 'text/json' || substr($mime, -5) === '+json') {
+            return true;
+        }
+        if ($mime !== '') {
+            return false;
+        }
+        if (!in_array($method, ['post', 'put', 'patch', 'delete'], true)) {
+            return false;
+        }
+        $t = ltrim($content);
+        return $t !== '' && ($t[0] === '{' || $t[0] === '[');
+    }
+
     public function process()
     {
-        if ($this->processed || !isset($_SERVER['CONTENT_TYPE'])) return;
+        if ($this->processed) return;
+        $method = strtolower($_SERVER['REQUEST_METHOD'] ?? 'get');
+        $contentType = $_SERVER['CONTENT_TYPE'] ?? '';
         $content = file_get_contents('php://input');
-        $contentType = strtolower($_SERVER['CONTENT_TYPE']);
-        $method = strtolower($_SERVER['REQUEST_METHOD']);
-        if (strpos($contentType, 'application/json') === 0) {
-            $this->param = json_decode($content, true);
-        } elseif (strpos($contentType, 'application/x-www-form-urlencoded') === 0) {
-            if ($method === 'post') {
-                $this->param = $_POST;
-                return;
+        if ($this->isJson($contentType, $method, $content)) {
+            $decoded = json_decode($content, true);
+            $this->param = is_array($decoded) ? $decoded : [];
+            if (in_array($method, ['post', 'put', 'patch', 'delete'], true)) {
+                $_POST = array_replace($_POST, $this->param);
             }
-            parse_str($content, $this->param);
-        } elseif (strpos($contentType, 'multipart/form-data;') === 0) {
+            $this->processed = true;
+            return;
+        }
+        if ($contentType === '' || !isset($_SERVER['CONTENT_TYPE'])) return;
+        $contentTypeLower = strtolower($contentType);
+        if (strpos($contentTypeLower, 'application/x-www-form-urlencoded') === 0) {
             if ($method === 'post') {
                 $this->param = $_POST;
+            } else {
+                parse_str($content, $this->param);
+            }
+            $this->processed = true;
+            return;
+        }
+        if (strpos($contentTypeLower, 'multipart/form-data;') === 0) {
+            if ($method === 'post') {
+                $this->param = $_POST;
+                $this->processed = true;
                 return;
             }
             $boundary = substr($content, 0, strpos($content, "\r\n"));
@@ -119,6 +148,7 @@ class Request implements ArrayAccess
                     }
                 }
             }
+            $this->processed = true;
         }
     }
 
