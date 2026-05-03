@@ -46,4 +46,13 @@ class FileStorage implements Storage
     {
         unlink($this->uploadPath . $filename);
     }
+
+    public function toPublicUrl(string $reference): string
+    {
+        $base = defined('TP_SITE_URL') ? (string)TP_SITE_URL : '';
+        $base = rtrim($base, '/');
+        if ($reference === '') return $base;
+        if (strpos($reference, '/') === 0) return $base . $reference;
+        return $base . $this->dir . '/' . ltrim($reference, '/');
+    }
 }

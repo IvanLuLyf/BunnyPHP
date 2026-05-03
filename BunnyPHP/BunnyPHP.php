@@ -13,7 +13,7 @@ use ReflectionMethod;
 
 class BunnyPHP
 {
-    const BUNNY_VERSION = '3.3.1';
+    const BUNNY_VERSION = '3.3.2';
     const MODE_NORMAL = 0;
     const MODE_API = 1;
     const MODE_AJAX = 2;
@@ -116,6 +116,9 @@ class BunnyPHP
             $controllerPrefix = '';
         }
         define('BUNNY_APP', $prefix);
+        if ($this->mode === BunnyPHP::MODE_AJAX) {
+            self::app()->set('tp_ajax', true);
+        }
         define('BUNNY_APP_MODE', $this->mode);
         define('BUNNY_CONTROLLER', $controllerName);
         define('BUNNY_ACTION', $actionName);
@@ -486,6 +489,17 @@ class BunnyPHP
     public static function getStorage(): Storage
     {
         return self::getInternalInstance(Storage::class);
+    }
+
+    public static function toPublicUrl(string $reference): string
+    {
+        if ($reference === '') {
+            return '';
+        }
+        if (strpos($reference, 'http://') === 0 || strpos($reference, 'https://') === 0) {
+            return $reference;
+        }
+        return self::getStorage()->toPublicUrl($reference);
     }
 
     public static function getCache(): Cache

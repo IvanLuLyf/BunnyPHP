@@ -31,4 +31,9 @@ interface Storage
      * @param string $filename
      */
     public function remove(string $filename);
+
+    /**
+     * Stored reference to public URL
+     */
+    public function toPublicUrl(string $reference): string;
 }
